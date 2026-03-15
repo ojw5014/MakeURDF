@@ -1,0 +1,4 @@
+# Robot Viewer Configuration
+
+FIXED_BASE=1
+
