@@ -3,11 +3,19 @@ import pybullet_data
 import time
 import sys
 import math
+
+# 한글 Windows (cp949) 에서 em-dash 등 유니코드 print 실패 방지 — stdout 을 utf-8 로 reconfigure
+try:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass
 import xml.etree.ElementTree as ET
 import os
 import socket
 import threading
 import queue
+import json as _json  # 트랙 벨트 메타데이터 로드용
 
 # Windows 비블로킹 키보드 입력
 if sys.platform == 'win32':
@@ -107,11 +115,12 @@ if missing_meshes:
 # 설정 파일 읽기 (C#에서 생성)
 ####################################################
 def read_viewer_config():
-    """viewer_config.txt 파일에서 설정 읽기"""
+    """viewer_config.txt 파일에서 설정 읽기 (bool + float 혼합)."""
     config = {
-        'FIXED_BASE': True,  # 기본값: 고정
+        'FIXED_BASE': True,
         'USE_PYBULLET': True,
-        'USE_MUJOCO': False
+        'USE_MUJOCO': False,
+        'SPAWN_Z': 0.4,   # float: 로봇 base 의 초기 z (m). fixed/non-fixed 모두 동일하게 적용.
     }
     config_file = os.path.join(release_dir, "viewer_config.txt")
     if os.path.exists(config_file):
@@ -124,8 +133,15 @@ def read_viewer_config():
                     key, value = line.split('=', 1)
                     key = key.strip()
                     value = value.strip()
-                    if key in config:
+                    if key not in config:
+                        continue
+                    if isinstance(config[key], bool):
                         config[key] = (value == '1')
+                    elif isinstance(config[key], float):
+                        try:
+                            config[key] = float(value)
+                        except ValueError:
+                            pass
             print(f"Config loaded from: {config_file}")
         except Exception as e:
             print(f"Warning: Could not read config file: {e}")
@@ -135,6 +151,8 @@ def read_viewer_config():
 
 viewer_config = read_viewer_config()
 USE_FIXED_BASE = viewer_config['FIXED_BASE']
+SPAWN_Z = float(viewer_config.get('SPAWN_Z', 0.4))
+print(f"Spawn Z: {SPAWN_Z}")
 print(f"Fixed Base: {'Enabled' if USE_FIXED_BASE else 'Disabled'}")
 
 print("\n" + "=" * 60)
@@ -143,34 +161,57 @@ print("=" * 60)
 print(f"Loading: {urdf_file}")
 
 ####################################################
-# 테스트용 큐브들 배치
-cube_positions = [
-    [0.1, 0.2, 0.05],   # 큐브 1 위치
-    [0.2, 0.1, 0.05],   # 큐브 2 위치
-    [0.15, 0.3, 0.05]   # 큐브 3 위치
-]
+# Scene 객체 로드 — URDF 의 <scene><include .../></scene> 노드 자동 파싱
+#   MakeUrdf 의 $scene 라인이 만든 메타데이터를 읽어 객체 자동 배치
+#   체크박스 Export $scene OFF 였으면 <scene> 노드 자체가 없어 아무것도 안 함
+####################################################
+import xml.etree.ElementTree as _ET
 
-# 큐브 색상 팔레트
-colors = [
-    [1, 0, 0, 1],      # 빨간색
-    [0, 1, 0, 1],      # 초록색
-    [0, 0, 1, 1],      # 파란색
-    [1, 1, 0, 1],      # 노란색
-    [1, 0, 1, 1],      # 자홍색
-    [0, 1, 1, 1],      # 청록색
-    [1, 0.5, 0, 1],    # 주황색
-    [0.5, 0, 1, 1],    # 보라색
-]
+def _parse_scene_from_urdf(path):
+    """URDF 의 <scene><include .../></scene> 노드를 파싱하여 객체 dict 리스트 반환."""
+    items = []
+    try:
+        tree = _ET.parse(path)
+        for sc in tree.getroot().findall("scene"):
+            for inc in sc.findall("include"):
+                url = inc.get("url", "")
+                if not url:
+                    continue
+                try:
+                    xyz = [float(v) for v in inc.get("xyz", "0 0 0").split()]
+                    rpy = [float(v) for v in inc.get("rpy", "0 0 0").split()]
+                    scale = float(inc.get("scale", "1.0"))
+                except Exception:
+                    continue
+                color_str = inc.get("color", "")
+                color = None
+                if color_str:
+                    try:
+                        cv = int(color_str, 0) if color_str.lower().startswith("0x") else int(color_str)
+                        color = [((cv >> 16) & 0xFF) / 255.0,
+                                 ((cv >> 8) & 0xFF) / 255.0,
+                                 (cv & 0xFF) / 255.0, 1.0]
+                    except Exception:
+                        color = None
+                items.append({"url": url, "xyz": xyz, "rpy": rpy, "scale": scale, "color": color})
+    except Exception as ex:
+        print(f"[Scene] parse error: {ex}", flush=True)
+    return items
 
-# 큐브들 생성 및 색상 적용
-nColorIndex = 0
-for pos in cube_positions:
-    cube_id = p.loadURDF("cube_small.urdf", pos)
-    p.changeVisualShape(cube_id, -1, rgbaColor=colors[nColorIndex])
-    nColorIndex += 1
 
-# 바구니 배치 (작업 공간 시각화용)
-tray_id = p.loadURDF("tray/tray.urdf", [0.05, -0.2, 0], globalScaling=0.33)
+_urdf_for_scene = urdf_to_load if 'urdf_to_load' in dir() else os.path.join(release_dir, "robot_stl.urdf")
+scene_items = _parse_scene_from_urdf(_urdf_for_scene)
+scene_ids = []
+for it in scene_items:
+    try:
+        orn = p.getQuaternionFromEuler(it["rpy"])
+        bid = p.loadURDF(it["url"], it["xyz"], orn, globalScaling=it["scale"])
+        scene_ids.append(bid)
+        if it["color"] is not None:
+            p.changeVisualShape(bid, -1, rgbaColor=it["color"])
+    except Exception as ex:
+        print(f"[Scene] loadURDF failed for {it['url']}: {ex}", flush=True)
+print(f"[Scene] {len(scene_ids)} object(s) loaded from <scene> node", flush=True)
 ####################################################
 
 # 로봇 링크 색상 팔레트 정의
@@ -185,14 +226,36 @@ COLOR_PRESETS = {
 
 # 전역 변수들
 simulation_running = True               # 시뮬레이션 실행 상태
+
+# ── 자동 종료 (캡쳐 모드용) ─────────────────────────────────────────────
+# 환경변수 OJW_AUTO_EXIT_SEC 가 설정되면 그 초만큼 시뮬 후 자동 종료.
+# C# 측 btnCaptureAll_Click 가 윈도우 캡쳐 마치고 정리할 때 사용.
+_ojw_auto_exit_sec = 0.0
+try:
+    _ojw_auto_exit_sec = float(os.environ.get('OJW_AUTO_EXIT_SEC', '0') or 0)
+except Exception:
+    _ojw_auto_exit_sec = 0.0
+_ojw_auto_exit_start = time.time() if _ojw_auto_exit_sec > 0 else None
+if _ojw_auto_exit_start is not None:
+    print(f"[OJW] AUTO_EXIT_SEC={_ojw_auto_exit_sec} (capture mode)", flush=True)
 command_queue = queue.Queue()          # 소켓 명령 큐
+# === $scene 라이브 적용 ===
+#   MakeUrdf Scene 탭의 Apply 버튼이 SCENE_ADD/SCENE_CLEAR 명령을 보냄.
+#   Play() 가 prefix 보고 scene_queue 에 enqueue, process_scene_commands() 가 main 루프에서 spawn.
+scene_queue = queue.Queue()
+scene_spawned_ids = []                 # spawn 된 body 들 (SCENE_CLEAR 시 removeBody)
+# === viewer 내 직접 클릭 배치 ===
+#   MakeUrdf 의 Scene 탭 라이브러리 버튼 클릭 시 SCENE_TOOL_SET 으로 채워짐.
+#   active 인 동안 PyBullet 윈도우의 좌클릭이 ray cast → Z=0 plane → object spawn.
+active_scene_tool = None              # dict: type, sx, sy, sz, color, mass, zoffset
+scene_last_click_state = 0            # 좌클릭 down/up 트리거 dedup 용
 active_moves: Dict[int, JointMoveCommand] = {}  # 현재 실행 중인 조인트 이동 명령들
 joint_number_to_id = {}                # 조인트 번호(예: 11, 12) → PyBullet joint ID 매핑
 
 # 로봇 위치 제어 변수들
 robot_position_sliders = {}            # 로봇 위치 제어 슬라이더들
-initial_robot_position = [0, 0, 0.5]  # 로봇 초기 위치
-current_robot_position = [0, 0, 0.5]  # 현재 로봇 위치
+initial_robot_position = [0, 0, SPAWN_Z]   # 로봇 초기 위치 (fixed/non-fixed 모두 SPAWN_Z 적용)
+current_robot_position = [0, 0, SPAWN_Z]
 
 ##########################################
 # URDF 파일 파싱 및 조인트 제어 함수들
@@ -205,6 +268,178 @@ def extract_joint_number(joint_name):
     if match:
         return int(match.group(1))
     return None
+
+##########################################
+# 카메라 sensor (REP 0119 <sensor> element) 지원
+#   isaac_runner.py 와 동일한 파싱 방식 + PyBullet 의 getCameraImage 로 렌더.
+#   cv2.imshow 로 별도 윈도우에 카메라 뷰 표시 (cv2 import 가능할 때만).
+##########################################
+
+def _parse_cameras_from_urdf(urdf_path):
+    """URDF 의 <sensor> elements (REP 0119) 에서 camera 정보 추출.
+    Returns: list of dict {name, link, hfov_rad, w, h, near, far, rate, origin_xyz, origin_rpy}.
+    원점 (origin xyz/rpy) 는 부모 link 기준 — joint 없이 sensor element 직속.
+    MakeUrdf 출력 형식 (camera0 link + camera0_joint + sensor) 와 호환."""
+    cams = []
+    try:
+        tree = ET.parse(urdf_path)
+        for s in tree.getroot().findall("sensor"):
+            cam = s.find("camera")
+            if cam is None:
+                continue
+            img = cam.find("image")
+            parent = s.find("parent")
+            if img is None or parent is None:
+                continue
+            try:
+                hfov = float(img.get("hfov", "1.047"))
+                w = int(img.get("width", "640"))
+                h = int(img.get("height", "480"))
+                near = float(img.get("near", "0.05"))
+                far  = float(img.get("far", "10.0"))
+                rate = int(s.get("update_rate", "30"))
+            except Exception:
+                continue
+            # world_fixed 비표준 확장 attribute — MakeUrdf 에서 $camera 의 14번째 필드 = 1 시 emit.
+            #   true → robot 의 base_link 위치/자세 추적 X, 초기 world pose 에 고정 (천장 카메라 등).
+            world_fixed = (s.get("world_fixed", "0") == "1")
+            cams.append({
+                "name":     s.get("name", ""),
+                "link":     parent.get("link", ""),
+                "hfov_rad": hfov,
+                "w": w, "h": h,
+                "near": near, "far": far,
+                "rate": rate,
+                "world_fixed": world_fixed,
+                "fixed_pos": None,   # 첫 렌더 때 캡쳐
+                "fixed_quat": None,
+            })
+    except Exception as ex:
+        print(f"[Camera] parse failed: {ex}", flush=True)
+    return cams
+
+def _parse_world_cameras_json(json_path):
+    """world_cameras.json (MakeUrdf 가 robot URDF 옆에 출력) 파싱.
+    Returns: list of dict (camera_list 와 동일 포맷, world_pose 키로 절대좌표 명시).
+    파일 없으면 빈 리스트.
+
+    world_fixed 카메라는 robot URDF 와 무관하게 world 좌표에 고정 — robot 떨어져도 위치 유지.
+    PyBullet 다중 env 학습 시 env_origin + offset 으로 확장 가능 (env_origin 인수는 추후).
+    """
+    import json as _json
+    cams = []
+    if not json_path or not os.path.exists(json_path):
+        return cams
+    try:
+        # utf-8-sig — BOM 이 있어도 안전하게 파싱
+        with open(json_path, 'r', encoding='utf-8-sig') as f:
+            data = _json.load(f)
+        for entry in data.get("cameras", []):
+            pose = entry.get("pose", {})
+            intr = entry.get("intrinsic", {})
+            cams.append({
+                "name":     entry.get("name", f"scene_cam{entry.get('idx', 0)}"),
+                "link":     "(world)",
+                "hfov_rad": float(intr.get("fov_deg", 60.0)) * math.pi / 180.0,
+                "w":        int(intr.get("width", 512)),
+                "h":        int(intr.get("height", 512)),
+                "near":     float(intr.get("near", 0.05)),
+                "far":      float(intr.get("far", 100.0)),
+                "rate":     int(entry.get("update_rate", 30)),
+                # world_pose: 절대 world 좌표 (또는 env-local). _render_camera_view 가 직접 사용.
+                "world_pose": (
+                    float(pose.get("x", 0.0)),
+                    float(pose.get("y", 0.0)),
+                    float(pose.get("z", 0.0)),
+                    float(pose.get("roll",  0.0)),
+                    float(pose.get("pitch", 0.0)),
+                    float(pose.get("yaw",   0.0)),
+                ),
+            })
+        print(f"[Camera] world_cameras.json 로드: {len(cams)}개 (robot 과 분리, world 고정)", flush=True)
+    except Exception as ex:
+        print(f"[Camera] world_cameras.json 파싱 실패: {ex}", flush=True)
+    return cams
+
+def _spawn_world_camera_marker(cam):
+    """world camera 위치에 작은 빨간 박스 마커 spawn (시각 식별용, 충돌 없음)."""
+    try:
+        pose = cam.get("world_pose")
+        if not pose:
+            return
+        x, y, z, roll, pitch, yaw = pose
+        # X 방향 가장 김 = 광축, 빨간색 (URDF builder 의 cam_color_world 와 동일 톤)
+        vs = p.createVisualShape(p.GEOM_BOX, halfExtents=[0.02, 0.01, 0.01],
+                                  rgbaColor=[0.85, 0.1, 0.1, 1.0])
+        quat = p.getQuaternionFromEuler([roll, pitch, yaw])
+        p.createMultiBody(baseMass=0.0,
+                          baseVisualShapeIndex=vs,
+                          basePosition=[x, y, z],
+                          baseOrientation=quat)
+        print(f"[Camera] '{cam['name']}' 마커 spawn @ "
+              f"({x:.3f},{y:.3f},{z:.3f})", flush=True)
+    except Exception as ex:
+        print(f"[Camera] 마커 spawn 실패 ({cam.get('name','')}): {ex}", flush=True)
+
+def _find_link_id_by_name(robot_id, name):
+    """링크 이름 → link index (PyBullet getLinkState 호출용).
+    base_link 면 -1 반환."""
+    if not name or name == "base_link":
+        return -1
+    try:
+        n = p.getNumJoints(robot_id)
+        for i in range(n):
+            info = p.getJointInfo(robot_id, i)
+            link_name = info[12].decode('utf-8')
+            if link_name == name:
+                return i
+    except Exception:
+        pass
+    return None
+
+def _render_camera_view(robot_id, cam, link_id):
+    """카메라 sensor 의 view 를 렌더해 RGB 배열 반환 (np.uint8, [h,w,3]).
+    실패 시 None.
+
+    우선순위:
+      1. cam["world_pose"] 가 있으면 → 절대 world 좌표로 직접 렌더 ($scene 카메라, robot 무관)
+      2. 아니면 robot link_state → 부착 카메라
+    """
+    try:
+        import numpy as _np
+        # 1) world camera: pose 가 절대좌표로 명시되어 robot 과 무관
+        wp = cam.get("world_pose")
+        if wp is not None:
+            x, y, z, roll, pitch, yaw = wp
+            pos = (x, y, z)
+            quat = p.getQuaternionFromEuler([roll, pitch, yaw])
+        else:
+            # 2) 부착 카메라
+            if link_id is None:
+                return None
+            if link_id < 0:
+                pos, quat = p.getBasePositionAndOrientation(robot_id)
+            else:
+                ls = p.getLinkState(robot_id, link_id, computeForwardKinematics=True)
+                pos = ls[0]; quat = ls[1]
+        rot = _np.array(p.getMatrixFromQuaternion(quat)).reshape(3, 3)
+        # 카메라 +X = 광축 (forward), +Z = up — OpenJigWare convention
+        forward = rot.dot([1.0, 0.0, 0.0])
+        up      = rot.dot([0.0, 0.0, 1.0])
+        target  = [pos[0] + forward[0], pos[1] + forward[1], pos[2] + forward[2]]
+        view_mat = p.computeViewMatrix(pos, target, up)
+        fov_deg = cam["hfov_rad"] * 180.0 / math.pi
+        aspect  = float(cam["w"]) / float(cam["h"])
+        proj_mat = p.computeProjectionMatrixFOV(fov_deg, aspect, cam["near"], cam["far"])
+        _, _, rgb, _, _ = p.getCameraImage(
+            width=cam["w"], height=cam["h"],
+            viewMatrix=view_mat, projectionMatrix=proj_mat,
+            renderer=p.ER_BULLET_HARDWARE_OPENGL)
+        arr = _np.array(rgb, dtype=_np.uint8)
+        return arr[:, :, :3] if arr.ndim == 3 else None
+    except Exception as ex:
+        print(f"[Camera] render failed ({cam.get('name','')}): {ex}", flush=True)
+        return None
 
 def parse_link_visual_colors(urdf_path):
     """URDF 파일에서 각 링크의 모든 visual 색상 정보를 추출하여 반환
@@ -502,21 +737,272 @@ def parse_socket_message(message):
         return None
 
 def Play(command_string):
-    """명령 문자열을 받아서 실행 큐에 추가하는 함수"""
+    """명령 문자열을 받아서 실행 큐에 추가하는 함수.
+       SCENE_CLEAR / SCENE_ADD prefix 도 처리 (scene_queue 로 라우팅)."""
     try:
-        # 메시지 파싱
+        cmd = command_string.strip().rstrip(';').strip()
+
+        # === $scene 명령 라우팅 ===
+        global active_scene_tool
+        if cmd.startswith('SCENE_TOOL_CLEAR'):
+            active_scene_tool = None
+            print("[Scene] tool cleared (viewer click placement OFF)")
+            return True
+        if cmd.startswith('SCENE_TOOL_SET'):
+            # SCENE_TOOL_SET, type, sx, sy, sz, color, mass, zoffset
+            parts = [s.strip() for s in cmd.split(',')]
+            if len(parts) >= 8:
+                try:
+                    active_scene_tool = {
+                        'type':  parts[1],
+                        'sx': float(parts[2]), 'sy': float(parts[3]), 'sz': float(parts[4]),
+                        'color': int(parts[5], 0) if parts[5].lower().startswith('0x') else int(parts[5]),
+                        'mass': float(parts[6]),
+                        'zoffset': float(parts[7]),
+                    }
+                    print(f"[Scene] tool set: {active_scene_tool['type']} (viewer click → spawn)")
+                    return True
+                except Exception as ex:
+                    print(f"SCENE_TOOL_SET parse error: {ex}")
+                    return False
+            return False
+        if cmd.startswith('SCENE_CLEAR'):
+            scene_queue.put(('CLEAR',))
+            return True
+        if cmd.startswith('SCENE_ADD'):
+            # SCENE_ADD, type, x, y, z, rx, ry, rz, sx, sy, sz, color, mass
+            parts = [s.strip() for s in cmd.split(',')]
+            if len(parts) >= 13:
+                try:
+                    obj = {
+                        'type':  parts[1],
+                        'x': float(parts[2]), 'y': float(parts[3]), 'z': float(parts[4]),
+                        'rx': float(parts[5]), 'ry': float(parts[6]), 'rz': float(parts[7]),
+                        'sx': float(parts[8]), 'sy': float(parts[9]), 'sz': float(parts[10]),
+                        'color': int(parts[11], 0) if parts[11].lower().startswith('0x') else int(parts[11]),
+                        'mass': float(parts[12]),
+                    }
+                    scene_queue.put(('ADD', obj))
+                    return True
+                except Exception as ex:
+                    print(f"SCENE_ADD parse error: {ex} / {cmd}")
+                    return False
+            return False
+
+        # 기존 joint 명령 처리
         parsed = parse_socket_message(command_string)
-        
         if parsed:
-            # 명령 큐에 추가
             command_queue.put(parsed)
             return True
         else:
             return False
-            
+
     except Exception as e:
         print(f"Play exception: {e}")
         return False
+
+
+def _spawn_scene_object(obj):
+    """obj dict 에서 PyBullet body 하나 생성. body id 반환 (실패 시 None)."""
+    try:
+        t = obj['type']
+        pos = [obj['x'], obj['y'], obj['z']]
+        orn = p.getQuaternionFromEuler([
+            math.radians(obj['rx']), math.radians(obj['ry']), math.radians(obj['rz'])
+        ])
+        sx, sy, sz = obj['sx'], obj['sy'], obj['sz']
+        col_int = obj['color']
+        mass = obj['mass']
+        rgba = [
+            ((col_int >> 16) & 0xFF) / 255.0,
+            ((col_int >> 8) & 0xFF) / 255.0,
+            (col_int & 0xFF) / 255.0,
+            1.0
+        ]
+
+        if t in ('cube', 'box'):
+            cs = p.createCollisionShape(p.GEOM_BOX, halfExtents=[sx/2, sy/2, sz/2])
+            vs = p.createVisualShape(p.GEOM_BOX, halfExtents=[sx/2, sy/2, sz/2], rgbaColor=rgba)
+            return p.createMultiBody(mass, cs, vs, pos, orn)
+
+        if t == 'sphere':
+            r = sx / 2 if sx > 0 else 0.04
+            cs = p.createCollisionShape(p.GEOM_SPHERE, radius=r)
+            vs = p.createVisualShape(p.GEOM_SPHERE, radius=r, rgbaColor=rgba)
+            return p.createMultiBody(mass, cs, vs, pos, orn)
+
+        if t == 'cylinder':
+            r = sx / 2 if sx > 0 else 0.03
+            h = sy if sy > 0 else 0.1
+            cs = p.createCollisionShape(p.GEOM_CYLINDER, radius=r, height=h)
+            vs = p.createVisualShape(p.GEOM_CYLINDER, radius=r, length=h, rgbaColor=rgba)
+            return p.createMultiBody(mass, cs, vs, pos, orn)
+
+        if t.startswith('asset:'):
+            # PyBullet 내장 URDF 자산 매핑
+            # PyBullet 내장 URDF 의 native 크기가 다 다르므로 scale 로 보정.
+            #   tray.urdf  ≈ 600 × 500 × 40mm  → scale 0.3 → ≈ 180 × 150 × 12mm
+            #   table.urdf ≈ 적당히 큰 책상      → scale 0.5
+            asset_map = {
+                'tray':  ('tray/tray.urdf',   0.3),
+                'table': ('table/table.urdf', 0.5),
+                'mug':   ('urdf/mug.urdf',    1.0),
+            }
+            name = t[6:]
+
+            # 'can' 같은 PyBullet 내장이 없는 자산은 cylinder 로 우아하게 fallback.
+            #   (Isaac Sim 에서는 YCB texture mesh 로 진짜 토마토수프 캔처럼 보이지만,
+            #    PyBullet 은 동급 자산이 없어서 색상/사이즈만 일치하는 cylinder.
+            #    PyBullet GEOM_CYLINDER 는 Z-axis default 라 자동으로 세워서 spawn.)
+            if name == 'can':
+                r = sx / 2 if sx > 0 else 0.025
+                h = sy if sy > 0 else 0.080
+                cs = p.createCollisionShape(p.GEOM_CYLINDER, radius=r, height=h)
+                vs = p.createVisualShape(p.GEOM_CYLINDER, radius=r, length=h, rgbaColor=rgba)
+                return p.createMultiBody(mass, cs, vs, pos, orn)
+
+            mapping = asset_map.get(name)
+            if mapping:
+                urdf_path, default_scale = mapping
+                try:
+                    bid = p.loadURDF(urdf_path, pos, orn,
+                                     useFixedBase=(mass <= 0),
+                                     globalScaling=default_scale)
+                    # 색상 override (visualShapeData 의 각 link)
+                    try:
+                        for vsi in p.getVisualShapeData(bid):
+                            p.changeVisualShape(bid, vsi[1], rgbaColor=rgba)
+                    except Exception:
+                        pass
+                    return bid
+                except Exception as ex:
+                    print(f"loadURDF {urdf_path} failed: {ex}, falling back to box")
+            # fallback: box 로 근사
+            cs = p.createCollisionShape(p.GEOM_BOX, halfExtents=[sx/2, sy/2, sz/2])
+            vs = p.createVisualShape(p.GEOM_BOX, halfExtents=[sx/2, sy/2, sz/2], rgbaColor=rgba)
+            return p.createMultiBody(mass, cs, vs, pos, orn)
+
+        if t.endswith('.urdf'):
+            try:
+                return p.loadURDF(t, pos, orn, useFixedBase=(mass <= 0), globalScaling=max(sx, 0.01))
+            except Exception as ex:
+                print(f"loadURDF {t} failed: {ex}")
+                return None
+
+        print(f"Unknown scene type: {t}")
+        return None
+    except Exception as ex:
+        print(f"_spawn_scene_object error: {ex}")
+        return None
+
+
+def process_viewer_click_placement():
+    """PyBullet viewer 의 좌클릭을 받아 active_scene_tool 객체를 Z=0 평면에 spawn.
+       active_scene_tool 이 None 이면 작동 안 함 (보통 PyBullet 카메라 조작 정상).
+       이미 spawn 된 객체 위에 클릭하면 그 위에 쌓이도록 rayTest 결과의 hit_position 사용.
+       없으면 (= ray 가 free space) Z=0 floor 와 교차."""
+    global active_scene_tool, scene_spawned_ids
+    if active_scene_tool is None:
+        return
+    try:
+        events = p.getMouseEvents()
+        if not events:
+            return
+        cam = p.getDebugVisualizerCamera()
+        if cam is None or len(cam) < 12:
+            return
+        width  = cam[0]
+        height = cam[1]
+        view_m = cam[2]   # 16-elem flat (column-major)
+        proj_m = cam[3]
+
+        import numpy as _np
+        view_np = _np.array(view_m, dtype=_np.float64).reshape(4, 4, order='F')
+        proj_np = _np.array(proj_m, dtype=_np.float64).reshape(4, 4, order='F')
+        try:
+            inv_vp = _np.linalg.inv(proj_np @ view_np)
+        except _np.linalg.LinAlgError:
+            return
+
+        for e in events:
+            # event_type=2 (mouse button), button=0 (left), state has KEY_WAS_TRIGGERED bit.
+            if len(e) < 5: continue
+            if e[0] != 2: continue
+            if e[3] != 0: continue
+            if not (e[4] & p.KEY_WAS_TRIGGERED): continue
+
+            mx = float(e[1]); my = float(e[2])
+            ndc_x = (2.0 * mx / float(width)) - 1.0
+            ndc_y = 1.0 - (2.0 * my / float(height))
+
+            near_clip = _np.array([ndc_x, ndc_y, -1.0, 1.0])
+            far_clip  = _np.array([ndc_x, ndc_y,  1.0, 1.0])
+            near_world = inv_vp @ near_clip; near_world = near_world[:3] / near_world[3]
+            far_world  = inv_vp @ far_clip;  far_world  = far_world[:3]  / far_world[3]
+
+            # 1) 우선 기존 객체와 ray test → 그 위에 쌓을 수 있도록 hit_position 사용.
+            hit_pos = None
+            try:
+                rt = p.rayTest(near_world.tolist(), far_world.tolist())
+                if rt and rt[0][0] >= 0:
+                    hit_pos = list(rt[0][3])
+            except Exception:
+                pass
+
+            # 2) ray 가 아무것도 안 맞췄으면 Z=0 평면 교차.
+            if hit_pos is None:
+                dz = far_world[2] - near_world[2]
+                if abs(dz) < 1e-9:
+                    print("[Scene] viewer click: ray parallel to floor — skip")
+                    continue
+                t = -near_world[2] / dz
+                if t < 0:
+                    continue
+                hit_pos = (near_world + t * (far_world - near_world)).tolist()
+
+            # 3) active tool 정의로 객체 obj 생성 후 spawn.
+            tool = active_scene_tool
+            obj = {
+                'type':  tool['type'],
+                'x': hit_pos[0],
+                'y': hit_pos[1],
+                'z': hit_pos[2] + tool['zoffset'],
+                'rx': 0.0, 'ry': 0.0, 'rz': 0.0,
+                'sx': tool['sx'], 'sy': tool['sy'], 'sz': tool['sz'],
+                'color': tool['color'],
+                'mass': tool['mass'],
+            }
+            bid = _spawn_scene_object(obj)
+            if bid is not None:
+                scene_spawned_ids.append(bid)
+                print(f"[Scene] viewer-click spawn {tool['type']} @ ({obj['x']:.3f},{obj['y']:.3f},{obj['z']:.3f})")
+    except Exception as ex:
+        print(f"process_viewer_click_placement error: {ex}")
+
+
+def process_scene_commands():
+    """scene_queue 에서 SCENE_CLEAR / SCENE_ADD 명령 꺼내 처리. 매 frame main 루프에서 호출."""
+    global scene_spawned_ids
+    try:
+        while not scene_queue.empty():
+            try:
+                cmd = scene_queue.get_nowait()
+            except queue.Empty:
+                break
+            if cmd[0] == 'CLEAR':
+                for bid in scene_spawned_ids:
+                    try: p.removeBody(bid)
+                    except Exception: pass
+                scene_spawned_ids = []
+                print("[Scene] cleared")
+            elif cmd[0] == 'ADD':
+                obj = cmd[1]
+                bid = _spawn_scene_object(obj)
+                if bid is not None:
+                    scene_spawned_ids.append(bid)
+                    print(f"[Scene] +{obj['type']} @ ({obj['x']:.3f},{obj['y']:.3f},{obj['z']:.3f}) mass={obj['mass']}")
+    except Exception as e:
+        print(f"process_scene_commands error: {e}")
 
 def WaitMotion(milliseconds=None):
     """
@@ -540,38 +1026,81 @@ def WaitMotion(milliseconds=None):
         time.sleep(milliseconds / 1000.0)
         
 def move_joint_to_angle(robot_id, joint_id, target_degrees, duration_ms, movable_joints):
-    """조인트를 지정된 각도로 부드럽게 이동시키는 명령 생성"""
-    
+    """조인트 명령 처리.
+       - Revolute/Prismatic: target_degrees 를 목표 각도/거리로 해석, 부드럽게 보간.
+       - Continuous (바퀴/트랙): target_degrees 를 RPS (rotations per second) 로 해석, 즉시 속도 적용.
+    """
+
     # 유효한 조인트 인덱스인지 확인
     if joint_id >= len(movable_joints):
         print(f"Invalid joint index: {joint_id} (max: {len(movable_joints)-1})")
         return False
-    
+
     actual_joint_id = movable_joints[joint_id]
-    
-    # 현재 위치 가져오기 (라디안 -> 도로 변환)
-    current_pos_rad = get_joint_position(robot_id, actual_joint_id)
-    current_pos_deg = math.degrees(current_pos_rad)
-    
-    # 목표 위치 (라디안으로 변환)
-    target_rad = math.radians(target_degrees)
-    
-    # 조인트 한계값 확인 및 적용
+
+    # 조인트 타입 판별 (continuous = revolute + 한계값 없음)
     joint_info = p.getJointInfo(robot_id, actual_joint_id)
+    joint_type = joint_info[2]
     lower_limit = joint_info[8]
     upper_limit = joint_info[9]
-    
+    is_continuous = (joint_type == p.JOINT_REVOLUTE and lower_limit >= upper_limit)
+
+    if is_continuous:
+        # Continuous: target_degrees 를 RPS 로 해석 (사용자 요청)
+        # target_velocity_rad_s = RPS × 2π
+        target_vel_rad_s = target_degrees * 2.0 * math.pi
+        p.setJointMotorControl2(
+            robot_id,
+            actual_joint_id,
+            p.VELOCITY_CONTROL,
+            targetVelocity=target_vel_rad_s,
+            force=2000
+        )
+        # 슬라이더 UI 값도 동기화 (RPS 단위로 표시)
+        try:
+            if actual_joint_id in movable_joints:
+                jidx = movable_joints.index(actual_joint_id)
+                if jidx in sliders:
+                    # RPS 값을 슬라이더 범위 [-5, +5] 에 클램프
+                    rps_clamped = max(-5.0, min(5.0, target_degrees))
+                    p.setUserDebugParameterValue(sliders[jidx]['id'], rps_clamped)
+                    if jidx in joint_info:
+                        joint_info[jidx]['current_pos'] = target_vel_rad_s
+        except Exception:
+            pass
+        return True
+
+    # 현재 위치 가져오기 (라디안 또는 m)
+    current_pos_native = get_joint_position(robot_id, actual_joint_id)
+
+    # 단위 분기 — URDF joint type 에 따라 다르게 변환.
+    #   revolute: target_degrees 가 deg → rad 변환
+    #   prismatic: target_degrees 가 mm → m 변환 (MakeUrdf 내부 단위 = mm)
+    is_prismatic = (joint_type == p.JOINT_PRISMATIC)
+    if is_prismatic:
+        target_native = target_degrees * 0.001    # mm → m
+        current_pos_display = current_pos_native * 1000.0   # m → mm (UI/시작값 표시)
+    else:
+        target_native = math.radians(target_degrees)   # deg → rad
+        current_pos_display = math.degrees(current_pos_native)  # rad → deg
+
+    # 조인트 한계값 확인 및 적용 (네이티브 단위로 클램프 — Limit 도 native)
     if lower_limit > -1e10 and upper_limit < 1e10:
-        target_rad = max(lower_limit, min(upper_limit, target_rad))
-        target_degrees = math.degrees(target_rad)
-    
+        target_native = max(lower_limit, min(upper_limit, target_native))
+        if is_prismatic:
+            target_degrees = target_native * 1000.0
+        else:
+            target_degrees = math.degrees(target_native)
+
     # 이동 명령 객체 생성
+    #   target_angle / start_angle 필드 이름은 그대로 두지만 단위는 display 단위
+    #   (revolute: deg, prismatic: mm) — update_joint_movements 가 사용.
     move_command = JointMoveCommand(
         joint_id=actual_joint_id,
         target_angle=target_degrees,
         duration=duration_ms / 1000.0,  # 밀리초를 초로 변환
         start_time=time.time(),
-        start_angle=current_pos_deg
+        start_angle=current_pos_display
     )
     
     # 활성 이동 목록에 추가 (기존 이동이 있으면 덮어쓰기)
@@ -600,19 +1129,29 @@ def update_joint_movements(robot_id):
             # 선형 보간으로 중간 위치 계산
             current_angle = move_cmd.start_angle + (move_cmd.target_angle - move_cmd.start_angle) * progress
         
-        # 조인트 위치 설정
-        target_rad = math.radians(current_angle)
+        # 단위 분기 — joint type 에 따라 display 단위(current_angle) 를 native 로 변환
+        #   revolute: deg → rad
+        #   prismatic: mm → m
+        try:
+            jt = p.getJointInfo(robot_id, joint_id)[2]
+        except Exception:
+            jt = p.JOINT_REVOLUTE   # 안전한 default
+        if jt == p.JOINT_PRISMATIC:
+            target_native = current_angle * 0.001    # mm → m
+        else:
+            target_native = math.radians(current_angle)   # deg → rad
+
         p.setJointMotorControl2(
             robot_id,
             joint_id,
             p.POSITION_CONTROL,
-            targetPosition=target_rad,
+            targetPosition=target_native,
             force=1000
         )
-        
+
         # Mimic 조인트 업데이트 (부모 조인트가 움직일 때 자식들도 함께 움직임)
-        update_mimic_joints_for_parent(joint_id, target_rad)
-        
+        update_mimic_joints_for_parent(joint_id, target_native)
+
         # 해당 슬라이더 값 업데이트 (반복 작업이므로 print 제거)
         update_slider_for_joint(joint_id, current_angle)
     
@@ -720,6 +1259,352 @@ def process_socket_commands(robot_id, movable_joints):
         print(f"Exception in process_socket_commands: {e}")
 
 ####################################################
+# 트랙 벨트 flow 애니메이션 (robot_stl_tracks.json 기반)
+####################################################
+
+# 트랙 flow 애니메이션 활성화 여부. True 면:
+#   - URDF 의 정적 트랙 세그먼트 visual 제거
+#   - JSON 메타데이터로 동적 세그먼트 body 생성
+#   - 매 프레임 drive 모터 각도 따라 세그먼트를 belt path 재배치
+# False 면: URDF 의 정적 세그먼트만 표시 (트랙 자체 애니메이션 없음)
+ENABLE_TRACK_FLOW = True
+
+
+def preprocess_urdf_for_track_flow(urdf_path_in, tracks_metas):
+    """트랙 flow 활성화 시: URDF 의 정적 트랙 visual + collision 전부 제거.
+    → 지면 접촉은 별도 휠 실린더(continuous joint 자식)가 담당. 휠 마찰은 run-time 에서 튜닝.
+    """
+    if not tracks_metas:
+        return urdf_path_in
+    track_stls = set()
+    for entry in tracks_metas:
+        stl = entry.get("segment_stl", "")
+        if stl:
+            track_stls.add(stl.replace("\\", "/"))
+    if not track_stls:
+        return urdf_path_in
+    try:
+        tree = ET.parse(urdf_path_in)
+    except Exception as e:
+        print(f"[Track] URDF 파싱 실패: {e}")
+        return urdf_path_in
+    root = tree.getroot()
+    removed = 0
+    for link in root.findall('link'):
+        to_remove = []
+        for elem in list(link):
+            if elem.tag not in ('visual', 'collision'):
+                continue
+            mesh = elem.find('.//mesh')
+            if mesh is None:
+                continue
+            fn = (mesh.get('filename') or '').replace('\\', '/')
+            if fn in track_stls:
+                to_remove.append(elem)
+        for elem in to_remove:
+            link.remove(elem)
+            removed += 1
+    if removed == 0:
+        return urdf_path_in
+    temp_path = urdf_path_in + ".trackanim.urdf"
+    try:
+        tree.write(temp_path, xml_declaration=True, encoding='utf-8')
+        print(f"[Track] 정적 세그먼트 visual+collision {removed}개 제거 → {os.path.basename(temp_path)}")
+        return temp_path
+    except Exception as e:
+        print(f"[Track] URDF 임시 저장 실패: {e}")
+        return urdf_path_in
+
+
+def boost_track_wheel_friction(robot_id, tracks):
+    """트랙 구동 휠 + 지면의 마찰 계수 튜닝 — 탱크 추진력 확보용.
+    기본 PyBullet friction 낮아서 바퀴가 헛도는 문제 방지.
+    """
+    for track in tracks:
+        jname = track["motor_joint"]
+        try:
+            if jname not in joint_name_to_id:
+                continue
+            jid = joint_name_to_id[jname]
+            # joint index == child link index (PyBullet convention)
+            p.changeDynamics(robot_id, jid,
+                             lateralFriction=2.5,
+                             rollingFriction=0.001,
+                             spinningFriction=0.001,
+                             restitution=0.0)
+        except Exception as e:
+            print(f"[Track] friction 튜닝 실패 ({jname}): {e}")
+    # mimic wheels 도 동일하게
+    for name in list(mimic_joints.keys() if 'mimic_joints' in globals() else []):
+        pass  # mimic_joints 는 dict[int,dict] 형태. 후처리로 set
+
+
+def boost_mimic_wheels_friction(robot_id):
+    """트랙 구동 휠만 지면과 접촉 + 마찰 강화. 다른 링크(chassis, 팔)는 collision 비활성화.
+    → chassis STL 이 지면에 끼어서 휠이 헛도는 문제 방지.
+    """
+    try:
+        num_j = p.getNumJoints(robot_id)
+        # ── 가드: 실제 'track_T' joint 가 존재할 때만 적용 ──
+        # 이전 캡쳐의 stale tracks.json 가 남아있으면 비-트랙 로봇에도
+        # 호출되어 모든 link collision 이 꺼짐 → 로봇이 지면 통과.
+        has_track = False
+        for i in range(num_j):
+            name = p.getJointInfo(robot_id, i)[1].decode('utf-8')
+            if 'track_T' in name:
+                has_track = True
+                break
+        if not has_track:
+            print("[Track] no 'track_T' joint — skip friction tuning (stale tracks.json guard)", flush=True)
+            return
+        wheel_count = 0
+        disabled_count = 0
+        # base_link (-1) collision 비활성화
+        p.setCollisionFilterGroupMask(robot_id, -1, 0, 0)
+        disabled_count += 1
+        for i in range(num_j):
+            info = p.getJointInfo(robot_id, i)
+            name = info[1].decode('utf-8')
+            if 'track_T' in name:
+                # 트랙 휠: collision 활성 + 매우 강한 마찰 (탱크용)
+                # linearDamping/angularDamping 은 0 으로 (휠 회전 자체를 감쇠하면 안 됨)
+                p.setCollisionFilterGroupMask(robot_id, i, 1, 0xFFFFFFFF)
+                p.changeDynamics(robot_id, i,
+                                 lateralFriction=50.0,    # 측면 마찰 초강화 (회전 시 미끄러짐 방지)
+                                 rollingFriction=0.0001,  # 굴러가는 저항 최소
+                                 spinningFriction=5.0,    # 회전 피벗 미끄러짐 강력 억제
+                                 restitution=0.0,
+                                 contactStiffness=100000,
+                                 contactDamping=5000,
+                                 linearDamping=0.0,
+                                 angularDamping=0.0)
+                wheel_count += 1
+            else:
+                # 그 외 링크(chassis body, arm): collision 비활성화
+                p.setCollisionFilterGroupMask(robot_id, i, 0, 0)
+                disabled_count += 1
+        print(f"[Track] 휠 {wheel_count}개 마찰 튜닝, 기타 링크 {disabled_count}개 collision 비활성화", flush=True)
+        # 지면 마찰도 매우 강하게
+        if 'plane_id' in globals() and plane_id is not None:
+            p.changeDynamics(plane_id, -1, lateralFriction=20.0, spinningFriction=5.0)
+    except Exception as e:
+        print(f"[Track] friction 튜닝 실패: {e}", flush=True)
+
+
+def _preview_tracks_meta(release_dir_local):
+    """URDF 로드 전에 track JSON 만 훑어봄 (preprocess 용)."""
+    jp = os.path.join(release_dir_local, "robot_stl_tracks.json")
+    if not os.path.exists(jp):
+        return []
+    try:
+        # utf-8-sig: C# Encoding.UTF8 이 쓰는 BOM 자동 제거
+        with open(jp, 'r', encoding='utf-8-sig') as f:
+            return _json.load(f).get("tracks", [])
+    except Exception as e:
+        print(f"[Track] _preview_tracks_meta 실패: {e}", flush=True)
+        return []
+
+def _belt_perimeter(pulleys):
+    """2D 풀리 리스트 [[x,y,r], ...] 로부터 벨트 전체 둘레 길이 계산 (mm)."""
+    n_cnt = len(pulleys)
+    total = 0.0
+    for n in range(n_cnt):
+        p0 = pulleys[n]
+        p1 = pulleys[(n + 1) % n_cnt]
+        p2 = pulleys[(n + 2) % n_cnt]
+        dx = p1[0] - p0[0]; dy = p1[1] - p0[1]
+        length = math.sqrt(dx * dx + dy * dy)
+        if length < 1e-6: continue
+        dr = p1[2] - p0[2]
+        length_out = math.sqrt(max(length * length - dr * dr, 0.0))
+        angle_deg = math.degrees(math.atan2(dy, dx))
+        dx2 = p2[0] - p1[0]; dy2 = p2[1] - p1[1]
+        angle2_deg = math.degrees(math.atan2(dy2, dx2))
+        tmp_deg = ((angle_deg - angle2_deg) % 360.0 + 360.0) % 360.0
+        R1 = p1[2] if p1[2] > 0 else 1.0
+        arc_len = (tmp_deg / 360.0) * 2.0 * math.pi * R1
+        total += length_out + arc_len
+    return total
+
+def _arc_pos_to_xy_rot(s, pulleys):
+    """벨트 아크 길이 s (mm) → 2D 평면 (x_mm, y_mm, rot_deg) 변환."""
+    n_cnt = len(pulleys)
+    for n in range(n_cnt):
+        p0 = pulleys[n]
+        p1 = pulleys[(n + 1) % n_cnt]
+        p2 = pulleys[(n + 2) % n_cnt]
+        dx = p1[0] - p0[0]; dy = p1[1] - p0[1]
+        length = math.sqrt(dx * dx + dy * dy)
+        if length < 1e-6: continue
+        dr = p1[2] - p0[2]
+        length_out = math.sqrt(max(length * length - dr * dr, 0.0))
+        angle_rad = math.atan2(dy, dx)
+        angle_deg = math.degrees(angle_rad)
+        angle_gap_rad = math.atan2(dr, length)
+        angle_gap_deg = math.degrees(angle_gap_rad)
+        # Phase 1 tangent
+        if s < length_out:
+            cos_a = math.cos(angle_rad); sin_a = math.sin(angle_rad)
+            cos_g = math.cos(angle_gap_rad); sin_g = math.sin(angle_gap_rad)
+            lx1 = s * cos_g
+            ly1 = p0[2] + s * sin_g
+            seg_x = p0[0] + lx1 * cos_a - ly1 * sin_a
+            seg_y = p0[1] + lx1 * sin_a + ly1 * cos_a
+            return (seg_x, seg_y, angle_deg + angle_gap_deg)
+        s -= length_out
+        # Phase 2 arc around p1
+        dx2 = p2[0] - p1[0]; dy2 = p2[1] - p1[1]
+        angle2_deg = math.degrees(math.atan2(dy2, dx2))
+        tmp_deg = ((angle_deg - angle2_deg) % 360.0 + 360.0) % 360.0
+        R1 = p1[2] if p1[2] > 0 else 1.0
+        arc_len = (tmp_deg / 360.0) * 2.0 * math.pi * R1
+        if s < arc_len:
+            angle_diff_deg = s * 360.0 / (2.0 * math.pi * R1)
+            rot_deg = angle_deg + 90 - angle_diff_deg
+            rot_rad = math.radians(rot_deg)
+            seg_x = p1[0] + R1 * math.cos(rot_rad)
+            seg_y = p1[1] + R1 * math.sin(rot_rad)
+            return (seg_x, seg_y, rot_deg - 90)
+        s -= arc_len
+    return None
+
+def load_track_belts(release_dir_local):
+    """robot_stl_tracks.json 로드 + 각 트랙의 세그먼트 body 생성. 없으면 빈 리스트."""
+    json_path = os.path.join(release_dir_local, "robot_stl_tracks.json")
+    print(f"[Track] JSON 검색: {json_path}")
+    if not os.path.exists(json_path):
+        print(f"[Track] JSON 파일 없음 → 트랙 애니메이션 비활성화")
+        return []
+    try:
+        with open(json_path, 'r', encoding='utf-8-sig') as f:
+            data = _json.load(f)
+    except Exception as e:
+        print(f"[Track] JSON 로드 실패: {e}")
+        return []
+
+    tracks = []
+    for entry in data.get("tracks", []):
+        pulleys = entry.get("pulleys_2d_mm", [])
+        dist = entry.get("segment_distance_mm", 10.0)
+        if len(pulleys) < 2 or dist < 1e-3:
+            print(f"[Track] 스킵: pulleys={len(pulleys)}, dist={dist}")
+            continue
+        perim = _belt_perimeter(pulleys)
+        if perim < 1e-3:
+            print(f"[Track] 스킵: perimeter={perim}")
+            continue
+        n_seg = max(1, int(round(perim / dist)))
+        seg_dist_adj = perim / n_seg  # 세그먼트 N개가 벨트를 정확히 덮도록
+
+        color = entry.get("color_rgb", [0.7, 0.7, 0.7])
+        rgba = [color[0], color[1], color[2], 1.0]
+        scale = entry.get("stl_scale", 0.001)
+        stl = entry.get("segment_stl", "")
+
+        # STL 파일 존재 확인
+        stl_abs = stl if os.path.isabs(stl) else os.path.join(release_dir_local, stl)
+        if not os.path.exists(stl_abs):
+            # cwd 기준 시도
+            stl_cwd = os.path.join(os.getcwd(), stl)
+            if not os.path.exists(stl_cwd):
+                print(f"[Track] STL 파일 없음: {stl} (cwd={os.getcwd()}, release={release_dir_local})")
+                continue
+            stl_abs = stl_cwd
+        print(f"[Track] STL 로드: {stl_abs}")
+
+        try:
+            vshape = p.createVisualShape(
+                shapeType=p.GEOM_MESH,
+                fileName=stl_abs,
+                meshScale=[scale, scale, scale],
+                rgbaColor=rgba
+            )
+            if vshape < 0:
+                print(f"[Track] visual shape 생성 실패 (return={vshape}, stl={stl_abs})")
+                continue
+        except Exception as e:
+            print(f"[Track] visual shape 예외 ({stl_abs}): {e}")
+            continue
+
+        body_ids = []
+        for i in range(n_seg):
+            try:
+                body = p.createMultiBody(
+                    baseMass=0,
+                    baseCollisionShapeIndex=-1,
+                    baseVisualShapeIndex=vshape,
+                    basePosition=[0, 0, -10]  # 초기 위치: 일단 바닥 아래로 숨겨둠
+                )
+                body_ids.append(body)
+            except Exception as e:
+                print(f"[Track] body 생성 실패: {e}")
+                break
+
+        tracks.append({
+            "motor_joint": entry.get("motor_joint", ""),
+            "pulleys": pulleys,
+            "seg_dist": seg_dist_adj,
+            "perim": perim,
+            "track_frame_pos": entry.get("track_frame_pos_m", [0, 0, 0]),
+            "track_frame_rpy_deg": entry.get("track_frame_rpy_deg", [0, 0, 0]),
+            "body_ids": body_ids,
+            "n_seg": n_seg,
+        })
+        print(f"[Track] {entry.get('motor_joint','?')}: {n_seg} segs (perim={perim:.1f}mm, dist={seg_dist_adj:.2f}mm)")
+    return tracks
+
+def update_track_belts(tracks, robot_id, joint_name_to_id_local):
+    """매 프레임: 모터 각도 읽어 세그먼트들을 belt path 따라 재배치."""
+    if not tracks: return
+    try:
+        base_pos, base_orn = p.getBasePositionAndOrientation(robot_id)
+    except:
+        return
+    for track in tracks:
+        jname = track["motor_joint"]
+        if jname not in joint_name_to_id_local:
+            continue
+        jid = joint_name_to_id_local[jname]
+        try:
+            motor_angle_rad = p.getJointState(robot_id, jid)[0]
+        except:
+            continue
+
+        R_mm = track["pulleys"][0][2] if track["pulleys"][0][2] > 0 else 30.0
+        # 휠 회전 방향과 벨트 flow 방향 일치시키기 위해 음수 (벨트 바닥이 탱크 뒤로 흐르면 탱크 전진)
+        belt_offset_mm = -motor_angle_rad * R_mm
+
+        tf_local_pos = track["track_frame_pos"]
+        tf_local_orn = p.getQuaternionFromEuler([
+            math.radians(track["track_frame_rpy_deg"][0]),
+            math.radians(track["track_frame_rpy_deg"][1]),
+            math.radians(track["track_frame_rpy_deg"][2]),
+        ])
+        track_world_pos, track_world_orn = p.multiplyTransforms(
+            base_pos, base_orn, tf_local_pos, tf_local_orn
+        )
+
+        pulleys = track["pulleys"]
+        n_seg = track["n_seg"]
+        seg_dist = track["seg_dist"]
+        perim = track["perim"]
+        body_ids = track["body_ids"]
+
+        for i in range(n_seg):
+            s = (i * seg_dist + belt_offset_mm) % perim
+            r = _arc_pos_to_xy_rot(s, pulleys)
+            if r is None: continue
+            seg_x, seg_y, seg_rot_deg = r
+            seg_local_pos = [seg_x * 0.001, seg_y * 0.001, 0.0]
+            seg_local_orn = p.getQuaternionFromEuler([0, 0, math.radians(seg_rot_deg)])
+            sw_pos, sw_orn = p.multiplyTransforms(
+                track_world_pos, track_world_orn, seg_local_pos, seg_local_orn
+            )
+            if i < len(body_ids):
+                p.resetBasePositionAndOrientation(body_ids[i], sw_pos, sw_orn)
+
+
+####################################################
 # 메인 실행 부분
 ####################################################
 
@@ -730,14 +1615,79 @@ mimic_relationships = parse_mimic_joints(urdf_file)
 link_colors = parse_link_visual_colors(urdf_file)
 print(f"Parsed {len(link_colors)} link colors from URDF")
 
-# 로봇 URDF 로드 (C#에서 이미 fixed/free-floating 구조로 생성된 파일을 그대로 사용)
-if not USE_FIXED_BASE:
-    robot = p.loadURDF(urdf_file, [0, 0, 0.4], useFixedBase=False)
-else:
-    robot = p.loadURDF(urdf_file, initial_robot_position, useFixedBase=True)
+# 트랙 flow 애니메이션 활성화 시: URDF 에서 정적 트랙 세그먼트 제거한 임시 URDF 로드
+urdf_to_load = urdf_file
+print(f"[Track] ENABLE_TRACK_FLOW={ENABLE_TRACK_FLOW}, release_dir={release_dir}", flush=True)
+if ENABLE_TRACK_FLOW:
+    _preview_metas = _preview_tracks_meta(release_dir)
+    print(f"[Track] JSON preview: {len(_preview_metas)} tracks", flush=True)
+    if _preview_metas:
+        urdf_to_load = preprocess_urdf_for_track_flow(urdf_file, _preview_metas)
+        print(f"[Track] URDF to load: {urdf_to_load}", flush=True)
+
+# 로봇 URDF 로드 — fixed/non-fixed 모두 동일하게 [0, 0, SPAWN_Z]
+robot = p.loadURDF(urdf_to_load, [0, 0, SPAWN_Z], useFixedBase=USE_FIXED_BASE)
 
 # 조인트 정보 수집을 위한 변수들 초기화
 num_joints = p.getNumJoints(robot)
+
+# ── 관절 강제 유지: 모든 movable joint 에 POSITION_CONTROL + 큰 force ──
+#    중력으로 인한 처짐/꺾임 방지. 사용자가 슬라이더로 조작하면 그 값으로 갱신됨.
+HOLD_FORCE = 5000.0
+try:
+    for _ji in range(num_joints):
+        _ji_info = p.getJointInfo(robot, _ji)
+        _jt = _ji_info[2]   # jointType: 0=revolute, 1=prismatic, 4=fixed 등
+        if _jt == p.JOINT_FIXED:
+            continue
+        _cur = p.getJointState(robot, _ji)[0]
+        _ctrl_mode = p.POSITION_CONTROL if _jt != p.JOINT_PRISMATIC else p.POSITION_CONTROL
+        p.setJointMotorControl2(robot, _ji, _ctrl_mode,
+                                targetPosition=_cur, force=HOLD_FORCE)
+    print(f"[OJW] hold force {HOLD_FORCE} applied to all movable joints", flush=True)
+except Exception as _ex:
+    print(f"[OJW] joint hold setup failed: {_ex}", flush=True)
+
+##########################################
+# 카메라 sensor 셋업
+#   - 부착 카메라: URDF <sensor> elements → robot link 따라감
+#   - world 카메라: world_cameras.json → 절대좌표 고정, 별도 마커 spawn
+##########################################
+camera_list = _parse_cameras_from_urdf(urdf_to_load)
+
+# world_cameras.json 도 같이 로드 (있으면) — robot URDF 와 같은 폴더
+_world_cams_path = os.path.join(os.path.dirname(urdf_to_load), "world_cameras.json")
+_world_cams = _parse_world_cameras_json(_world_cams_path)
+for _wc in _world_cams:
+    _spawn_world_camera_marker(_wc)   # 시각 마커 (작은 빨간 박스)
+camera_list.extend(_world_cams)        # 같은 렌더 루프에서 처리
+
+camera_link_ids = []  # 같은 인덱스에 link_id 저장 (world camera 는 None)
+for _cam in camera_list:
+    if _cam.get("world_pose") is not None:
+        camera_link_ids.append(None)   # world camera 는 link 추적 안 함
+        print(f"[Camera] '{_cam['name']}' (world) {_cam['w']}x{_cam['h']} "
+              f"fov={_cam['hfov_rad']*180/math.pi:.1f}deg", flush=True)
+    else:
+        _lid = _find_link_id_by_name(robot, _cam["link"])
+        camera_link_ids.append(_lid)
+        print(f"[Camera] '{_cam['name']}' parent='{_cam['link']}' "
+              f"link_id={_lid} {_cam['w']}x{_cam['h']} "
+              f"fov={_cam['hfov_rad']*180/math.pi:.1f}deg", flush=True)
+
+# cv2 import 시도 — 없으면 카메라 뷰 표시 skip (parse 는 유지)
+try:
+    import cv2 as _cv2
+    _cv2_ok = True
+    print(f"[Camera] cv2 OK — {len(camera_list)} 카메라 뷰 활성화", flush=True)
+except Exception as _ex:
+    _cv2_ok = False
+    print(f"[Camera] cv2 없음 — 카메라 뷰 비활성. "
+          f"`pip install opencv-python` 으로 설치 가능 ({_ex})", flush=True)
+
+# 카메라 update_rate 제한용 (sec 단위 마지막 갱신 시각)
+_camera_last_render = [0.0] * len(camera_list)
+
 joint_info = {}
 movable_joints = []
 joint_name_to_id = {}
@@ -777,6 +1727,18 @@ for i in range(num_joints):
     info = p.getJointInfo(robot, i)
     joint_name = info[1].decode('utf-8')
     joint_name_to_id[joint_name] = i
+
+# 트랙 벨트 flow 애니메이션 초기화 (ENABLE_TRACK_FLOW=True + JSON 있을 때만)
+print(f"[Track] 동적 세그먼트 초기화 시작 (ENABLE_TRACK_FLOW={ENABLE_TRACK_FLOW})", flush=True)
+track_belts = load_track_belts(release_dir) if ENABLE_TRACK_FLOW else []
+print(f"[Track] 동적 세그먼트 초기화 완료: {len(track_belts)} 트랙", flush=True)
+for _tb in track_belts:
+    print(f"[Track]  - {_tb['motor_joint']}: {_tb['n_seg']} 세그먼트, body_ids {len(_tb['body_ids'])}개", flush=True)
+
+# 트랙 구동 휠 + 지면 마찰 튜닝 (탱크 전진 가능하게)
+if track_belts:
+    boost_mimic_wheels_friction(robot)
+    print(f"[Track] 휠/지면 마찰 튜닝 완료 (lateralFriction=2.5, plane=2.0)", flush=True)
 
 # Mimic 관계 설정
 if mimic_relationships:
@@ -824,10 +1786,10 @@ for i in range(num_joints):
 
         # 타입별 슬라이더 설정
         if is_continuous:
-            # 바퀴형 연속 회전 조인트 — 속도 제어 (deg/s)
-            slider_min = -360.0
-            slider_max = 360.0
-            slider_label = f"{joint_name} [deg/s]"
+            # 바퀴형 연속 회전 조인트 — 속도 제어 (RPS: rotations per second, socket 과 단위 통일)
+            slider_min = -5.0   # -5 RPS
+            slider_max = 5.0    # +5 RPS
+            slider_label = f"{joint_name} [RPS]"
             initial_value = 0
         elif joint_type == p.JOINT_REVOLUTE:
             # 일반 회전 조인트 처리
@@ -1013,6 +1975,12 @@ print("Press 'r' in console to run test(), 'c' to clear moves, 'q' to quit")
 
 try:
     while simulation_running:
+        # 자동 종료 (캡쳐 모드)
+        if _ojw_auto_exit_start is not None and (time.time() - _ojw_auto_exit_start) >= _ojw_auto_exit_sec:
+            print(f"[OJW] AUTO_EXIT reached ({_ojw_auto_exit_sec}s) — exiting", flush=True)
+            simulation_running = False
+            break
+
         # PyBullet 연결 상태 확인
         if p.getConnectionInfo()['isConnected'] == 0:
             break
@@ -1036,7 +2004,11 @@ try:
         
         # 소켓 명령 처리
         process_socket_commands(robot, movable_joints)
-        
+        # $scene placement live 적용 (MakeUrdf Scene 탭 Apply 버튼 → 즉시 spawn)
+        process_scene_commands()
+        # viewer 내 좌클릭 직접 배치 (active_scene_tool 설정된 경우)
+        process_viewer_click_placement()
+
         # 조인트 이동 업데이트 (소켓 명령으로 인한 부드러운 이동)
         update_joint_movements(robot)
         
@@ -1047,8 +2019,8 @@ try:
                 
                 # 조인트 타입에 따른 값 변환
                 if slider_data.get('is_continuous', False):
-                    # 바퀴: 슬라이더 값은 deg/s → rad/s 변환
-                    target_vel = math.radians(slider_value)
+                    # 바퀴: 슬라이더 값은 RPS (rotations per second) → rad/s 변환
+                    target_vel = slider_value * 2.0 * math.pi
                     target_pos = target_vel  # 비교용
                 elif slider_data['type'] == p.JOINT_REVOLUTE:
                     target_pos = math.radians(slider_value)
@@ -1068,7 +2040,7 @@ try:
                                 joint_id,
                                 p.VELOCITY_CONTROL,
                                 targetVelocity=target_vel,
-                                force=1000
+                                force=2000
                             )
                         else:
                             # 일반 조인트: 위치 제어
@@ -1114,10 +2086,32 @@ try:
         except:
             pass
         
+        # 트랙 벨트 flow 애니메이션 업데이트 (모터 각도 기반)
+        update_track_belts(track_belts, robot, joint_name_to_id)
+
         # 물리 시뮬레이션 한 스텝 실행
         p.stepSimulation()
         time.sleep(1./240.)  # 240 FPS로 제한
-        
+
+        # === 카메라 sensor 렌더 (update_rate 제한 적용) ===
+        if _cv2_ok and camera_list:
+            _now = time.time()
+            for _i, _cam in enumerate(camera_list):
+                _interval = 1.0 / max(1, _cam["rate"])
+                if _now - _camera_last_render[_i] < _interval:
+                    continue
+                _camera_last_render[_i] = _now
+                _img = _render_camera_view(robot, _cam, camera_link_ids[_i])
+                if _img is None:
+                    continue
+                # cv2 는 BGR — pybullet RGB 를 BGR 로 변환
+                _bgr = _img[:, :, ::-1]
+                _cv2.imshow(_cam["name"] or f"Camera_{_i}", _bgr)
+            # waitKey 1ms — 윈도우가 반응성 있게. ESC 누르면 카메라 뷰만 닫기
+            _k = _cv2.waitKey(1) & 0xFF
+            if _k == 27:  # ESC
+                _cv2.destroyAllWindows()
+
         # 키보드 이벤트 체크 (q 키로 종료)
         keys = p.getKeyboardEvents()
         if ord('q') in keys and keys[ord('q')] & p.KEY_WAS_TRIGGERED:
@@ -1132,5 +2126,10 @@ except Exception as e:
 # 시뮬레이션 종료 처리
 simulation_running = False
 print("\nShutting down...")
+try:
+    if _cv2_ok:
+        _cv2.destroyAllWindows()
+except Exception:
+    pass
 p.disconnect()
 print("Program terminated.")
