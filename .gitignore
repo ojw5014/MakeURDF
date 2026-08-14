@@ -1,0 +1,18 @@
+# 빌드 중간물
+obj/
+bin/Debug/
+
+# 디버그 심볼
+*.pdb
+
+# 실행 중 생성물 (URDF/MJCF export 출력·캡처·런타임 상태 — 실행할 때마다 재생성됨)
+bin/Release/captures/
+bin/Release/urdf/
+bin/Release/robot_stl.*
+bin/Release/robot_commands.txt
+bin/Release/formula_view.html
+bin/Release/param.dat
+bin/Release/assembled_model.stl
+bin/Release/stl/_highlight.stl
+bin/Release/stl/_face_highlight.stl
+bin/Release/_EdhToUrdf_headless.exe
