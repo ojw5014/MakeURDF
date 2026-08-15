@@ -69,19 +69,19 @@
     <Reference Include="System.Xml" />
     <Reference Include="Tao.FreeGlut, Version=2.4.0.2, Culture=neutral, PublicKeyToken=6e602a6ad6c0d06d, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Released_DLL\Tao.FreeGlut.dll</HintPath>
+      <HintPath>lib\Tao.FreeGlut.dll</HintPath>
     </Reference>
     <Reference Include="Tao.Ode, Version=0.9.0.0, Culture=neutral, PublicKeyToken=e499629dc69cd531, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Released_DLL\Tao.Ode.dll</HintPath>
+      <HintPath>lib\Tao.Ode.dll</HintPath>
     </Reference>
     <Reference Include="Tao.OpenGl, Version=2.1.0.12, Culture=neutral, PublicKeyToken=1ca010269a4501ef, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Released_DLL\Tao.OpenGl.dll</HintPath>
+      <HintPath>lib\Tao.OpenGl.dll</HintPath>
     </Reference>
     <Reference Include="Tao.Platform.Windows, Version=1.0.0.5, Culture=neutral, PublicKeyToken=701104b2da67a104, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Released_DLL\Tao.Platform.Windows.dll</HintPath>
+      <HintPath>lib\Tao.Platform.Windows.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -143,12 +143,26 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\OpenJigWare\OpenJigWare.csproj">
-      <Project>{E0E62640-C66D-46A3-A57C-80A42A1C3E39}</Project>
-      <Name>OpenJigWare</Name>
-    </ProjectReference>
-  </ItemGroup>
+  <!-- OpenJigWare 참조 이원화:
+       trunk 안(개발 환경, ..\OpenJigWare 프로젝트 존재)에서는 프로젝트 참조 — 항상 최신 DLL 로 빌드.
+       GitHub 클론처럼 원본 프로젝트가 없으면 동봉된 lib\OpenJigWare.dll 참조 — 단독 빌드 가능. -->
+  <Choose>
+    <When Condition="Exists('..\OpenJigWare\OpenJigWare.csproj')">
+      <ItemGroup>
+        <ProjectReference Include="..\OpenJigWare\OpenJigWare.csproj">
+          <Project>{E0E62640-C66D-46A3-A57C-80A42A1C3E39}</Project>
+          <Name>OpenJigWare</Name>
+        </ProjectReference>
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <Reference Include="OpenJigWare">
+          <HintPath>lib\OpenJigWare.dll</HintPath>
+        </Reference>
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
       <Visible>False</Visible>
@@ -172,7 +186,14 @@
     </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- 개발 환경 Release 빌드 시 동봉 lib\OpenJigWare.dll 을 방금 빌드된 DLL 로 자동 동기화.
+       (클론 환경에는 ..\OpenJigWare 가 없어 그대로 건너뜀 — lib 의 커밋본으로 빌드)
+       이 동기화 덕에 신규 DLL API 를 쓰는 소스가 커밋돼도 lib 이 뒤처져 클론 빌드가
+       깨지는 사고를 막는다. -->
+  <PropertyGroup>
+    <PreBuildEvent>if exist "$(ProjectDir)..\OpenJigWare\bin\Release\OpenJigWare.dll" copy /Y "$(ProjectDir)..\OpenJigWare\bin\Release\OpenJigWare.dll" "$(ProjectDir)lib\OpenJigWare.dll"</PreBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
