@@ -39,6 +39,30 @@
             this.btnRedRotate = new System.Windows.Forms.Button();
             this.btnBlueRotate = new System.Windows.Forms.Button();
             this.btnGreenRotate = new System.Windows.Forms.Button();
+            this.btnRedMoveM10 = new System.Windows.Forms.Button();
+            this.btnRedMoveP10 = new System.Windows.Forms.Button();
+            this.btnRedMoveMTxt = new System.Windows.Forms.Button();
+            this.btnRedMovePTxt = new System.Windows.Forms.Button();
+            this.btnBlueMoveM10 = new System.Windows.Forms.Button();
+            this.btnBlueMoveP10 = new System.Windows.Forms.Button();
+            this.btnBlueMoveMTxt = new System.Windows.Forms.Button();
+            this.btnBlueMovePTxt = new System.Windows.Forms.Button();
+            this.btnGreenMoveM10 = new System.Windows.Forms.Button();
+            this.btnGreenMoveP10 = new System.Windows.Forms.Button();
+            this.btnGreenMoveMTxt = new System.Windows.Forms.Button();
+            this.btnGreenMovePTxt = new System.Windows.Forms.Button();
+            this.btnRedRotateM90 = new System.Windows.Forms.Button();
+            this.btnRedRotateP90 = new System.Windows.Forms.Button();
+            this.btnRedRotateMTxt = new System.Windows.Forms.Button();
+            this.btnRedRotatePTxt = new System.Windows.Forms.Button();
+            this.btnBlueRotateM90 = new System.Windows.Forms.Button();
+            this.btnBlueRotateP90 = new System.Windows.Forms.Button();
+            this.btnBlueRotateMTxt = new System.Windows.Forms.Button();
+            this.btnBlueRotatePTxt = new System.Windows.Forms.Button();
+            this.btnGreenRotateM90 = new System.Windows.Forms.Button();
+            this.btnGreenRotateP90 = new System.Windows.Forms.Button();
+            this.btnGreenRotateMTxt = new System.Windows.Forms.Button();
+            this.btnGreenRotatePTxt = new System.Windows.Forms.Button();
             this.lblEtcGroup = new System.Windows.Forms.Label();
             this.btnMotor = new System.Windows.Forms.Button();
             this.cmbMotorId = new System.Windows.Forms.ComboBox();
@@ -253,7 +277,7 @@
             this.tabRight.Margin = new System.Windows.Forms.Padding(4);
             this.tabRight.Name = "tabRight";
             this.tabRight.SelectedIndex = 0;
-            this.tabRight.Size = new System.Drawing.Size(473, 600);
+            this.tabRight.Size = new System.Drawing.Size(565, 600);
             this.tabRight.TabIndex = 1;
             this.tabRight.SelectedIndexChanged += new System.EventHandler(this.tabRight_SelectedIndexChanged);
             // 
@@ -275,7 +299,30 @@
             this.tabCreate.Controls.Add(this.btnRedRotate);
             this.tabCreate.Controls.Add(this.btnBlueRotate);
             this.tabCreate.Controls.Add(this.btnGreenRotate);
-            this.tabCreate.Controls.Add(this.lblEtcGroup);
+            this.tabCreate.Controls.Add(this.btnRedMoveM10);
+            this.tabCreate.Controls.Add(this.btnRedMoveP10);
+            this.tabCreate.Controls.Add(this.btnRedMoveMTxt);
+            this.tabCreate.Controls.Add(this.btnRedMovePTxt);
+            this.tabCreate.Controls.Add(this.btnBlueMoveM10);
+            this.tabCreate.Controls.Add(this.btnBlueMoveP10);
+            this.tabCreate.Controls.Add(this.btnBlueMoveMTxt);
+            this.tabCreate.Controls.Add(this.btnBlueMovePTxt);
+            this.tabCreate.Controls.Add(this.btnGreenMoveM10);
+            this.tabCreate.Controls.Add(this.btnGreenMoveP10);
+            this.tabCreate.Controls.Add(this.btnGreenMoveMTxt);
+            this.tabCreate.Controls.Add(this.btnGreenMovePTxt);
+            this.tabCreate.Controls.Add(this.btnRedRotateM90);
+            this.tabCreate.Controls.Add(this.btnRedRotateP90);
+            this.tabCreate.Controls.Add(this.btnRedRotateMTxt);
+            this.tabCreate.Controls.Add(this.btnRedRotatePTxt);
+            this.tabCreate.Controls.Add(this.btnBlueRotateM90);
+            this.tabCreate.Controls.Add(this.btnBlueRotateP90);
+            this.tabCreate.Controls.Add(this.btnBlueRotateMTxt);
+            this.tabCreate.Controls.Add(this.btnBlueRotatePTxt);
+            this.tabCreate.Controls.Add(this.btnGreenRotateM90);
+            this.tabCreate.Controls.Add(this.btnGreenRotateP90);
+            this.tabCreate.Controls.Add(this.btnGreenRotateMTxt);
+            this.tabCreate.Controls.Add(this.btnGreenRotatePTxt);
             this.tabCreate.Controls.Add(this.btnMotor);
             this.tabCreate.Controls.Add(this.cmbMotorId);
             this.tabCreate.Controls.Add(this.btnInit);
@@ -290,10 +337,11 @@
             this.tabCreate.Controls.Add(this.btnUndo);
             this.tabCreate.Controls.Add(this.btnDelete);
             this.tabCreate.Controls.Add(this.btnClear);
+            this.tabCreate.Controls.Add(this.lblEtcGroup);
             this.tabCreate.Location = new System.Drawing.Point(4, 28);
             this.tabCreate.Margin = new System.Windows.Forms.Padding(4);
             this.tabCreate.Name = "tabCreate";
-            this.tabCreate.Size = new System.Drawing.Size(465, 568);
+            this.tabCreate.Size = new System.Drawing.Size(557, 568);
             this.tabCreate.TabIndex = 0;
             this.tabCreate.Text = "Build";
             // 
@@ -337,10 +385,10 @@
             // 
             // lblMoveInput
             // 
-            this.lblMoveInput.Location = new System.Drawing.Point(0, 44);
+            this.lblMoveInput.Location = new System.Drawing.Point(2, 34);
             this.lblMoveInput.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblMoveInput.Name = "lblMoveInput";
-            this.lblMoveInput.Size = new System.Drawing.Size(102, 46);
+            this.lblMoveInput.Size = new System.Drawing.Size(102, 36);
             this.lblMoveInput.TabIndex = 30;
             this.lblMoveInput.Text = "Move(mm)";
             this.lblMoveInput.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -348,11 +396,11 @@
             // 
             // txtMoveValue
             // 
-            this.txtMoveValue.Font = new System.Drawing.Font("맑은 고딕", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.txtMoveValue.Location = new System.Drawing.Point(105, 44);
+            this.txtMoveValue.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.txtMoveValue.Location = new System.Drawing.Point(107, 34);
             this.txtMoveValue.Margin = new System.Windows.Forms.Padding(4);
             this.txtMoveValue.Name = "txtMoveValue";
-            this.txtMoveValue.Size = new System.Drawing.Size(112, 45);
+            this.txtMoveValue.Size = new System.Drawing.Size(112, 39);
             this.txtMoveValue.TabIndex = 3;
             this.txtMoveValue.Text = "100";
             this.txtMoveValue.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
@@ -360,10 +408,10 @@
             // 
             // lblRotateInput
             // 
-            this.lblRotateInput.Location = new System.Drawing.Point(218, 44);
+            this.lblRotateInput.Location = new System.Drawing.Point(220, 34);
             this.lblRotateInput.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblRotateInput.Name = "lblRotateInput";
-            this.lblRotateInput.Size = new System.Drawing.Size(102, 46);
+            this.lblRotateInput.Size = new System.Drawing.Size(102, 36);
             this.lblRotateInput.TabIndex = 31;
             this.lblRotateInput.Text = "Rot(deg)";
             this.lblRotateInput.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -371,11 +419,11 @@
             // 
             // txtRotateValue
             // 
-            this.txtRotateValue.Font = new System.Drawing.Font("맑은 고딕", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.txtRotateValue.Location = new System.Drawing.Point(338, 44);
+            this.txtRotateValue.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.txtRotateValue.Location = new System.Drawing.Point(340, 34);
             this.txtRotateValue.Margin = new System.Windows.Forms.Padding(4);
             this.txtRotateValue.Name = "txtRotateValue";
-            this.txtRotateValue.Size = new System.Drawing.Size(112, 45);
+            this.txtRotateValue.Size = new System.Drawing.Size(112, 39);
             this.txtRotateValue.TabIndex = 4;
             this.txtRotateValue.Text = "90";
             this.txtRotateValue.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
@@ -414,12 +462,12 @@
             // 
             // lblMoveGroup
             // 
-            this.lblMoveGroup.Location = new System.Drawing.Point(0, 95);
+            this.lblMoveGroup.Location = new System.Drawing.Point(0, 85);
             this.lblMoveGroup.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblMoveGroup.Name = "lblMoveGroup";
             this.lblMoveGroup.Size = new System.Drawing.Size(450, 24);
             this.lblMoveGroup.TabIndex = 5;
-            this.lblMoveGroup.Text = "──── Move ────";
+            this.lblMoveGroup.Text = "──── Move(click하고 3d 화면에서 scrolling) ────";
             this.lblMoveGroup.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // btnRedMove
@@ -427,10 +475,10 @@
             this.btnRedMove.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(100)))), ((int)(((byte)(100)))));
             this.btnRedMove.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRedMove.ForeColor = System.Drawing.Color.White;
-            this.btnRedMove.Location = new System.Drawing.Point(0, 122);
+            this.btnRedMove.Location = new System.Drawing.Point(0, 112);
             this.btnRedMove.Margin = new System.Windows.Forms.Padding(4);
             this.btnRedMove.Name = "btnRedMove";
-            this.btnRedMove.Size = new System.Drawing.Size(138, 38);
+            this.btnRedMove.Size = new System.Drawing.Size(88, 58);
             this.btnRedMove.TabIndex = 6;
             this.btnRedMove.Text = "X Move";
             this.btnRedMove.UseVisualStyleBackColor = false;
@@ -441,10 +489,10 @@
             this.btnBlueMove.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(255)))));
             this.btnBlueMove.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnBlueMove.ForeColor = System.Drawing.Color.White;
-            this.btnBlueMove.Location = new System.Drawing.Point(156, 122);
+            this.btnBlueMove.Location = new System.Drawing.Point(184, 112);
             this.btnBlueMove.Margin = new System.Windows.Forms.Padding(4);
             this.btnBlueMove.Name = "btnBlueMove";
-            this.btnBlueMove.Size = new System.Drawing.Size(138, 38);
+            this.btnBlueMove.Size = new System.Drawing.Size(88, 58);
             this.btnBlueMove.TabIndex = 7;
             this.btnBlueMove.Text = "Z Move";
             this.btnBlueMove.UseVisualStyleBackColor = false;
@@ -455,10 +503,10 @@
             this.btnGreenMove.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(200)))), ((int)(((byte)(100)))));
             this.btnGreenMove.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnGreenMove.ForeColor = System.Drawing.Color.White;
-            this.btnGreenMove.Location = new System.Drawing.Point(312, 122);
+            this.btnGreenMove.Location = new System.Drawing.Point(368, 112);
             this.btnGreenMove.Margin = new System.Windows.Forms.Padding(4);
             this.btnGreenMove.Name = "btnGreenMove";
-            this.btnGreenMove.Size = new System.Drawing.Size(138, 38);
+            this.btnGreenMove.Size = new System.Drawing.Size(88, 58);
             this.btnGreenMove.TabIndex = 8;
             this.btnGreenMove.Text = "Y Move";
             this.btnGreenMove.UseVisualStyleBackColor = false;
@@ -466,12 +514,12 @@
             // 
             // lblRotateGroup
             // 
-            this.lblRotateGroup.Location = new System.Drawing.Point(0, 165);
+            this.lblRotateGroup.Location = new System.Drawing.Point(0, 175);
             this.lblRotateGroup.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblRotateGroup.Name = "lblRotateGroup";
-            this.lblRotateGroup.Size = new System.Drawing.Size(450, 24);
+            this.lblRotateGroup.Size = new System.Drawing.Size(452, 24);
             this.lblRotateGroup.TabIndex = 9;
-            this.lblRotateGroup.Text = "──── Rotate ────";
+            this.lblRotateGroup.Text = "──── Rotate(click하고 3d 화면에서 scrolling) ────";
             this.lblRotateGroup.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // btnRedRotate
@@ -479,10 +527,10 @@
             this.btnRedRotate.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(100)))), ((int)(((byte)(100)))));
             this.btnRedRotate.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRedRotate.ForeColor = System.Drawing.Color.White;
-            this.btnRedRotate.Location = new System.Drawing.Point(0, 191);
+            this.btnRedRotate.Location = new System.Drawing.Point(0, 201);
             this.btnRedRotate.Margin = new System.Windows.Forms.Padding(4);
             this.btnRedRotate.Name = "btnRedRotate";
-            this.btnRedRotate.Size = new System.Drawing.Size(138, 38);
+            this.btnRedRotate.Size = new System.Drawing.Size(88, 58);
             this.btnRedRotate.TabIndex = 10;
             this.btnRedRotate.Text = "X Rotate";
             this.btnRedRotate.UseVisualStyleBackColor = false;
@@ -493,10 +541,10 @@
             this.btnBlueRotate.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(255)))));
             this.btnBlueRotate.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnBlueRotate.ForeColor = System.Drawing.Color.White;
-            this.btnBlueRotate.Location = new System.Drawing.Point(156, 191);
+            this.btnBlueRotate.Location = new System.Drawing.Point(184, 201);
             this.btnBlueRotate.Margin = new System.Windows.Forms.Padding(4);
             this.btnBlueRotate.Name = "btnBlueRotate";
-            this.btnBlueRotate.Size = new System.Drawing.Size(138, 38);
+            this.btnBlueRotate.Size = new System.Drawing.Size(88, 58);
             this.btnBlueRotate.TabIndex = 11;
             this.btnBlueRotate.Text = "Z Rotate";
             this.btnBlueRotate.UseVisualStyleBackColor = false;
@@ -507,18 +555,426 @@
             this.btnGreenRotate.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(200)))), ((int)(((byte)(100)))));
             this.btnGreenRotate.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnGreenRotate.ForeColor = System.Drawing.Color.White;
-            this.btnGreenRotate.Location = new System.Drawing.Point(312, 191);
+            this.btnGreenRotate.Location = new System.Drawing.Point(368, 201);
             this.btnGreenRotate.Margin = new System.Windows.Forms.Padding(4);
             this.btnGreenRotate.Name = "btnGreenRotate";
-            this.btnGreenRotate.Size = new System.Drawing.Size(138, 38);
+            this.btnGreenRotate.Size = new System.Drawing.Size(88, 58);
             this.btnGreenRotate.TabIndex = 12;
             this.btnGreenRotate.Text = "Y Rotate";
             this.btnGreenRotate.UseVisualStyleBackColor = false;
             this.btnGreenRotate.Click += new System.EventHandler(this.btnGreenRotate_Click);
             // 
+            // btnRedMoveM10
+            // 
+            this.btnRedMoveM10.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(231)))), ((int)(((byte)(82)))), ((int)(((byte)(82)))));
+            this.btnRedMoveM10.FlatAppearance.BorderSize = 0;
+            this.btnRedMoveM10.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRedMoveM10.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnRedMoveM10.ForeColor = System.Drawing.Color.White;
+            this.btnRedMoveM10.Location = new System.Drawing.Point(88, 112);
+            this.btnRedMoveM10.Margin = new System.Windows.Forms.Padding(0);
+            this.btnRedMoveM10.Name = "btnRedMoveM10";
+            this.btnRedMoveM10.Size = new System.Drawing.Size(44, 28);
+            this.btnRedMoveM10.TabIndex = 201;
+            this.btnRedMoveM10.Tag = "RedMove,-1,10";
+            this.btnRedMoveM10.Text = "-10";
+            this.btnRedMoveM10.UseVisualStyleBackColor = false;
+            this.btnRedMoveM10.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnRedMoveP10
+            // 
+            this.btnRedMoveP10.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(231)))), ((int)(((byte)(82)))), ((int)(((byte)(82)))));
+            this.btnRedMoveP10.FlatAppearance.BorderSize = 0;
+            this.btnRedMoveP10.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRedMoveP10.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnRedMoveP10.ForeColor = System.Drawing.Color.White;
+            this.btnRedMoveP10.Location = new System.Drawing.Point(134, 112);
+            this.btnRedMoveP10.Margin = new System.Windows.Forms.Padding(0);
+            this.btnRedMoveP10.Name = "btnRedMoveP10";
+            this.btnRedMoveP10.Size = new System.Drawing.Size(44, 28);
+            this.btnRedMoveP10.TabIndex = 202;
+            this.btnRedMoveP10.Tag = "RedMove,1,10";
+            this.btnRedMoveP10.Text = "+10";
+            this.btnRedMoveP10.UseVisualStyleBackColor = false;
+            this.btnRedMoveP10.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnRedMoveMTxt
+            // 
+            this.btnRedMoveMTxt.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(133)))), ((int)(((byte)(133)))));
+            this.btnRedMoveMTxt.FlatAppearance.BorderSize = 0;
+            this.btnRedMoveMTxt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRedMoveMTxt.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnRedMoveMTxt.ForeColor = System.Drawing.Color.White;
+            this.btnRedMoveMTxt.Location = new System.Drawing.Point(88, 142);
+            this.btnRedMoveMTxt.Margin = new System.Windows.Forms.Padding(0);
+            this.btnRedMoveMTxt.Name = "btnRedMoveMTxt";
+            this.btnRedMoveMTxt.Size = new System.Drawing.Size(44, 28);
+            this.btnRedMoveMTxt.TabIndex = 203;
+            this.btnRedMoveMTxt.Tag = "RedMove,-1,0";
+            this.btnRedMoveMTxt.Text = "-";
+            this.btnRedMoveMTxt.UseVisualStyleBackColor = false;
+            this.btnRedMoveMTxt.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnRedMovePTxt
+            // 
+            this.btnRedMovePTxt.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(133)))), ((int)(((byte)(133)))));
+            this.btnRedMovePTxt.FlatAppearance.BorderSize = 0;
+            this.btnRedMovePTxt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRedMovePTxt.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnRedMovePTxt.ForeColor = System.Drawing.Color.White;
+            this.btnRedMovePTxt.Location = new System.Drawing.Point(134, 142);
+            this.btnRedMovePTxt.Margin = new System.Windows.Forms.Padding(0);
+            this.btnRedMovePTxt.Name = "btnRedMovePTxt";
+            this.btnRedMovePTxt.Size = new System.Drawing.Size(44, 28);
+            this.btnRedMovePTxt.TabIndex = 204;
+            this.btnRedMovePTxt.Tag = "RedMove,1,0";
+            this.btnRedMovePTxt.Text = "+";
+            this.btnRedMovePTxt.UseVisualStyleBackColor = false;
+            this.btnRedMovePTxt.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnBlueMoveM10
+            // 
+            this.btnBlueMoveM10.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(82)))), ((int)(((byte)(82)))), ((int)(((byte)(231)))));
+            this.btnBlueMoveM10.FlatAppearance.BorderSize = 0;
+            this.btnBlueMoveM10.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBlueMoveM10.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnBlueMoveM10.ForeColor = System.Drawing.Color.White;
+            this.btnBlueMoveM10.Location = new System.Drawing.Point(272, 112);
+            this.btnBlueMoveM10.Margin = new System.Windows.Forms.Padding(0);
+            this.btnBlueMoveM10.Name = "btnBlueMoveM10";
+            this.btnBlueMoveM10.Size = new System.Drawing.Size(44, 28);
+            this.btnBlueMoveM10.TabIndex = 205;
+            this.btnBlueMoveM10.Tag = "BlueMove,-1,10";
+            this.btnBlueMoveM10.Text = "-10";
+            this.btnBlueMoveM10.UseVisualStyleBackColor = false;
+            this.btnBlueMoveM10.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnBlueMoveP10
+            // 
+            this.btnBlueMoveP10.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(82)))), ((int)(((byte)(82)))), ((int)(((byte)(231)))));
+            this.btnBlueMoveP10.FlatAppearance.BorderSize = 0;
+            this.btnBlueMoveP10.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBlueMoveP10.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnBlueMoveP10.ForeColor = System.Drawing.Color.White;
+            this.btnBlueMoveP10.Location = new System.Drawing.Point(318, 112);
+            this.btnBlueMoveP10.Margin = new System.Windows.Forms.Padding(0);
+            this.btnBlueMoveP10.Name = "btnBlueMoveP10";
+            this.btnBlueMoveP10.Size = new System.Drawing.Size(44, 28);
+            this.btnBlueMoveP10.TabIndex = 206;
+            this.btnBlueMoveP10.Tag = "BlueMove,1,10";
+            this.btnBlueMoveP10.Text = "+10";
+            this.btnBlueMoveP10.UseVisualStyleBackColor = false;
+            this.btnBlueMoveP10.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnBlueMoveMTxt
+            // 
+            this.btnBlueMoveMTxt.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(133)))), ((int)(((byte)(133)))), ((int)(((byte)(255)))));
+            this.btnBlueMoveMTxt.FlatAppearance.BorderSize = 0;
+            this.btnBlueMoveMTxt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBlueMoveMTxt.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnBlueMoveMTxt.ForeColor = System.Drawing.Color.White;
+            this.btnBlueMoveMTxt.Location = new System.Drawing.Point(272, 142);
+            this.btnBlueMoveMTxt.Margin = new System.Windows.Forms.Padding(0);
+            this.btnBlueMoveMTxt.Name = "btnBlueMoveMTxt";
+            this.btnBlueMoveMTxt.Size = new System.Drawing.Size(44, 28);
+            this.btnBlueMoveMTxt.TabIndex = 207;
+            this.btnBlueMoveMTxt.Tag = "BlueMove,-1,0";
+            this.btnBlueMoveMTxt.Text = "-";
+            this.btnBlueMoveMTxt.UseVisualStyleBackColor = false;
+            this.btnBlueMoveMTxt.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnBlueMovePTxt
+            // 
+            this.btnBlueMovePTxt.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(133)))), ((int)(((byte)(133)))), ((int)(((byte)(255)))));
+            this.btnBlueMovePTxt.FlatAppearance.BorderSize = 0;
+            this.btnBlueMovePTxt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBlueMovePTxt.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnBlueMovePTxt.ForeColor = System.Drawing.Color.White;
+            this.btnBlueMovePTxt.Location = new System.Drawing.Point(318, 142);
+            this.btnBlueMovePTxt.Margin = new System.Windows.Forms.Padding(0);
+            this.btnBlueMovePTxt.Name = "btnBlueMovePTxt";
+            this.btnBlueMovePTxt.Size = new System.Drawing.Size(44, 28);
+            this.btnBlueMovePTxt.TabIndex = 208;
+            this.btnBlueMovePTxt.Tag = "BlueMove,1,0";
+            this.btnBlueMovePTxt.Text = "+";
+            this.btnBlueMovePTxt.UseVisualStyleBackColor = false;
+            this.btnBlueMovePTxt.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnGreenMoveM10
+            // 
+            this.btnGreenMoveM10.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(82)))), ((int)(((byte)(176)))), ((int)(((byte)(82)))));
+            this.btnGreenMoveM10.FlatAppearance.BorderSize = 0;
+            this.btnGreenMoveM10.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnGreenMoveM10.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnGreenMoveM10.ForeColor = System.Drawing.Color.White;
+            this.btnGreenMoveM10.Location = new System.Drawing.Point(456, 112);
+            this.btnGreenMoveM10.Margin = new System.Windows.Forms.Padding(0);
+            this.btnGreenMoveM10.Name = "btnGreenMoveM10";
+            this.btnGreenMoveM10.Size = new System.Drawing.Size(44, 28);
+            this.btnGreenMoveM10.TabIndex = 209;
+            this.btnGreenMoveM10.Tag = "GreenMove,-1,10";
+            this.btnGreenMoveM10.Text = "-10";
+            this.btnGreenMoveM10.UseVisualStyleBackColor = false;
+            this.btnGreenMoveM10.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnGreenMoveP10
+            // 
+            this.btnGreenMoveP10.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(82)))), ((int)(((byte)(176)))), ((int)(((byte)(82)))));
+            this.btnGreenMoveP10.FlatAppearance.BorderSize = 0;
+            this.btnGreenMoveP10.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnGreenMoveP10.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnGreenMoveP10.ForeColor = System.Drawing.Color.White;
+            this.btnGreenMoveP10.Location = new System.Drawing.Point(502, 112);
+            this.btnGreenMoveP10.Margin = new System.Windows.Forms.Padding(0);
+            this.btnGreenMoveP10.Name = "btnGreenMoveP10";
+            this.btnGreenMoveP10.Size = new System.Drawing.Size(44, 28);
+            this.btnGreenMoveP10.TabIndex = 210;
+            this.btnGreenMoveP10.Tag = "GreenMove,1,10";
+            this.btnGreenMoveP10.Text = "+10";
+            this.btnGreenMoveP10.UseVisualStyleBackColor = false;
+            this.btnGreenMoveP10.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnGreenMoveMTxt
+            // 
+            this.btnGreenMoveMTxt.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(133)))), ((int)(((byte)(216)))), ((int)(((byte)(133)))));
+            this.btnGreenMoveMTxt.FlatAppearance.BorderSize = 0;
+            this.btnGreenMoveMTxt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnGreenMoveMTxt.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnGreenMoveMTxt.ForeColor = System.Drawing.Color.White;
+            this.btnGreenMoveMTxt.Location = new System.Drawing.Point(456, 142);
+            this.btnGreenMoveMTxt.Margin = new System.Windows.Forms.Padding(0);
+            this.btnGreenMoveMTxt.Name = "btnGreenMoveMTxt";
+            this.btnGreenMoveMTxt.Size = new System.Drawing.Size(44, 28);
+            this.btnGreenMoveMTxt.TabIndex = 211;
+            this.btnGreenMoveMTxt.Tag = "GreenMove,-1,0";
+            this.btnGreenMoveMTxt.Text = "-";
+            this.btnGreenMoveMTxt.UseVisualStyleBackColor = false;
+            this.btnGreenMoveMTxt.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnGreenMovePTxt
+            // 
+            this.btnGreenMovePTxt.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(133)))), ((int)(((byte)(216)))), ((int)(((byte)(133)))));
+            this.btnGreenMovePTxt.FlatAppearance.BorderSize = 0;
+            this.btnGreenMovePTxt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnGreenMovePTxt.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnGreenMovePTxt.ForeColor = System.Drawing.Color.White;
+            this.btnGreenMovePTxt.Location = new System.Drawing.Point(502, 142);
+            this.btnGreenMovePTxt.Margin = new System.Windows.Forms.Padding(0);
+            this.btnGreenMovePTxt.Name = "btnGreenMovePTxt";
+            this.btnGreenMovePTxt.Size = new System.Drawing.Size(44, 28);
+            this.btnGreenMovePTxt.TabIndex = 212;
+            this.btnGreenMovePTxt.Tag = "GreenMove,1,0";
+            this.btnGreenMovePTxt.Text = "+";
+            this.btnGreenMovePTxt.UseVisualStyleBackColor = false;
+            this.btnGreenMovePTxt.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnRedRotateM90
+            // 
+            this.btnRedRotateM90.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(231)))), ((int)(((byte)(82)))), ((int)(((byte)(82)))));
+            this.btnRedRotateM90.FlatAppearance.BorderSize = 0;
+            this.btnRedRotateM90.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRedRotateM90.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnRedRotateM90.ForeColor = System.Drawing.Color.White;
+            this.btnRedRotateM90.Location = new System.Drawing.Point(88, 201);
+            this.btnRedRotateM90.Margin = new System.Windows.Forms.Padding(0);
+            this.btnRedRotateM90.Name = "btnRedRotateM90";
+            this.btnRedRotateM90.Size = new System.Drawing.Size(44, 28);
+            this.btnRedRotateM90.TabIndex = 213;
+            this.btnRedRotateM90.Tag = "RedRotate,-1,90";
+            this.btnRedRotateM90.Text = "-90";
+            this.btnRedRotateM90.UseVisualStyleBackColor = false;
+            this.btnRedRotateM90.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnRedRotateP90
+            // 
+            this.btnRedRotateP90.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(231)))), ((int)(((byte)(82)))), ((int)(((byte)(82)))));
+            this.btnRedRotateP90.FlatAppearance.BorderSize = 0;
+            this.btnRedRotateP90.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRedRotateP90.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnRedRotateP90.ForeColor = System.Drawing.Color.White;
+            this.btnRedRotateP90.Location = new System.Drawing.Point(134, 201);
+            this.btnRedRotateP90.Margin = new System.Windows.Forms.Padding(0);
+            this.btnRedRotateP90.Name = "btnRedRotateP90";
+            this.btnRedRotateP90.Size = new System.Drawing.Size(44, 28);
+            this.btnRedRotateP90.TabIndex = 214;
+            this.btnRedRotateP90.Tag = "RedRotate,1,90";
+            this.btnRedRotateP90.Text = "+90";
+            this.btnRedRotateP90.UseVisualStyleBackColor = false;
+            this.btnRedRotateP90.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnRedRotateMTxt
+            // 
+            this.btnRedRotateMTxt.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(133)))), ((int)(((byte)(133)))));
+            this.btnRedRotateMTxt.FlatAppearance.BorderSize = 0;
+            this.btnRedRotateMTxt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRedRotateMTxt.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnRedRotateMTxt.ForeColor = System.Drawing.Color.White;
+            this.btnRedRotateMTxt.Location = new System.Drawing.Point(88, 231);
+            this.btnRedRotateMTxt.Margin = new System.Windows.Forms.Padding(0);
+            this.btnRedRotateMTxt.Name = "btnRedRotateMTxt";
+            this.btnRedRotateMTxt.Size = new System.Drawing.Size(44, 28);
+            this.btnRedRotateMTxt.TabIndex = 215;
+            this.btnRedRotateMTxt.Tag = "RedRotate,-1,0";
+            this.btnRedRotateMTxt.Text = "-";
+            this.btnRedRotateMTxt.UseVisualStyleBackColor = false;
+            this.btnRedRotateMTxt.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnRedRotatePTxt
+            // 
+            this.btnRedRotatePTxt.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(133)))), ((int)(((byte)(133)))));
+            this.btnRedRotatePTxt.FlatAppearance.BorderSize = 0;
+            this.btnRedRotatePTxt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRedRotatePTxt.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnRedRotatePTxt.ForeColor = System.Drawing.Color.White;
+            this.btnRedRotatePTxt.Location = new System.Drawing.Point(134, 231);
+            this.btnRedRotatePTxt.Margin = new System.Windows.Forms.Padding(0);
+            this.btnRedRotatePTxt.Name = "btnRedRotatePTxt";
+            this.btnRedRotatePTxt.Size = new System.Drawing.Size(44, 28);
+            this.btnRedRotatePTxt.TabIndex = 216;
+            this.btnRedRotatePTxt.Tag = "RedRotate,1,0";
+            this.btnRedRotatePTxt.Text = "+";
+            this.btnRedRotatePTxt.UseVisualStyleBackColor = false;
+            this.btnRedRotatePTxt.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnBlueRotateM90
+            // 
+            this.btnBlueRotateM90.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(82)))), ((int)(((byte)(82)))), ((int)(((byte)(231)))));
+            this.btnBlueRotateM90.FlatAppearance.BorderSize = 0;
+            this.btnBlueRotateM90.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBlueRotateM90.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnBlueRotateM90.ForeColor = System.Drawing.Color.White;
+            this.btnBlueRotateM90.Location = new System.Drawing.Point(272, 201);
+            this.btnBlueRotateM90.Margin = new System.Windows.Forms.Padding(0);
+            this.btnBlueRotateM90.Name = "btnBlueRotateM90";
+            this.btnBlueRotateM90.Size = new System.Drawing.Size(44, 28);
+            this.btnBlueRotateM90.TabIndex = 217;
+            this.btnBlueRotateM90.Tag = "BlueRotate,-1,90";
+            this.btnBlueRotateM90.Text = "-90";
+            this.btnBlueRotateM90.UseVisualStyleBackColor = false;
+            this.btnBlueRotateM90.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnBlueRotateP90
+            // 
+            this.btnBlueRotateP90.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(82)))), ((int)(((byte)(82)))), ((int)(((byte)(231)))));
+            this.btnBlueRotateP90.FlatAppearance.BorderSize = 0;
+            this.btnBlueRotateP90.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBlueRotateP90.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnBlueRotateP90.ForeColor = System.Drawing.Color.White;
+            this.btnBlueRotateP90.Location = new System.Drawing.Point(318, 201);
+            this.btnBlueRotateP90.Margin = new System.Windows.Forms.Padding(0);
+            this.btnBlueRotateP90.Name = "btnBlueRotateP90";
+            this.btnBlueRotateP90.Size = new System.Drawing.Size(44, 28);
+            this.btnBlueRotateP90.TabIndex = 218;
+            this.btnBlueRotateP90.Tag = "BlueRotate,1,90";
+            this.btnBlueRotateP90.Text = "+90";
+            this.btnBlueRotateP90.UseVisualStyleBackColor = false;
+            this.btnBlueRotateP90.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnBlueRotateMTxt
+            // 
+            this.btnBlueRotateMTxt.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(133)))), ((int)(((byte)(133)))), ((int)(((byte)(255)))));
+            this.btnBlueRotateMTxt.FlatAppearance.BorderSize = 0;
+            this.btnBlueRotateMTxt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBlueRotateMTxt.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnBlueRotateMTxt.ForeColor = System.Drawing.Color.White;
+            this.btnBlueRotateMTxt.Location = new System.Drawing.Point(272, 231);
+            this.btnBlueRotateMTxt.Margin = new System.Windows.Forms.Padding(0);
+            this.btnBlueRotateMTxt.Name = "btnBlueRotateMTxt";
+            this.btnBlueRotateMTxt.Size = new System.Drawing.Size(44, 28);
+            this.btnBlueRotateMTxt.TabIndex = 219;
+            this.btnBlueRotateMTxt.Tag = "BlueRotate,-1,0";
+            this.btnBlueRotateMTxt.Text = "-";
+            this.btnBlueRotateMTxt.UseVisualStyleBackColor = false;
+            this.btnBlueRotateMTxt.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnBlueRotatePTxt
+            // 
+            this.btnBlueRotatePTxt.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(133)))), ((int)(((byte)(133)))), ((int)(((byte)(255)))));
+            this.btnBlueRotatePTxt.FlatAppearance.BorderSize = 0;
+            this.btnBlueRotatePTxt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBlueRotatePTxt.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnBlueRotatePTxt.ForeColor = System.Drawing.Color.White;
+            this.btnBlueRotatePTxt.Location = new System.Drawing.Point(318, 231);
+            this.btnBlueRotatePTxt.Margin = new System.Windows.Forms.Padding(0);
+            this.btnBlueRotatePTxt.Name = "btnBlueRotatePTxt";
+            this.btnBlueRotatePTxt.Size = new System.Drawing.Size(44, 28);
+            this.btnBlueRotatePTxt.TabIndex = 220;
+            this.btnBlueRotatePTxt.Tag = "BlueRotate,1,0";
+            this.btnBlueRotatePTxt.Text = "+";
+            this.btnBlueRotatePTxt.UseVisualStyleBackColor = false;
+            this.btnBlueRotatePTxt.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnGreenRotateM90
+            // 
+            this.btnGreenRotateM90.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(82)))), ((int)(((byte)(176)))), ((int)(((byte)(82)))));
+            this.btnGreenRotateM90.FlatAppearance.BorderSize = 0;
+            this.btnGreenRotateM90.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnGreenRotateM90.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnGreenRotateM90.ForeColor = System.Drawing.Color.White;
+            this.btnGreenRotateM90.Location = new System.Drawing.Point(456, 201);
+            this.btnGreenRotateM90.Margin = new System.Windows.Forms.Padding(0);
+            this.btnGreenRotateM90.Name = "btnGreenRotateM90";
+            this.btnGreenRotateM90.Size = new System.Drawing.Size(44, 28);
+            this.btnGreenRotateM90.TabIndex = 221;
+            this.btnGreenRotateM90.Tag = "GreenRotate,-1,90";
+            this.btnGreenRotateM90.Text = "-90";
+            this.btnGreenRotateM90.UseVisualStyleBackColor = false;
+            this.btnGreenRotateM90.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnGreenRotateP90
+            // 
+            this.btnGreenRotateP90.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(82)))), ((int)(((byte)(176)))), ((int)(((byte)(82)))));
+            this.btnGreenRotateP90.FlatAppearance.BorderSize = 0;
+            this.btnGreenRotateP90.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnGreenRotateP90.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnGreenRotateP90.ForeColor = System.Drawing.Color.White;
+            this.btnGreenRotateP90.Location = new System.Drawing.Point(502, 201);
+            this.btnGreenRotateP90.Margin = new System.Windows.Forms.Padding(0);
+            this.btnGreenRotateP90.Name = "btnGreenRotateP90";
+            this.btnGreenRotateP90.Size = new System.Drawing.Size(44, 28);
+            this.btnGreenRotateP90.TabIndex = 222;
+            this.btnGreenRotateP90.Tag = "GreenRotate,1,90";
+            this.btnGreenRotateP90.Text = "+90";
+            this.btnGreenRotateP90.UseVisualStyleBackColor = false;
+            this.btnGreenRotateP90.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnGreenRotateMTxt
+            // 
+            this.btnGreenRotateMTxt.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(133)))), ((int)(((byte)(216)))), ((int)(((byte)(133)))));
+            this.btnGreenRotateMTxt.FlatAppearance.BorderSize = 0;
+            this.btnGreenRotateMTxt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnGreenRotateMTxt.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnGreenRotateMTxt.ForeColor = System.Drawing.Color.White;
+            this.btnGreenRotateMTxt.Location = new System.Drawing.Point(456, 231);
+            this.btnGreenRotateMTxt.Margin = new System.Windows.Forms.Padding(0);
+            this.btnGreenRotateMTxt.Name = "btnGreenRotateMTxt";
+            this.btnGreenRotateMTxt.Size = new System.Drawing.Size(44, 28);
+            this.btnGreenRotateMTxt.TabIndex = 223;
+            this.btnGreenRotateMTxt.Tag = "GreenRotate,-1,0";
+            this.btnGreenRotateMTxt.Text = "-";
+            this.btnGreenRotateMTxt.UseVisualStyleBackColor = false;
+            this.btnGreenRotateMTxt.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
+            // btnGreenRotatePTxt
+            // 
+            this.btnGreenRotatePTxt.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(133)))), ((int)(((byte)(216)))), ((int)(((byte)(133)))));
+            this.btnGreenRotatePTxt.FlatAppearance.BorderSize = 0;
+            this.btnGreenRotatePTxt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnGreenRotatePTxt.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.btnGreenRotatePTxt.ForeColor = System.Drawing.Color.White;
+            this.btnGreenRotatePTxt.Location = new System.Drawing.Point(502, 231);
+            this.btnGreenRotatePTxt.Margin = new System.Windows.Forms.Padding(0);
+            this.btnGreenRotatePTxt.Name = "btnGreenRotatePTxt";
+            this.btnGreenRotatePTxt.Size = new System.Drawing.Size(44, 28);
+            this.btnGreenRotatePTxt.TabIndex = 224;
+            this.btnGreenRotatePTxt.Tag = "GreenRotate,1,0";
+            this.btnGreenRotatePTxt.Text = "+";
+            this.btnGreenRotatePTxt.UseVisualStyleBackColor = false;
+            this.btnGreenRotatePTxt.Click += new System.EventHandler(this.btnAxisDelta_Click);
+            // 
             // lblEtcGroup
             // 
-            this.lblEtcGroup.Location = new System.Drawing.Point(0, 230);
+            this.lblEtcGroup.Location = new System.Drawing.Point(0, 269);
             this.lblEtcGroup.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblEtcGroup.Name = "lblEtcGroup";
             this.lblEtcGroup.Size = new System.Drawing.Size(450, 24);
@@ -530,10 +986,10 @@
             // 
             this.btnMotor.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(200)))), ((int)(((byte)(80)))));
             this.btnMotor.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnMotor.Location = new System.Drawing.Point(71, 257);
+            this.btnMotor.Location = new System.Drawing.Point(71, 289);
             this.btnMotor.Margin = new System.Windows.Forms.Padding(4);
             this.btnMotor.Name = "btnMotor";
-            this.btnMotor.Size = new System.Drawing.Size(66, 38);
+            this.btnMotor.Size = new System.Drawing.Size(66, 30);
             this.btnMotor.TabIndex = 14;
             this.btnMotor.Text = "Joint";
             this.btnMotor.UseVisualStyleBackColor = false;
@@ -542,7 +998,7 @@
             // cmbMotorId
             // 
             this.cmbMotorId.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbMotorId.Location = new System.Drawing.Point(0, 263);
+            this.cmbMotorId.Location = new System.Drawing.Point(0, 291);
             this.cmbMotorId.Margin = new System.Windows.Forms.Padding(4);
             this.cmbMotorId.Name = "cmbMotorId";
             this.cmbMotorId.Size = new System.Drawing.Size(63, 26);
@@ -552,12 +1008,12 @@
             // 
             this.btnInit.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(200)))), ((int)(((byte)(200)))));
             this.btnInit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnInit.Location = new System.Drawing.Point(152, 257);
+            this.btnInit.Location = new System.Drawing.Point(305, 289);
             this.btnInit.Margin = new System.Windows.Forms.Padding(4);
             this.btnInit.Name = "btnInit";
-            this.btnInit.Size = new System.Drawing.Size(145, 38);
+            this.btnInit.Size = new System.Drawing.Size(145, 30);
             this.btnInit.TabIndex = 15;
-            this.btnInit.Text = "New Chain";
+            this.btnInit.Text = "New Chain(Init)";
             this.btnInit.UseVisualStyleBackColor = false;
             this.btnInit.Click += new System.EventHandler(this.btnInit_Click);
             // 
@@ -566,10 +1022,10 @@
             this.btnStl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(120)))), ((int)(((byte)(200)))));
             this.btnStl.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnStl.ForeColor = System.Drawing.Color.White;
-            this.btnStl.Location = new System.Drawing.Point(312, 257);
+            this.btnStl.Location = new System.Drawing.Point(0, 320);
             this.btnStl.Margin = new System.Windows.Forms.Padding(4);
             this.btnStl.Name = "btnStl";
-            this.btnStl.Size = new System.Drawing.Size(138, 38);
+            this.btnStl.Size = new System.Drawing.Size(450, 30);
             this.btnStl.TabIndex = 32;
             this.btnStl.Text = "Add STL";
             this.btnStl.UseVisualStyleBackColor = false;
@@ -580,10 +1036,10 @@
             this.btnStlCenter.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(120)))), ((int)(((byte)(100)))), ((int)(((byte)(180)))));
             this.btnStlCenter.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnStlCenter.ForeColor = System.Drawing.Color.White;
-            this.btnStlCenter.Location = new System.Drawing.Point(0, 298);
+            this.btnStlCenter.Location = new System.Drawing.Point(0, 349);
             this.btnStlCenter.Margin = new System.Windows.Forms.Padding(4);
             this.btnStlCenter.Name = "btnStlCenter";
-            this.btnStlCenter.Size = new System.Drawing.Size(210, 38);
+            this.btnStlCenter.Size = new System.Drawing.Size(210, 30);
             this.btnStlCenter.TabIndex = 33;
             this.btnStlCenter.Text = "STL Center";
             this.btnStlCenter.UseVisualStyleBackColor = false;
@@ -594,10 +1050,10 @@
             this.btnStlMerge.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(100)))), ((int)(((byte)(120)))));
             this.btnStlMerge.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnStlMerge.ForeColor = System.Drawing.Color.White;
-            this.btnStlMerge.Location = new System.Drawing.Point(240, 298);
+            this.btnStlMerge.Location = new System.Drawing.Point(240, 348);
             this.btnStlMerge.Margin = new System.Windows.Forms.Padding(4);
             this.btnStlMerge.Name = "btnStlMerge";
-            this.btnStlMerge.Size = new System.Drawing.Size(210, 38);
+            this.btnStlMerge.Size = new System.Drawing.Size(210, 30);
             this.btnStlMerge.TabIndex = 34;
             this.btnStlMerge.Text = "Face Align";
             this.btnStlMerge.UseVisualStyleBackColor = false;
@@ -605,7 +1061,7 @@
             // 
             // lblStatusTitle
             // 
-            this.lblStatusTitle.Location = new System.Drawing.Point(0, 343);
+            this.lblStatusTitle.Location = new System.Drawing.Point(0, 379);
             this.lblStatusTitle.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblStatusTitle.Name = "lblStatusTitle";
             this.lblStatusTitle.Size = new System.Drawing.Size(450, 22);
@@ -616,7 +1072,7 @@
             // lblStatus
             // 
             this.lblStatus.ForeColor = System.Drawing.Color.DarkBlue;
-            this.lblStatus.Location = new System.Drawing.Point(0, 367);
+            this.lblStatus.Location = new System.Drawing.Point(0, 397);
             this.lblStatus.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(450, 26);
@@ -628,7 +1084,7 @@
             // 
             this.lblCurrentValue.Font = new System.Drawing.Font("맑은 고딕", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.lblCurrentValue.ForeColor = System.Drawing.Color.DarkGreen;
-            this.lblCurrentValue.Location = new System.Drawing.Point(0, 396);
+            this.lblCurrentValue.Location = new System.Drawing.Point(0, 424);
             this.lblCurrentValue.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblCurrentValue.Name = "lblCurrentValue";
             this.lblCurrentValue.Size = new System.Drawing.Size(450, 43);
@@ -637,7 +1093,7 @@
             // 
             // lblHistoryTitle
             // 
-            this.lblHistoryTitle.Location = new System.Drawing.Point(0, 444);
+            this.lblHistoryTitle.Location = new System.Drawing.Point(0, 466);
             this.lblHistoryTitle.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblHistoryTitle.Name = "lblHistoryTitle";
             this.lblHistoryTitle.Size = new System.Drawing.Size(450, 22);
@@ -649,10 +1105,10 @@
             // 
             this.lstHistory.FormattingEnabled = true;
             this.lstHistory.ItemHeight = 18;
-            this.lstHistory.Location = new System.Drawing.Point(0, 468);
+            this.lstHistory.Location = new System.Drawing.Point(0, 488);
             this.lstHistory.Margin = new System.Windows.Forms.Padding(4);
             this.lstHistory.Name = "lstHistory";
-            this.lstHistory.Size = new System.Drawing.Size(450, 94);
+            this.lstHistory.Size = new System.Drawing.Size(450, 76);
             this.lstHistory.TabIndex = 20;
             this.lstHistory.SelectedIndexChanged += new System.EventHandler(this.lstHistory_SelectedIndexChanged);
             // 
@@ -1243,7 +1699,7 @@
             this.btnUsdExport.Text = "USD Export";
             this.btnUsdExport.UseVisualStyleBackColor = false;
             this.btnUsdExport.Click += new System.EventHandler(this.btnExportUsd_Click);
-            //
+            // 
             // btnSignCalib
             // 
             this.btnSignCalib.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
@@ -1284,7 +1740,7 @@
             this.btnMechLimit.Name = "btnMechLimit";
             this.btnMechLimit.Size = new System.Drawing.Size(144, 38);
             this.btnMechLimit.TabIndex = 305;
-            this.btnMechLimit.Text = "2) 관절리미트";
+            this.btnMechLimit.Text = "2) 관절리미트(손)";
             this.btnMechLimit.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnMechLimit.UseVisualStyleBackColor = false;
             this.btnMechLimit.Click += new System.EventHandler(this.btnMechLimit_Click);
@@ -1325,7 +1781,7 @@
             this.btnS2RGuide.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnS2RGuide.Font = new System.Drawing.Font("맑은 고딕", 8.5F, System.Drawing.FontStyle.Bold);
             this.btnS2RGuide.ForeColor = System.Drawing.Color.White;
-            this.btnS2RGuide.Location = new System.Drawing.Point(1301, 284);
+            this.btnS2RGuide.Location = new System.Drawing.Point(1455, 244);
             this.btnS2RGuide.Name = "btnS2RGuide";
             this.btnS2RGuide.Size = new System.Drawing.Size(86, 38);
             this.btnS2RGuide.TabIndex = 311;
@@ -1341,7 +1797,7 @@
             this.btnIsaacCam.ForeColor = System.Drawing.Color.Aqua;
             this.btnIsaacCam.Location = new System.Drawing.Point(656, 654);
             this.btnIsaacCam.Name = "btnIsaacCam";
-            this.btnIsaacCam.Size = new System.Drawing.Size(136, 41);
+            this.btnIsaacCam.Size = new System.Drawing.Size(149, 41);
             this.btnIsaacCam.TabIndex = 313;
             this.btnIsaacCam.Text = "📺 Isaac 영상";
             this.btnIsaacCam.UseVisualStyleBackColor = false;
@@ -1898,10 +2354,10 @@
             this.btnExportConfig.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnExportConfig.Font = new System.Drawing.Font("맑은 고딕", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.btnExportConfig.ForeColor = System.Drawing.Color.White;
-            this.btnExportConfig.Location = new System.Drawing.Point(1296, 81);
+            this.btnExportConfig.Location = new System.Drawing.Point(1397, 80);
             this.btnExportConfig.Margin = new System.Windows.Forms.Padding(4);
             this.btnExportConfig.Name = "btnExportConfig";
-            this.btnExportConfig.Size = new System.Drawing.Size(211, 43);
+            this.btnExportConfig.Size = new System.Drawing.Size(144, 43);
             this.btnExportConfig.TabIndex = 46;
             this.btnExportConfig.Text = "Export Config";
             this.btnExportConfig.UseVisualStyleBackColor = false;
@@ -1910,10 +2366,10 @@
             // lblWristBoundary
             // 
             this.lblWristBoundary.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
-            this.lblWristBoundary.Location = new System.Drawing.Point(1296, 129);
+            this.lblWristBoundary.Location = new System.Drawing.Point(1387, 128);
             this.lblWristBoundary.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblWristBoundary.Name = "lblWristBoundary";
-            this.lblWristBoundary.Size = new System.Drawing.Size(105, 29);
+            this.lblWristBoundary.Size = new System.Drawing.Size(66, 29);
             this.lblWristBoundary.TabIndex = 47;
             this.lblWristBoundary.Text = "Wrist:";
             this.lblWristBoundary.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -1924,17 +2380,17 @@
             this.cmbWristMotor.Font = new System.Drawing.Font("맑은 고딕", 9F);
             this.cmbWristMotor.Items.AddRange(new object[] {
             "None (Full Arm)"});
-            this.cmbWristMotor.Location = new System.Drawing.Point(1409, 127);
+            this.cmbWristMotor.Location = new System.Drawing.Point(1451, 126);
             this.cmbWristMotor.Margin = new System.Windows.Forms.Padding(4);
             this.cmbWristMotor.Name = "cmbWristMotor";
-            this.cmbWristMotor.Size = new System.Drawing.Size(98, 33);
+            this.cmbWristMotor.Size = new System.Drawing.Size(90, 33);
             this.cmbWristMotor.TabIndex = 48;
             // 
             // lblWristHint
             // 
             this.lblWristHint.Font = new System.Drawing.Font("맑은 고딕", 8F);
             this.lblWristHint.ForeColor = System.Drawing.Color.Gray;
-            this.lblWristHint.Location = new System.Drawing.Point(1297, 164);
+            this.lblWristHint.Location = new System.Drawing.Point(1386, 155);
             this.lblWristHint.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblWristHint.Name = "lblWristHint";
             this.lblWristHint.Size = new System.Drawing.Size(115, 18);
@@ -1945,10 +2401,10 @@
             // lblGripper
             // 
             this.lblGripper.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
-            this.lblGripper.Location = new System.Drawing.Point(1296, 194);
+            this.lblGripper.Location = new System.Drawing.Point(1383, 193);
             this.lblGripper.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblGripper.Name = "lblGripper";
-            this.lblGripper.Size = new System.Drawing.Size(105, 31);
+            this.lblGripper.Size = new System.Drawing.Size(83, 31);
             this.lblGripper.TabIndex = 50;
             this.lblGripper.Text = "Gripper:";
             this.lblGripper.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -1959,17 +2415,17 @@
             this.cmbGripperMotor.Font = new System.Drawing.Font("맑은 고딕", 9F);
             this.cmbGripperMotor.Items.AddRange(new object[] {
             "None"});
-            this.cmbGripperMotor.Location = new System.Drawing.Point(1409, 192);
+            this.cmbGripperMotor.Location = new System.Drawing.Point(1463, 191);
             this.cmbGripperMotor.Margin = new System.Windows.Forms.Padding(4);
             this.cmbGripperMotor.Name = "cmbGripperMotor";
-            this.cmbGripperMotor.Size = new System.Drawing.Size(98, 33);
+            this.cmbGripperMotor.Size = new System.Drawing.Size(78, 33);
             this.cmbGripperMotor.TabIndex = 51;
             // 
             // lblGripperHint
             // 
             this.lblGripperHint.Font = new System.Drawing.Font("맑은 고딕", 8F);
             this.lblGripperHint.ForeColor = System.Drawing.Color.Gray;
-            this.lblGripperHint.Location = new System.Drawing.Point(1299, 234);
+            this.lblGripperHint.Location = new System.Drawing.Point(1387, 228);
             this.lblGripperHint.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblGripperHint.Name = "lblGripperHint";
             this.lblGripperHint.Size = new System.Drawing.Size(115, 18);
@@ -1988,19 +2444,19 @@
             // 
             // lblDhTitle
             // 
-            this.lblDhTitle.Location = new System.Drawing.Point(991, 13);
+            this.lblDhTitle.Location = new System.Drawing.Point(1083, 13);
             this.lblDhTitle.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblDhTitle.Name = "lblDhTitle";
-            this.lblDhTitle.Size = new System.Drawing.Size(420, 18);
+            this.lblDhTitle.Size = new System.Drawing.Size(300, 18);
             this.lblDhTitle.TabIndex = 35;
-            this.lblDhTitle.Text = "──── DH Parameters ────";
-            this.lblDhTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblDhTitle.Text = "─ DH Parameters[a,d,Θ,α] ─";
+            this.lblDhTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // txtDhParams
             // 
             this.txtDhParams.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtDhParams.HideSelection = false;
-            this.txtDhParams.Location = new System.Drawing.Point(991, 33);
+            this.txtDhParams.Location = new System.Drawing.Point(1083, 32);
             this.txtDhParams.Margin = new System.Windows.Forms.Padding(4);
             this.txtDhParams.Name = "txtDhParams";
             this.txtDhParams.Size = new System.Drawing.Size(300, 478);
@@ -2014,10 +2470,10 @@
             this.btnApplyDh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnApplyDh.Font = new System.Drawing.Font("맑은 고딕", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.btnApplyDh.ForeColor = System.Drawing.Color.White;
-            this.btnApplyDh.Location = new System.Drawing.Point(1296, 33);
+            this.btnApplyDh.Location = new System.Drawing.Point(1397, 32);
             this.btnApplyDh.Margin = new System.Windows.Forms.Padding(4);
             this.btnApplyDh.Name = "btnApplyDh";
-            this.btnApplyDh.Size = new System.Drawing.Size(211, 40);
+            this.btnApplyDh.Size = new System.Drawing.Size(144, 40);
             this.btnApplyDh.TabIndex = 37;
             this.btnApplyDh.Text = "Apply DH";
             this.btnApplyDh.UseVisualStyleBackColor = false;
@@ -2102,17 +2558,18 @@
             "2: Humanoid (Skeleton)",
             "3: 6-Axis + STL",
             "4: OMX Leader",
-            "5: OMX Follower (+Camera)",
-            "6: Humanoid (Full)",
-            "7: 2-Wheel Mobile",
-            "8: 4-Wheel Mobile",
-            "9: Cartesian (Desktop)",
-            "[Lerobot_Ojw]Leader",
-            "11: Tank + 6-Axis Arm",
-            "12: XYZ Desktop Gantry",
-            "13: Linear Leadscrew",
-            "14: OMX Follower (Joints Only)",
-            "15: Delta Robot (Parallel)"});
+            "5: OMX Follower (Joints Only)",
+            "6: OMX Follower (+Camera)",
+            "7: Humanoid (Full)",
+            "8: 2-Wheel Mobile",
+            "9: 4-Wheel Mobile",
+            "10: Cartesian (Desktop)",
+            "11: [Lerobot_Ojw]Leader",
+            "12: Tank + 6-Axis Arm",
+            "13: XYZ Desktop Gantry",
+            "14: Linear Leadscrew",
+            "15: Delta Robot (Parallel)",
+            "16: Delta Biped (Walking)"});
             this.cmbExample.Location = new System.Drawing.Point(769, 616);
             this.cmbExample.Margin = new System.Windows.Forms.Padding(4);
             this.cmbExample.Name = "cmbExample";
@@ -2154,9 +2611,9 @@
             this.pnDhEdit.Controls.Add(this.lblEditStlSwing);
             this.pnDhEdit.Controls.Add(this.txtEditStlSwing);
             this.pnDhEdit.Controls.Add(this.btnEditApply);
-            this.pnDhEdit.Location = new System.Drawing.Point(991, 515);
+            this.pnDhEdit.Location = new System.Drawing.Point(1083, 515);
             this.pnDhEdit.Name = "pnDhEdit";
-            this.pnDhEdit.Size = new System.Drawing.Size(342, 206);
+            this.pnDhEdit.Size = new System.Drawing.Size(300, 206);
             this.pnDhEdit.TabIndex = 60;
             this.pnDhEdit.Visible = false;
             // 
@@ -2241,7 +2698,7 @@
             this.txtEditAlpha.Font = new System.Drawing.Font("맑은 고딕", 8F);
             this.txtEditAlpha.Location = new System.Drawing.Point(244, 30);
             this.txtEditAlpha.Name = "txtEditAlpha";
-            this.txtEditAlpha.Size = new System.Drawing.Size(55, 29);
+            this.txtEditAlpha.Size = new System.Drawing.Size(49, 29);
             this.txtEditAlpha.TabIndex = 8;
             this.txtEditAlpha.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
@@ -2318,7 +2775,7 @@
             this.txtEditStlFile.Font = new System.Drawing.Font("맑은 고딕", 8F);
             this.txtEditStlFile.Location = new System.Drawing.Point(17, 60);
             this.txtEditStlFile.Name = "txtEditStlFile";
-            this.txtEditStlFile.Size = new System.Drawing.Size(282, 29);
+            this.txtEditStlFile.Size = new System.Drawing.Size(276, 29);
             this.txtEditStlFile.TabIndex = 16;
             this.txtEditStlFile.Visible = false;
             // 
@@ -2388,7 +2845,7 @@
             // lblEditStlPan
             // 
             this.lblEditStlPan.Font = new System.Drawing.Font("맑은 고딕", 8F);
-            this.lblEditStlPan.Location = new System.Drawing.Point(175, 131);
+            this.lblEditStlPan.Location = new System.Drawing.Point(12, 170);
             this.lblEditStlPan.Name = "lblEditStlPan";
             this.lblEditStlPan.Size = new System.Drawing.Size(14, 20);
             this.lblEditStlPan.TabIndex = 23;
@@ -2399,7 +2856,7 @@
             // txtEditStlPan
             // 
             this.txtEditStlPan.Font = new System.Drawing.Font("맑은 고딕", 8F);
-            this.txtEditStlPan.Location = new System.Drawing.Point(189, 131);
+            this.txtEditStlPan.Location = new System.Drawing.Point(26, 170);
             this.txtEditStlPan.Name = "txtEditStlPan";
             this.txtEditStlPan.Size = new System.Drawing.Size(35, 29);
             this.txtEditStlPan.TabIndex = 24;
@@ -2409,7 +2866,7 @@
             // lblEditStlTilt
             // 
             this.lblEditStlTilt.Font = new System.Drawing.Font("맑은 고딕", 8F);
-            this.lblEditStlTilt.Location = new System.Drawing.Point(226, 131);
+            this.lblEditStlTilt.Location = new System.Drawing.Point(63, 170);
             this.lblEditStlTilt.Name = "lblEditStlTilt";
             this.lblEditStlTilt.Size = new System.Drawing.Size(14, 20);
             this.lblEditStlTilt.TabIndex = 25;
@@ -2420,7 +2877,7 @@
             // txtEditStlTilt
             // 
             this.txtEditStlTilt.Font = new System.Drawing.Font("맑은 고딕", 8F);
-            this.txtEditStlTilt.Location = new System.Drawing.Point(240, 131);
+            this.txtEditStlTilt.Location = new System.Drawing.Point(77, 170);
             this.txtEditStlTilt.Name = "txtEditStlTilt";
             this.txtEditStlTilt.Size = new System.Drawing.Size(35, 29);
             this.txtEditStlTilt.TabIndex = 26;
@@ -2430,7 +2887,7 @@
             // lblEditStlSwing
             // 
             this.lblEditStlSwing.Font = new System.Drawing.Font("맑은 고딕", 8F);
-            this.lblEditStlSwing.Location = new System.Drawing.Point(277, 131);
+            this.lblEditStlSwing.Location = new System.Drawing.Point(114, 170);
             this.lblEditStlSwing.Name = "lblEditStlSwing";
             this.lblEditStlSwing.Size = new System.Drawing.Size(14, 20);
             this.lblEditStlSwing.TabIndex = 27;
@@ -2441,7 +2898,7 @@
             // txtEditStlSwing
             // 
             this.txtEditStlSwing.Font = new System.Drawing.Font("맑은 고딕", 8F);
-            this.txtEditStlSwing.Location = new System.Drawing.Point(291, 131);
+            this.txtEditStlSwing.Location = new System.Drawing.Point(128, 170);
             this.txtEditStlSwing.Name = "txtEditStlSwing";
             this.txtEditStlSwing.Size = new System.Drawing.Size(35, 29);
             this.txtEditStlSwing.TabIndex = 28;
@@ -2454,7 +2911,7 @@
             this.btnEditApply.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnEditApply.Font = new System.Drawing.Font("맑은 고딕", 8F, System.Drawing.FontStyle.Bold);
             this.btnEditApply.ForeColor = System.Drawing.Color.White;
-            this.btnEditApply.Location = new System.Drawing.Point(244, 165);
+            this.btnEditApply.Location = new System.Drawing.Point(212, 154);
             this.btnEditApply.Name = "btnEditApply";
             this.btnEditApply.Size = new System.Drawing.Size(83, 36);
             this.btnEditApply.TabIndex = 29;
@@ -2591,7 +3048,6 @@
             this.Controls.Add(this.lblWristBoundary);
             this.Controls.Add(this.cmbWristMotor);
             this.Controls.Add(this.lblWristHint);
-            this.Controls.Add(this.lblGripper);
             this.Controls.Add(this.cmbGripperMotor);
             this.Controls.Add(this.lblGripperHint);
             this.Controls.Add(this.btnApplyDh);
@@ -2625,6 +3081,7 @@
             this.Controls.Add(this.pnDhEdit);
             this.Controls.Add(this.lblUrdfFolder);
             this.Controls.Add(this.lblStlFolder);
+            this.Controls.Add(this.lblGripper);
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "Main";
             this.Text = "MakeUrdf - Robot Designer";
@@ -2716,6 +3173,30 @@
         private System.Windows.Forms.Button btnRedRotate;
         private System.Windows.Forms.Button btnBlueRotate;
         private System.Windows.Forms.Button btnGreenRotate;
+        private System.Windows.Forms.Button btnRedMoveM10;
+        private System.Windows.Forms.Button btnRedMoveP10;
+        private System.Windows.Forms.Button btnRedMoveMTxt;
+        private System.Windows.Forms.Button btnRedMovePTxt;
+        private System.Windows.Forms.Button btnBlueMoveM10;
+        private System.Windows.Forms.Button btnBlueMoveP10;
+        private System.Windows.Forms.Button btnBlueMoveMTxt;
+        private System.Windows.Forms.Button btnBlueMovePTxt;
+        private System.Windows.Forms.Button btnGreenMoveM10;
+        private System.Windows.Forms.Button btnGreenMoveP10;
+        private System.Windows.Forms.Button btnGreenMoveMTxt;
+        private System.Windows.Forms.Button btnGreenMovePTxt;
+        private System.Windows.Forms.Button btnRedRotateM90;
+        private System.Windows.Forms.Button btnRedRotateP90;
+        private System.Windows.Forms.Button btnRedRotateMTxt;
+        private System.Windows.Forms.Button btnRedRotatePTxt;
+        private System.Windows.Forms.Button btnBlueRotateM90;
+        private System.Windows.Forms.Button btnBlueRotateP90;
+        private System.Windows.Forms.Button btnBlueRotateMTxt;
+        private System.Windows.Forms.Button btnBlueRotatePTxt;
+        private System.Windows.Forms.Button btnGreenRotateM90;
+        private System.Windows.Forms.Button btnGreenRotateP90;
+        private System.Windows.Forms.Button btnGreenRotateMTxt;
+        private System.Windows.Forms.Button btnGreenRotatePTxt;
         private System.Windows.Forms.Label lblEtcGroup;
         private System.Windows.Forms.Button btnMotor;
         private System.Windows.Forms.Button btnInit;

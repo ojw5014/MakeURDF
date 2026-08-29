@@ -52,7 +52,8 @@ except Exception:
 from isaacsim import SimulationApp  # type: ignore
 
 CONFIG = {
-    "headless": False,
+    # OJW_HEADLESS=1: 창 없이 실행 (자동 검증/CI 용)
+    "headless": os.environ.get("OJW_HEADLESS", "0").strip() == "1",
     "renderer": "RaytracedLighting",
     "anti_aliasing": 3,
 }
@@ -91,7 +92,7 @@ from isaacsim.core.utils.types import ArticulationAction  # noqa: E402
 # ----------------------------------------------------------------------------
 WHEEL_RADIUS_M = 0.030     # default, used only by helpers — runner itself is agnostic
 SOCKET_HOST = "127.0.0.1"
-SOCKET_PORT = 4000
+SOCKET_PORT = int(os.environ.get("OJW_SOCKET_PORT", "4000") or 4000)  # 병렬/테스트용 오버라이드
 
 world: World | None = None
 articulations: list[SingleArticulation] = []          # [robot_idx] -> articulation
@@ -133,6 +134,11 @@ _state_lock = threading.Lock()
 _actnet_models: dict = {}
 _actnet_state: dict = {}
 _ACTNET_DT = 0.02
+# ★로봇-모델 일치 게이트: npz 는 특정 로봇(예: 휴머노이드 T1~T17)용 — urdf 폴더에
+#   남아 있으면 델타(T1~T3)처럼 이름만 겹치는 다른 로봇의 모터까지 셰이핑해
+#   파괴적 타깃(-180° 등)을 만든다 (2026-08-26 실사고). _post_spawn_init 에서
+#   모델 관절의 60% 이상이 실제 존재할 때만 활성.
+_actnet_gate = {"on": True}
 
 def _actnet_load() -> None:
     path = os.environ.get("OJW_ACTNET", "").strip()
@@ -944,6 +950,9 @@ def _isaac6_convert_urdf(urdf_path: str) -> str:
     return usd_file
 
 
+_ojw_usd_mode = [False]   # USD 네이티브 경로 여부 (폐루프 dt 분기용)
+
+
 def _load_usd_as_reference(usd_path: str, robot_idx: int = 0,
                            position: tuple[float, float, float] = (0.0, 0.0, 0.0)) -> str:
     """USD 파일을 스테이지에 reference 로 로드하고 articulation root prim path 반환.
@@ -1024,6 +1033,26 @@ def _load_usd_as_reference(usd_path: str, robot_idx: int = 0,
     # ── Fixed base: root fixed joint (URDF importer 의 fix_base 와 동일 방식) ──
     _fix_base = os.environ.get("OJW_FIXED_BASE", "0").strip() == "1"
     if _fix_base:
+        # ★플로팅 루트 교정: importer 는 ArticulationRootAPI 를 base_link(리지드바디)에
+        #   저작 → PhysX 가 "떠 있는 베이스 + 월드 고정조인트(제약)" 로 해석해
+        #   경량 베이스가 반복해석 제약 위에서 미세하게 흔들리며 체인 간 에너지를
+        #   주고받는 지속 발진의 원인 (2026-08-25 델타 실측 — 직접 USDA 경로는
+        #   루트 API 가 비바디 Xform 이라 동일 조건에서 완전 정지였다).
+        #   → 바디에 붙은 루트 API 를 제거하고 래퍼 Xform(robot_N)에 적용해
+        #   고정베이스(키네마틱 루트) 아티큘레이션으로 만든다.
+        try:
+            n_moved = 0
+            for prim in Usd.PrimRange(ref_prim):
+                if (prim.HasAPI(UsdPhysics.ArticulationRootAPI)
+                        and prim.HasAPI(UsdPhysics.RigidBodyAPI)):
+                    prim.RemoveAPI(UsdPhysics.ArticulationRootAPI)
+                    n_moved += 1
+            if n_moved > 0:
+                UsdPhysics.ArticulationRootAPI.Apply(ref_prim)
+                print("[Spawn USD] ArticulationRootAPI relocated: body prim %d개 -> %s"
+                      % (n_moved, prim_path), flush=True)
+        except Exception as ex:
+            print("[Spawn USD] root API relocate failed: %s" % ex, flush=True)
         try:
             # base 링크 = robot root 의 자식 중 첫 RigidBodyAPI prim
             base_prim = None
@@ -1068,6 +1097,9 @@ def spawn_robot(urdf_path: str, robot_idx: int = 0,
 
     # === USD 로드 분기 ===
     if _is_usd_path(urdf_path):
+        # ★네이티브 USD 모드 표식 — Isaac6 은 URDF 도 변환 후 _load_usd_as_reference 를
+        #   타므로 그 함수 안에서 판정하면 안 된다 (폐루프 dt 분기가 URDF 에 오적용된 실사고)
+        _ojw_usd_mode[0] = True
         prim_path = _load_usd_as_reference(urdf_path, robot_idx, position)
         articulation_paths.append(prim_path)
 
@@ -1994,15 +2026,24 @@ def _handle_query(conn, cmd: str) -> bool:
     return False
 
 
+_server_sock = [None]   # 메인 루프 종료 시 명시적으로 닫아 포트 반납 (좀비 하이재킹 방지)
+
+
 def _socket_thread(host: str, port: int) -> None:
     srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    # ★SO_REUSEADDR 금지 (Windows): 이전 인스턴스가 좀비로 남아 포트를 쥐고 있어도
+    #   이중 바인드가 성공해 버려 명령/GETPOS 가 좀비에게 가로채이는 사고 실측
+    #   (2026-08-25 — simulation_app.close() 행으로 프로세스 잔존 + 데몬 소켓 스레드 생존).
+    #   바인드 실패를 명확히 알리는 편이 옳다.
     try:
         srv.bind((host, port))
         srv.listen(8)
     except OSError as ex:
         print("[Sock] bind %s:%d failed: %s" % (host, port, ex), flush=True)
+        print("[Sock] 포트 점유 = 이전 Isaac 이 좀비로 남았을 가능성 — kit.exe 종료 후 재실행",
+              flush=True)
         return
+    _server_sock[0] = srv
     print("[Sock] listening on %s:%d" % (host, port), flush=True)
 
     while True:
@@ -2190,6 +2231,499 @@ def _handle_command(cmd: str) -> None:
 
 
 # ============================================================================
+# 종동(passive) 조인트 퍼펫팅 — delta_passive.json (2026-08-25)
+#   MakeUrdf Export 가 폐루프 종동 관절(델타 무릎 β/γ 등)을 무동력 dpass_* 조인트로
+#   내보내고, 각 조인트의 각도 수식을 JSON 으로 동봉한다. 여기서는 매 physics step 마다
+#   현재 모터각으로 수식을 평가해 종동 조인트 타깃을 갱신 → 시뮬 안에서 T 를 어떻게
+#   움직이든(소켓/처짐 포함) 폐루프 형상이 유지된다.
+#   각도 규약: q_pass_deg = (motor_deg + eval(formula, motors_deg)) - zero_bake_deg
+#   (부호는 조인트 축에 흡수되어 있음 — C# ProcessDhLine_Urdf 참조)
+# ============================================================================
+_passive_defs = []            # [{joint, formula, motor_id, zero_bake_deg}]
+_delta_geo = [55.0, 100.0, 215.0, 24.0]  # deltainit 으로 갱신 (변 길이 규약)
+
+
+def _delta_fk(m0, m1, m2):
+    """COjw_05_Math.Delta_Parallel_ForwardKinematics 포팅 (+z 규약, deg 입력)"""
+    e, f, re_, rf = _delta_geo[3], _delta_geo[0], _delta_geo[2], _delta_geo[1]
+    d2r = math.pi / 180.0
+    t = (f - e) * math.tan(30 * d2r) / 2
+    y1 = -(t + rf * math.cos(-m0 * d2r)); z1 = -rf * math.sin(-m0 * d2r)
+    y2 = (t + rf * math.cos(-m1 * d2r)) * math.sin(30 * d2r); x2 = y2 * math.tan(60 * d2r); z2 = -rf * math.sin(-m1 * d2r)
+    y3 = (t + rf * math.cos(-m2 * d2r)) * math.sin(30 * d2r); x3 = -y3 * math.tan(60 * d2r); z3 = -rf * math.sin(-m2 * d2r)
+    dnm = (y2 - y1) * x3 - (y3 - y1) * x2
+    w1 = y1 * y1 + z1 * z1; w2 = x2 * x2 + y2 * y2 + z2 * z2; w3 = x3 * x3 + y3 * y3 + z3 * z3
+    a1 = (z2 - z1) * (y3 - y1) - (z3 - z1) * (y2 - y1); b1 = -((w2 - w1) * (y3 - y1) - (w3 - w1) * (y2 - y1)) / 2.0
+    a2 = -(z2 - z1) * x3 + (z3 - z1) * x2;              b2 = ((w2 - w1) * x3 - (w3 - w1) * x2) / 2.0
+    a = a1 * a1 + a2 * a2 + dnm * dnm
+    b = 2 * (a1 * b1 + a2 * (b2 - y1 * dnm) - z1 * dnm * dnm)
+    c = (b2 - y1 * dnm) ** 2 + b1 * b1 + dnm * dnm * (z1 * z1 - re_ * re_)
+    d = b * b - 4.0 * a * c
+    if d < 0 or d != d:
+        return None
+    h = -0.5 * (b + math.sqrt(d)) / a
+    return ((a1 * h + b1) / dnm, (a2 * h + b2) / dnm, -h)
+
+
+def _delta_calc_passive(arm, m0, m1, m2):
+    """COjw_05_Math.Delta_Parallel_CalcPassive 포팅 — (beta, gamma) deg 반환"""
+    p = _delta_fk(m0, m1, m2)
+    if p is None:
+        return None
+    d2r = math.pi / 180.0
+    psi = 30.0 if arm == 1 else (150.0 if arm == 2 else -90.0)
+    t = m1 if arm == 1 else (m2 if arm == 2 else m0)
+    cp_, sp_ = math.cos(psi * d2r), math.sin(psi * d2r)
+    px = p[0] * cp_ + p[1] * sp_; py = -p[0] * sp_ + p[1] * cp_; pz = p[2]
+    a_f = 0.5 * 0.57735 * _delta_geo[0]
+    a_e = 0.5 * 0.57735 * _delta_geo[3]
+    kx = a_f + _delta_geo[1] * math.cos(t * d2r)
+    kz = -_delta_geo[1] * math.sin(t * d2r)
+    vx = (px + a_e) - kx; vy = py; vz = pz - kz
+    vlen = math.sqrt(vx * vx + vy * vy + vz * vz)
+    if vlen < 1e-9:
+        return None
+    gamma = -math.asin(max(-1.0, min(1.0, vy / vlen))) / d2r
+    beta = -t - math.atan2(vz, vx) / d2r
+    return beta, gamma
+
+
+_EDH_OPS = ("=", "+", "-", "*", "/")
+_EDH_CMDS = ("deltainit", "getdelta") + _EDH_OPS
+
+
+def _edh_operand(tok, motors):
+    tok = tok.strip()
+    if not tok:
+        return None
+    if tok[0] == "t":
+        try:
+            return float(motors.get(int(tok[1:]), 0.0))
+        except (ValueError, TypeError):
+            return None
+    try:
+        return float(tok)
+    except ValueError:
+        return None
+
+
+def _edh_eval_formula(formula, motors):
+    """C# Edh_EvalDeltaFormula 포팅 — 실패 시 None. motors: {모터ID: deg}"""
+    try:
+        toks = formula.strip().lower().split(";")
+        result = 0.0
+        n = 0
+        while n < len(toks):
+            tok = toks[n].strip()
+            if not tok:
+                n += 1; continue
+            if tok == "deltainit":
+                if n + 4 >= len(toks):
+                    return None
+                vals = [_edh_operand(toks[n + k], motors) for k in range(1, 5)]
+                if any(v is None for v in vals):
+                    return None
+                _delta_geo[0], _delta_geo[1], _delta_geo[2], _delta_geo[3] = vals
+                n += 5; continue
+            if tok == "getdelta":
+                if n + 5 >= len(toks):
+                    return None
+                vals = [_edh_operand(toks[n + k], motors) for k in range(1, 6)]
+                if any(v is None for v in vals):
+                    return None
+                arm, sel, m0, m1, m2 = int(vals[0]), int(vals[1]), vals[2], vals[3], vals[4]
+                if sel <= 1:
+                    bg = _delta_calc_passive(arm, m0, m1, m2)
+                    if bg is None:
+                        return None
+                    result = bg[0] if sel == 0 else bg[1]
+                else:
+                    p = _delta_fk(m0, m1, m2)
+                    if p is None:
+                        return None
+                    result = p[sel - 2]
+                n += 6; continue
+            if tok in _EDH_OPS:
+                nxt = toks[n + 1].strip() if n + 1 < len(toks) else ""
+                if nxt in _EDH_CMDS:
+                    n += 1; continue  # 피연산자 자리에 명령 → 연산자 무효 (렌더 파서 거동)
+                v = _edh_operand(nxt, motors)
+                if v is None:
+                    return None
+                if tok == "=":
+                    result = v
+                elif tok == "+":
+                    result += v
+                elif tok == "-":
+                    result -= v
+                elif tok == "*":
+                    result *= v
+                else:
+                    result = result / v if v != 0 else 0.0
+                n += 2; continue
+            return None  # 미지원 토큰
+        return result
+    except Exception:
+        return None
+
+
+_closure_defs = []            # 진짜 물리 폐루프 앵커 (delta_passive.json "closures")
+
+
+def _load_passive_defs(urdf_dir):
+    global _passive_defs, _closure_defs
+    _passive_defs = []
+    _closure_defs = []
+    path = os.path.join(urdf_dir, "delta_passive.json")
+    if not os.path.exists(path):
+        return
+    try:
+        import json as _json
+        with open(path, "r", encoding="utf-8") as fp:
+            data = _json.load(fp)
+        _closure_defs = data.get("closures", [])
+        if _closure_defs:
+            # ★진짜 물리 폐루프 모드 (2026-08-26): 스폰 시 루프 조인트(스패리컬+거리)를 저작하고
+            #   dpass 드라이브를 무력화 — 물리가 폐루프를 유지하므로 퍼펫은 끈다
+            #   (퍼펫 드라이브 타깃은 구속 솔버와 싸운다).
+            print("[Closure] delta_passive.json: closures %d개 — 물리 폐루프 모드 (퍼펫 OFF)"
+                  % len(_closure_defs), flush=True)
+        else:
+            _passive_defs = data.get("passive_joints", [])
+            print("[Passive] delta_passive.json: %d joints (퍼펫팅 활성)" % len(_passive_defs), flush=True)
+    except Exception as ex:
+        print("[Passive] delta_passive.json 로드 실패: %s" % ex, flush=True)
+
+
+def _author_delta_closures(spawn_z_hint: float = 0.0) -> None:
+    """스폰 직후(world.reset 전) 루프 조인트 저작 — URDF 임포트/USDA 양 경로 공용.
+
+    조인트 prim 을 이름으로 찾아 body0/body1 rel 로 링크를 해석하므로 경로 구조 무관:
+      · rod_joint 의 body1(child) = 로드 링크, plate_joint 의 body1 = 플레이트 링크
+      · knee_joint 의 body0(parent) = 무릎블록(상완) 링크
+    저작 내용 (MJCF <connect>/<tendon> equality, USDA ojw_loop/ojw_rod2 와 동일 원리):
+      ①로드팁 PhysicsSphericalJoint (점 일치) ②두 번째 로드 PhysicsDistanceJoint (min=max=L)
+      — 전부 excludeFromArticulation (PhysX articulation 은 트리만 허용, 루프는 밖에서 닫는다)
+    USDA 경로는 export 시 이미 저작되어 있음 (ojw_loop_* 존재) → 스킵.
+    dpass 드라이브 stiffness=0 도 여기서 (URDF importer 는 전 관절에 고강성 드라이브를 단다)."""
+    if not _closure_defs:
+        return
+    try:
+        from pxr import Usd, UsdPhysics, Sdf, Gf  # type: ignore
+        stage = simulation_app.context.get_stage()
+        if stage is None:
+            return
+        roots = [p_ for p_ in articulation_paths] if articulation_paths else []
+        if not roots:
+            return
+        root = roots[0]
+        # 이름 → 조인트 prim (root 서브트리 한정)
+        joint_prims = {}
+        already = False
+        for prim in stage.Traverse():
+            pp = str(prim.GetPath())
+            if not pp.startswith(root):
+                continue
+            nm = prim.GetName()
+            if nm.startswith("ojw_loop_") or nm.startswith("ojw_rod2_"):
+                already = True
+            if prim.HasRelationship("physics:body1") or prim.HasRelationship("physics:body0"):
+                joint_prims[nm] = prim
+
+        def _rel_target(jname, rel):
+            pr = joint_prims.get(jname)
+            if pr is None:
+                return None
+            r = pr.GetRelationship(rel)
+            if not r:
+                return None
+            tg = r.GetTargets()
+            return str(tg[0]) if tg else None
+
+        # 폐루프 모드: 솔버 반복수 상향 — 루프 구속(스패리컬 5+rod2 6)이 그램급 링크를
+        # 지나는 사슬이라 반복 부족이 극자세에서 mm 급 플레이트 이탈로 나타난다.
+        # ★USD 경로는 ArticulationRootAPI 가 래퍼 Xform 에 있고 PhysxArticulationAPI(32)는
+        #   로봇 prim 에 남는다 — 어느 쪽을 파서가 읽든 걸리도록 루트+기존 보유 prim 전부 설정
+        try:
+            from pxr import Sdf as _Sdf  # type: ignore
+            targets = set()
+            root_prim0 = stage.GetPrimAtPath(root)
+            if root_prim0 and root_prim0.IsValid():
+                targets.add(root_prim0)
+            for prim2 in stage.Traverse():
+                if not str(prim2.GetPath()).startswith(root):
+                    continue
+                a_ex = prim2.GetAttribute("physxArticulation:solverPositionIterationCount")
+                if a_ex and a_ex.IsValid() and a_ex.HasAuthoredValue():
+                    targets.add(prim2)
+            for pr2 in targets:
+                a_it = pr2.GetAttribute("physxArticulation:solverPositionIterationCount")
+                if not (a_it and a_it.IsValid()):
+                    a_it = pr2.CreateAttribute("physxArticulation:solverPositionIterationCount",
+                                               _Sdf.ValueTypeNames.Int)
+                a_it.Set(128)
+        except Exception:
+            pass
+
+        # dpass 드라이브 무력화 + T 드라이브 완화 (양 경로 공통)
+        n_freed = 0
+        n_soft = 0
+        for nm, pr in joint_prims.items():
+            try:
+                if nm.startswith("dpass_"):
+                    # ★drive 완전 0 — deg 단위 damping 174.53 은 rad 1만 상당의 초과감쇠로
+                    #   그램급 링크를 동결시켜 루프 구속과 싸우다 NaN 폭발 (실측 사고)
+                    vals = (("drive:angular:physics:stiffness", 0.0),
+                            ("drive:angular:physics:damping", 0.0))
+                    n_freed += 1
+                elif nm.startswith("T") and nm[1:].isdigit():
+                    # T 드라이브 = 임포터 패리티(deg 17453293/17453.293)로 통일.
+                    #   (러너의 "drive hardening" 1e9 재강화는 폐루프 관절 제외 — 아래 참조.
+                    #    플립 분기 도약의 진짜 원인은 free 강체 rod2 의 텔레포트 킥이었고
+                    #    트리 편입으로 해결 — 드라이브 완화(deg 8.7)는 오히려 정적 바이어스만 남김)
+                    vals = (("drive:angular:physics:stiffness", 17453293.0),
+                            ("drive:angular:physics:damping", 17453.293))
+                    n_soft += 1
+                else:
+                    continue
+                for attr, val in vals:
+                    a = pr.GetAttribute(attr)
+                    if a and a.IsValid():
+                        a.Set(val)
+            except Exception:
+                pass
+        if already:
+            # USDA 저작본: rod2 는 트리 조인트(_a 스패리컬, exclude 없음)로 articulation 에
+            # 편입되므로 spawn 텔레포트를 함께 따라간다 — 별도 보정 불필요.
+            print("[Closure] 루프 조인트 이미 저작됨 (USDA) — dpass/T 드라이브 조정만 (해제 %d, 완화 %d)"
+                  % (n_freed, n_soft), flush=True)
+            return
+
+        n_loop = 0
+        for idx, clo in enumerate(_closure_defs, start=1):
+            plate_path = _rel_target(clo.get("plate_joint") or "", "physics:body1")
+            if not plate_path:
+                continue
+            rj = clo.get("rod_joint") or ""
+            if rj:
+                rod_path = _rel_target(rj, "physics:body1")
+                if rod_path:
+                    jp = UsdPhysics.SphericalJoint.Define(stage, Sdf.Path(root + "/ojw_loop_%d" % idx))
+                    jp.CreateBody0Rel().SetTargets([Sdf.Path(rod_path)])
+                    jp.CreateBody1Rel().SetTargets([Sdf.Path(plate_path)])
+                    jp.CreateLocalPos0Attr().Set(Gf.Vec3f(*[float(v) for v in clo["rod_xyz"]]))
+                    jp.CreateLocalPos1Attr().Set(Gf.Vec3f(*[float(v) for v in clo["plate_xyz"]]))
+                    jp.CreateLocalRot0Attr().Set(Gf.Quatf(1.0))
+                    jp.CreateLocalRot1Attr().Set(Gf.Quatf(1.0))
+                    jp.CreateExcludeFromArticulationAttr().Set(True)
+                    n_loop += 1
+            kj = clo.get("knee_joint") or ""
+            ax = clo.get("pair_axis", [0, 0, 0])
+            alen = math.sqrt(sum(a * a for a in ax))
+            if kj and alen > 1e-9:
+                knee_parent = _rel_target(kj, "physics:body0")
+                if knee_parent:
+                    # ★두 번째 로드 = 실제 강체 + 양끝 스패리컬.
+                    #   PhysicsDistanceJoint(min=max)는 PhysX 에서 사실상 무력 (플레이트가
+                    #   10~17mm 떠돎 — 실측). 스패리컬 루프는 완벽 작동이 검증되었으므로
+                    #   질량 1g 무형상 강체 rod2 로 평행사변형을 정직하게 구성한다.
+                    from pxr import UsdGeom  # type: ignore
+                    w = float(clo.get("pair_halfwidth_m", 0.03))
+                    u = [a / alen * w for a in ax]
+                    knee = clo.get("knee_xyz", [0, 0, 0])
+                    plate = clo.get("plate_xyz", [0, 0, 0])
+                    cache = UsdGeom.XformCache(Usd.TimeCode.Default())
+                    kp_prim = stage.GetPrimAtPath(Sdf.Path(knee_parent))
+                    pl_prim = stage.GetPrimAtPath(Sdf.Path(plate_path))
+                    root_prim = stage.GetPrimAtPath(Sdf.Path(root))
+                    if not (kp_prim and kp_prim.IsValid() and pl_prim and pl_prim.IsValid()):
+                        continue
+                    Tk = cache.GetLocalToWorldTransform(kp_prim)
+                    Tp = cache.GetLocalToWorldTransform(pl_prim)
+                    K2w = Tk.Transform(Gf.Vec3d(knee[0] + u[0], knee[1] + u[1], knee[2] + u[2]))
+                    P2w = Tp.Transform(Gf.Vec3d(plate[0] + u[0], plate[1] + u[1], plate[2] + u[2]))
+                    # ★rod2 는 아티큘레이션 "트리의 가지" — 무릎→rod2 스패리컬을 exclude 없이
+                    #   저작하면 PhysX 파서가 rod2 를 articulation 링크로 편입한다.
+                    #   free 강체로 두면 reset 텔레포트(spawn_z)를 못 따라가 첫 스텝에 팔을
+                    #   걷어차 팔꿈치 플립 분기로 떨어뜨린다 (실측 사고 — z 보정/후처리 재배치는
+                    #   physics view 무효화 등 부작용만 낳고 실패). 트리 편입이 근본 해결.
+                    rod2_path = Sdf.Path(root + "/ojw_rod2_%d" % idx)
+                    rod2 = UsdGeom.Xform.Define(stage, rod2_path)
+                    rod2_prim = rod2.GetPrim()
+                    UsdPhysics.RigidBodyAPI.Apply(rod2_prim)
+                    mass_api = UsdPhysics.MassAPI.Apply(rod2_prim)
+                    mass_api.CreateMassAttr().Set(0.001)
+                    mass_api.CreateDiagonalInertiaAttr().Set(Gf.Vec3f(1e-7, 1e-7, 1e-7))
+                    Tr = cache.GetLocalToWorldTransform(root_prim)
+                    K2_local_root = Tr.GetInverse().Transform(K2w)
+                    try:
+                        rod2.AddTranslateOp().Set(Gf.Vec3d(K2_local_root))
+                    except Exception:
+                        rod2_prim.GetAttribute("xformOp:translate").Set(Gf.Vec3d(K2_local_root))
+                    # rod2 로컬 = 월드 정렬 (회전 없음) — P2 는 rod2 로컬로 (P2w − K2w)
+                    d_vec = Gf.Vec3d(P2w[0] - K2w[0], P2w[1] - K2w[1], P2w[2] - K2w[2])
+                    # 무릎→rod2 스패리컬: 트리 조인트 (exclude 없음 — rod2 가 articulation 에 편입)
+                    ja = UsdPhysics.SphericalJoint.Define(stage, Sdf.Path(root + "/ojw_rod2_%d_a" % idx))
+                    ja.CreateBody0Rel().SetTargets([Sdf.Path(knee_parent)])
+                    ja.CreateBody1Rel().SetTargets([rod2_path])
+                    ja.CreateLocalPos0Attr().Set(Gf.Vec3f(knee[0] + u[0], knee[1] + u[1], knee[2] + u[2]))
+                    ja.CreateLocalPos1Attr().Set(Gf.Vec3f(0.0, 0.0, 0.0))
+                    ja.CreateLocalRot0Attr().Set(Gf.Quatf(1.0))
+                    ja.CreateLocalRot1Attr().Set(Gf.Quatf(1.0))
+                    try:
+                        # rod2 자체축 스핀(볼-볼 로드의 자유 회전)이 무감쇠로 계속 돌지 않게 소량 마찰
+                        ja.GetPrim().CreateAttribute("physxJoint:jointFriction",
+                                                     Sdf.ValueTypeNames.Float).Set(0.0001)
+                    except Exception:
+                        pass
+                    jb = UsdPhysics.SphericalJoint.Define(stage, Sdf.Path(root + "/ojw_rod2_%d_b" % idx))
+                    jb.CreateBody0Rel().SetTargets([rod2_path])
+                    jb.CreateBody1Rel().SetTargets([Sdf.Path(plate_path)])
+                    jb.CreateLocalPos0Attr().Set(Gf.Vec3f(d_vec[0], d_vec[1], d_vec[2]))
+                    jb.CreateLocalPos1Attr().Set(Gf.Vec3f(plate[0] + u[0], plate[1] + u[1], plate[2] + u[2]))
+                    jb.CreateLocalRot0Attr().Set(Gf.Quatf(1.0))
+                    jb.CreateLocalRot1Attr().Set(Gf.Quatf(1.0))
+                    jb.CreateExcludeFromArticulationAttr().Set(True)
+                    # ★평행 잠금 (안티평행사변형 봉쇄): rod2 는 rod1 과 항상 평행 — 회전 3축 잠금,
+                    #   병진 3축 자유 (D6). 없으면 빠른 천이 중 rod2 가 교차 상태로 플립해
+                    #   메커니즘이 잼 (T1 이 41° 에서 고착된 실측 사고 — 링키지 특이점 통과 실패).
+                    #   rod1 링크 = 무릎(β) child 의 child (γ joint 의 child) — 체인 한 칸 하강으로 해석
+                    rod1_path = None
+                    kc = _rel_target(kj, "physics:body1")
+                    if kc:
+                        for nm2 in joint_prims:
+                            if _rel_target(nm2, "physics:body0") == kc:
+                                rod1_path = _rel_target(nm2, "physics:body1")
+                                break
+                    if rod1_path and os.environ.get("OJW_ROD2_PLOCK", "1") == "1":
+                        jl = UsdPhysics.Joint.Define(stage, Sdf.Path(root + "/ojw_rod2_%d_p" % idx))
+                        jl.CreateBody0Rel().SetTargets([Sdf.Path(rod1_path)])
+                        jl.CreateBody1Rel().SetTargets([rod2_path])
+                        jl.CreateLocalPos0Attr().Set(Gf.Vec3f(0.0, 0.0, 0.0))
+                        jl.CreateLocalPos1Attr().Set(Gf.Vec3f(0.0, 0.0, 0.0))
+                        jl.CreateLocalRot0Attr().Set(Gf.Quatf(1.0))
+                        jl.CreateLocalRot1Attr().Set(Gf.Quatf(1.0))
+                        # 일반 PhysicsJoint(D6) = 기본 전 DOF 잠금 → 병진 3축만 해방 (회전은 잠긴 채)
+                        for dof in ("transX", "transY", "transZ"):
+                            la = UsdPhysics.LimitAPI.Apply(jl.GetPrim(), dof)
+                            la.CreateLowAttr().Set(float("-inf"))
+                            la.CreateHighAttr().Set(float("inf"))
+                        jl.CreateExcludeFromArticulationAttr().Set(True)
+                    n_loop += 1
+        print("[Closure] 루프 조인트 %d개 저작 완료 + dpass 해제 %d개 + T 드라이브 완화 %d개 (물리 폐루프)"
+              % (n_loop, n_freed, n_soft), flush=True)
+    except Exception as ex:
+        print("[Closure] 루프 조인트 저작 실패: %s" % ex, flush=True)
+
+
+_passive_dbg = {"announced": False, "fail": 0, "t_print": 0.0}
+
+
+def _apply_passive_puppet(art, names, positions):
+    """이 스텝의 모터 타깃으로 종동 조인트 타깃 계산 — positions 리스트에 기입. 반환: 기입 여부
+
+    ★모터값은 명령(이 스텝에 계산된 positions[i]) 우선, 없을 때만 실측(cur[i]).
+      실측을 쓰면 물리 흔들림이 수식→드라이브로 되먹임돼 워크스페이스 경계
+      (∂수식/∂모터 폭증) 근처에서 발진한다 (2026-08-25 URDF 경로 실사고).
+    ★스텝당 타깃 변화 ±20° 제한 — 경계에서 수식이 잠시 실패했다 복귀할 때
+      타깃이 한 스텝에 점프하면 고강성 드라이브가 로봇을 걷어차는 것을 방지.
+    """
+    if not _passive_defs:
+        return False
+    try:
+        cur = art.get_joint_positions()
+        if cur is None:
+            return False
+    except Exception:
+        return False
+    motors = {}
+    name_idx = {}
+    for i, jn in enumerate(names):
+        name_idx[jn] = i
+        if jn.startswith("T") and jn[1:].isdigit():
+            src = positions[i] if positions[i] is not None else float(cur[i])
+            motors[int(jn[1:])] = float(src) * 180.0 / math.pi
+    if not motors:
+        return False
+    last = getattr(art, "_ojw_passive_last", None)
+    if last is None:
+        last = {}
+        try:
+            art._ojw_passive_last = last
+        except Exception:
+            pass
+    # 이번 스텝 모터 변화량 — 수식 출력 점프가 "모터 명령 점프" 로 설명 가능한지 판정용
+    m_prev = getattr(art, "_ojw_passive_mprev", None)
+    m_step = 0.0
+    if m_prev:
+        for k, v in motors.items():
+            dv = abs(v - m_prev.get(k, v))
+            if dv > m_step:
+                m_step = dv
+    try:
+        art._ojw_passive_mprev = dict(motors)
+    except Exception:
+        pass
+    wrote = False
+    dbg_jn = None
+    for pdef in _passive_defs:
+        jn = pdef.get("joint")
+        if jn not in name_idx:
+            continue
+        f_val = _edh_eval_formula(pdef.get("formula", ""), motors)
+        if f_val is None:
+            _passive_dbg["fail"] += 1
+            continue
+        m_deg = motors.get(pdef.get("motor_id", -1), 0.0)
+        q_deg = (m_deg + f_val) - float(pdef.get("zero_bake_deg", 0.0))
+        prev = last.get(jn)
+        if prev is not None:
+            # ★각도 연속화(unwrap): atan2 경계에서 수식이 360° 랩 — 렌더/MuJoCo(qpos)는
+            #   mod360 이라 안 보이지만 드라이브 타깃은 실제로 한 바퀴 돌다 ±180° 한계에
+            #   걸려 "서서히 분해" 됐다 (2026-08-25 실사고, T1≈-99° 에서 +360.3 점프).
+            d_un = ((q_deg - prev + 180.0) % 360.0) - 180.0
+            # 분기 점프 가드: 모터 변화(m_step)로 설명 안 되는 큰 점프 = FK 팬텀 분기
+            #   (|T1|≥130° 등 물리 불가능 접힘 영역에서 117~128° 진짜 점프 실측) —
+            #   추종하면 관절이 찢어지므로 1°/스텝 서행 (복귀 시 자기치유).
+            #   정상/명령 점프는 20°/스텝 슬루 유지.
+            rate = 1.0 if abs(d_un) > (5.0 + 3.0 * m_step) else 20.0
+            if d_un > rate:
+                d_un = rate
+            elif d_un < -rate:
+                d_un = -rate
+            q_deg = prev + d_un
+        last[jn] = q_deg
+        positions[name_idx[jn]] = q_deg * math.pi / 180.0
+        # 추종 오차 (타깃 vs 실측) — 최대값을 하트비트에 노출.
+        # 커지면 = 드라이브 무력(토크 오프) 또는 관절 한계 충돌 — "토크 풀림" 판별용.
+        err = abs(q_deg - float(cur[name_idx[jn]]) * 180.0 / math.pi)
+        if err > _passive_dbg.get("trk_err", 0.0):
+            _passive_dbg["trk_err"] = err
+        if dbg_jn is None:
+            dbg_jn = jn
+        wrote = True
+    # 하트비트 진단 — 퍼펫 실동작 여부(타깃 기입)와 물리 추종 여부(실측)를 로그로 남김
+    if wrote:
+        now = time.time()
+        if not _passive_dbg["announced"]:
+            _passive_dbg["announced"] = True
+            _passive_dbg["t_print"] = now
+            print("[Passive] puppet ACTIVE (%d joints, motor src=cmd>measured)"
+                  % len(last), flush=True)
+        elif now - _passive_dbg["t_print"] >= 5.0:
+            _passive_dbg["t_print"] = now
+            mtxt = ",".join("T%d=%.1f" % (k, motors[k]) for k in sorted(motors))
+            i_dbg = name_idx.get(dbg_jn, -1)
+            meas = float(cur[i_dbg]) * 180.0 / math.pi if i_dbg >= 0 else 0.0
+            print("[Passive] hb %s | %s: tgt=%.1f meas=%.1f | trk_err=%.1f | eval_fail=%d"
+                  % (mtxt, dbg_jn, last.get(dbg_jn, 0.0), meas,
+                     _passive_dbg.get("trk_err", 0.0), _passive_dbg["fail"]), flush=True)
+            _passive_dbg["fail"] = 0
+            _passive_dbg["trk_err"] = 0.0
+    return wrote
+
+
+# ============================================================================
 # Physics step callback
 # ============================================================================
 def _on_physics_step(dt: float) -> None:
@@ -2228,13 +2762,19 @@ def _on_physics_step(dt: float) -> None:
                     frac = (now - t_start) / (t_end - t_start)
                     origin = joint_pos_origin.get(key, target)
                     cmd = origin + (target - origin) * frac
-                # actuator-net 타깃셰이핑 (revolute 만 — prismatic 은 원값)
-                if _actnet_models and not (ridx < len(prismatic_joint_names)
-                                           and jname in prismatic_joint_names[ridx]):
+                # actuator-net 타깃셰이핑 (revolute 만 — prismatic 은 원값,
+                # 로봇-모델 불일치 시 게이트 OFF)
+                if _actnet_models and _actnet_gate["on"] \
+                        and not (ridx < len(prismatic_joint_names)
+                                 and jname in prismatic_joint_names[ridx]):
                     positions[i] = _actnet_shape(key, jname, ridx, cmd, dt)
                 else:
                     positions[i] = cmd
                 any_pos = True
+
+        # 종동(passive) 조인트 퍼펫팅 — 현재 모터각 기준 매 스텝 갱신 (타깃 유무와 무관)
+        if _apply_passive_puppet(art, names, positions):
+            any_pos = True
 
         if not any_pos and not any_vel:
             continue
@@ -2265,6 +2805,7 @@ def main() -> None:
         print("[Init] file not found: %s" % urdf_path, flush=True)
         simulation_app.close()
         return
+    _load_passive_defs(os.path.dirname(urdf_path))  # 종동 조인트 퍼펫팅 메타 (있을 때만)
     if _is_usd_path(urdf_path):
         print("[Init] load mode = USD (%s)" % urdf_path, flush=True)
     else:
@@ -2347,6 +2888,17 @@ def _post_spawn_init(spawn_z: float) -> None:
     #    world.reset() 이 articulation 의 default state 를 적용하므로, reset 전에
     #    base pose 를 default 로 박아두면 reset 후에도 자동 유지됨.
     #    (이전 버그: reset 후 set_world_pose 만 호출 → physics view 가 이미 (0,0,0) 캐시한 상태)
+    # 델타 폐루프 조인트 저작 — world.reset() 의 physics 파싱 *전* 에 있어야 반영됨
+    _author_delta_closures(spawn_z)
+    # 폐루프 모드 dt (경로별 실측 최적):
+    #   USD 경로 = 1/240 — 1/60 은 dpass_4(팔1 되감기)가 4° 무름, 1/240 에서 1.4° (실측)
+    #   URDF 경로 = 1/60 유지 — 1/240 은 오히려 T2 스톨(41° 고착) 유발, 1/60 은 전 자세 정상 (실측)
+    if _closure_defs and _ojw_usd_mode[0]:
+        try:
+            world.get_physics_context().set_physics_dt(1.0 / 240.0)
+            print("[Closure] physics dt = 1/240 (USD 경로 폐루프 구속 강성 확보)", flush=True)
+        except Exception as _ex:
+            print("[Closure] physics dt 설정 실패: %s" % _ex, flush=True)
     import numpy as _np
     _default_pos = _np.array([0.0, 0.0, spawn_z], dtype=_np.float32)
     _default_orn = _np.array([1.0, 0.0, 0.0, 0.0], dtype=_np.float32)  # wxyz identity
@@ -2406,6 +2958,19 @@ def _post_spawn_init(spawn_z: float) -> None:
                 print("[Init] DOFs: %s" % list(art.dof_names), flush=True)
             except Exception:
                 pass
+            # ── ActNet 적용 게이트 판정 (첫 로봇 기준 1회) ──
+            try:
+                if _actnet_models and art is articulations[0]:
+                    _dof = set(art.dof_names)
+                    _mdl = set(_actnet_models.keys())
+                    _cov = len(_mdl & _dof) / float(max(1, len(_mdl)))
+                    _actnet_gate["on"] = (_cov >= 0.6)
+                    print("[ActNet] robot match %.0f%% (%d/%d joints) -> %s"
+                          % (_cov * 100.0, len(_mdl & _dof), len(_mdl),
+                             "ON" if _actnet_gate["on"] else
+                             "OFF (다른 로봇용 모델 — 셰이핑 비활성)"), flush=True)
+            except Exception:
+                pass
             # ── SPAWN_Z 보험 재적용 (default_state 가 살아남았으면 no-op, 아니면 강제 적용) ──
             try:
                 art.set_world_pose(position=_default_pos, orientation=_default_orn)
@@ -2447,6 +3012,13 @@ def _post_spawn_init(spawn_z: float) -> None:
                         for _jprim in _joints_prim.GetChildren():
                             # continuous joint (velocity drive) 는 _set_joint_to_velocity_drive 가 이미 처리.
                             # 여기서는 position drive (stiffness>0) 만 강화 — velocity drive 는 손대지 않음.
+                            # ★폐루프 모드의 델타 관절은 제외 — _author_delta_closures 가 dpass 해제/
+                            #   T 완화(deg 8.73 = rad 500)를 해뒀는데 여기서 1e9 로 되굳히면
+                            #   그램급 링크가 폭력 가속돼 팔꿈치 플립 분기로 도약한다 (실측 사고)
+                            _jn0 = _jprim.GetName()
+                            if _closure_defs and (_jn0.startswith("dpass_")
+                                                  or (_jn0.startswith("T") and _jn0[1:].isdigit())):
+                                continue
 
                             # angular drive (revolute / continuous)
                             try:
@@ -2489,6 +3061,7 @@ def _despawn_and_reload(urdf_path: str, spawn_z: float) -> None:
     6.0 변환은 standalone stage 라 세션 중에도 안전. ★메인 스레드에서만 호출."""
     global _world_cameras_loaded
     print("[Reload] Apply DH 핫 리로드 시작", flush=True)
+    _load_passive_defs(os.path.dirname(urdf_path))  # 재-Export 로 갱신된 퍼펫팅 메타 재로드
     try:
         try:
             world.stop()
@@ -2525,6 +3098,10 @@ def _despawn_and_reload(urdf_path: str, spawn_z: float) -> None:
         for d in (joint_pos_targets, joint_pos_origin, joint_pos_t_start,
                   joint_pos_t_end, joint_vel_targets):
             d.clear()
+        # ★actnet 내부 상태도 반드시 청소 — 리로드 전의 격한 이력이 남으면
+        #   새 로봇의 타깃 셰이핑이 계속 오염돼 "부서진 영향이 리프레시 후에도
+        #   지속" 되는 실사고 (2026-08-26)
+        _actnet_state.clear()
         with _mjpeg_lock:
             _mjpeg_frames.clear()
         _world_cameras_loaded = False
@@ -2537,6 +3114,33 @@ def _despawn_and_reload(urdf_path: str, spawn_z: float) -> None:
     except Exception as ex:
         import traceback
         print("[Reload] 실패: %s\n%s" % (ex, traceback.format_exc()), flush=True)
+
+
+def _dump_state() -> None:
+    """진단용 상태 덤프 (OJW_STATE_DUMP_SEC) — 관절각(deg) + 링크 world 위치.
+    조립 이상(조인트 미바인딩/프레임 오해석) 을 수치로 특정하기 위한 것."""
+    try:
+        if not articulations or articulations[0] is None:
+            return
+        art = articulations[0]
+        names = art.dof_names
+        q = art.get_joint_positions()
+        if q is not None:
+            print("[Dump] q(deg): " + ", ".join(
+                "%s=%.2f" % (n, float(v) * 180.0 / math.pi)
+                for n, v in zip(names, q)), flush=True)
+        stage = omni.usd.get_context().get_stage()
+        root = stage.GetPrimAtPath(articulation_paths[0])
+        if not root or not root.IsValid():
+            return
+        cache = UsdGeom.XformCache(Usd.TimeCode.Default())
+        for prim in Usd.PrimRange(root):
+            if prim.HasAPI(UsdPhysics.RigidBodyAPI):
+                t = cache.GetLocalToWorldTransform(prim).ExtractTranslation()
+                print("[Dump] %s pos=(%.4f, %.4f, %.4f)"
+                      % (prim.GetName(), t[0], t[1], t[2]), flush=True)
+    except Exception as ex:
+        print("[Dump] failed: %s" % ex, flush=True)
 
 
 def _run_main_loop(urdf_path: str, _spawn_z: float) -> None:
@@ -2561,6 +3165,13 @@ def _run_main_loop(urdf_path: str, _spawn_z: float) -> None:
     _ojw_auto_exit_start = time.time() if _ojw_auto_exit_sec > 0 else None
     if _ojw_auto_exit_start is not None:
         print(f"[OJW] AUTO_EXIT_SEC={_ojw_auto_exit_sec} (capture mode)", flush=True)
+
+    # ── 상태 덤프 주기 (진단용) — 환경변수 OJW_STATE_DUMP_SEC ────────────
+    try:
+        _ojw_dump_sec = float(os.environ.get('OJW_STATE_DUMP_SEC', '0') or 0)
+    except Exception:
+        _ojw_dump_sec = 0.0
+    _ojw_dump_last = [time.time()]
 
     # ── cv2 카메라 윈도우 (PyBullet 과 동일한 UX, OPT-IN) ──────────────
     #   기본 OFF — Isaac Sim 의 Omniverse Kit GUI 와 cv2 HighGUI 가 같은 프로세스에서
@@ -2628,6 +3239,11 @@ def _run_main_loop(urdf_path: str, _spawn_z: float) -> None:
             except Exception:
                 pass
             _serve_cam_requests(_isaac_get_rgb)
+
+            # === 진단 상태 덤프 (OJW_STATE_DUMP_SEC 초마다) ===
+            if _ojw_dump_sec > 0 and (time.time() - _ojw_dump_last[0]) >= _ojw_dump_sec:
+                _ojw_dump_last[0] = time.time()
+                _dump_state()
 
             # === MJPEG 프레임 펌프 (Ojw.CStream 소비용, ~15fps) ===
             #   카메라 캡처는 메인 스레드 전용이라 여기서 찍어 두고
@@ -2723,6 +3339,16 @@ def _run_main_loop(urdf_path: str, _spawn_z: float) -> None:
     try:
         if _cv2_ok:
             _cv2.destroyAllWindows()
+    except Exception:
+        pass
+
+    # ★소켓 즉시 반납 — simulation_app.close() 가 행으로 멈춰 프로세스가 좀비로 남아도
+    #   포트 4000 이 풀려 있어야 다음 인스턴스가 정상 바인드/명령 수신한다.
+    try:
+        if _server_sock[0] is not None:
+            _server_sock[0].close()
+            _server_sock[0] = None
+            print("[Sock] closed (port released)", flush=True)
     except Exception:
         pass
 

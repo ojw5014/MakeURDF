@@ -1429,6 +1429,226 @@ print("Use the MuJoCo viewer's control panel to adjust joints manually.")
 # 물리 시뮬레이션 사용 여부 (False: 기구학만 사용, 중력 영향 없음)
 USE_PHYSICS_SIMULATION = True
 
+####################################################
+# 종동(passive) 조인트 퍼펫팅 — delta_passive.json (2026-08-25)
+#   MakeUrdf Export 가 폐루프 종동 관절(델타 무릎 β/γ 등)을 무동력 dpass_* 조인트로
+#   내보내고 각도 수식을 JSON 으로 동봉한다. 매 스텝 현재 모터각(T*)으로 수식을 평가해
+#   qpos 를 직접 구동 → UI 슬라이더/소켓 어느 쪽으로 T 를 움직여도 폐루프가 유지된다.
+#   q_pass_deg = (motor_deg + eval(formula, motors_deg)) - zero_bake_deg
+####################################################
+_delta_geo = [55.0, 100.0, 215.0, 24.0]  # deltainit 으로 갱신 (변 길이 규약)
+
+
+def _delta_fk(m0, m1, m2):
+    e, f, re_, rf = _delta_geo[3], _delta_geo[0], _delta_geo[2], _delta_geo[1]
+    d2r = math.pi / 180.0
+    t = (f - e) * math.tan(30 * d2r) / 2
+    y1 = -(t + rf * math.cos(-m0 * d2r)); z1 = -rf * math.sin(-m0 * d2r)
+    y2 = (t + rf * math.cos(-m1 * d2r)) * math.sin(30 * d2r); x2 = y2 * math.tan(60 * d2r); z2 = -rf * math.sin(-m1 * d2r)
+    y3 = (t + rf * math.cos(-m2 * d2r)) * math.sin(30 * d2r); x3 = -y3 * math.tan(60 * d2r); z3 = -rf * math.sin(-m2 * d2r)
+    dnm = (y2 - y1) * x3 - (y3 - y1) * x2
+    w1 = y1 * y1 + z1 * z1; w2 = x2 * x2 + y2 * y2 + z2 * z2; w3 = x3 * x3 + y3 * y3 + z3 * z3
+    a1 = (z2 - z1) * (y3 - y1) - (z3 - z1) * (y2 - y1); b1 = -((w2 - w1) * (y3 - y1) - (w3 - w1) * (y2 - y1)) / 2.0
+    a2 = -(z2 - z1) * x3 + (z3 - z1) * x2;              b2 = ((w2 - w1) * x3 - (w3 - w1) * x2) / 2.0
+    a = a1 * a1 + a2 * a2 + dnm * dnm
+    b = 2 * (a1 * b1 + a2 * (b2 - y1 * dnm) - z1 * dnm * dnm)
+    c = (b2 - y1 * dnm) ** 2 + b1 * b1 + dnm * dnm * (z1 * z1 - re_ * re_)
+    d = b * b - 4.0 * a * c
+    if d < 0 or d != d:
+        return None
+    h = -0.5 * (b + math.sqrt(d)) / a
+    return ((a1 * h + b1) / dnm, (a2 * h + b2) / dnm, -h)
+
+
+def _delta_calc_passive(arm, m0, m1, m2):
+    p = _delta_fk(m0, m1, m2)
+    if p is None:
+        return None
+    d2r = math.pi / 180.0
+    psi = 30.0 if arm == 1 else (150.0 if arm == 2 else -90.0)
+    t = m1 if arm == 1 else (m2 if arm == 2 else m0)
+    cp_, sp_ = math.cos(psi * d2r), math.sin(psi * d2r)
+    px = p[0] * cp_ + p[1] * sp_; py = -p[0] * sp_ + p[1] * cp_; pz = p[2]
+    a_f = 0.5 * 0.57735 * _delta_geo[0]
+    a_e = 0.5 * 0.57735 * _delta_geo[3]
+    kx = a_f + _delta_geo[1] * math.cos(t * d2r)
+    kz = -_delta_geo[1] * math.sin(t * d2r)
+    vx = (px + a_e) - kx; vy = py; vz = pz - kz
+    vlen = math.sqrt(vx * vx + vy * vy + vz * vz)
+    if vlen < 1e-9:
+        return None
+    gamma = -math.asin(max(-1.0, min(1.0, vy / vlen))) / d2r
+    beta = -t - math.atan2(vz, vx) / d2r
+    return beta, gamma
+
+
+_EDH_OPS = ("=", "+", "-", "*", "/")
+_EDH_CMDS = ("deltainit", "getdelta") + _EDH_OPS
+
+
+def _edh_operand(tok, motors):
+    tok = tok.strip()
+    if not tok:
+        return None
+    if tok[0] == "t":
+        try:
+            return float(motors.get(int(tok[1:]), 0.0))
+        except (ValueError, TypeError):
+            return None
+    try:
+        return float(tok)
+    except ValueError:
+        return None
+
+
+def _edh_eval_formula(formula, motors):
+    """C# Edh_EvalDeltaFormula 포팅 — 실패 시 None. motors: {모터ID: deg}"""
+    try:
+        toks = formula.strip().lower().split(";")
+        result = 0.0
+        n = 0
+        while n < len(toks):
+            tok = toks[n].strip()
+            if not tok:
+                n += 1; continue
+            if tok == "deltainit":
+                if n + 4 >= len(toks):
+                    return None
+                vals = [_edh_operand(toks[n + k], motors) for k in range(1, 5)]
+                if any(v is None for v in vals):
+                    return None
+                _delta_geo[0], _delta_geo[1], _delta_geo[2], _delta_geo[3] = vals
+                n += 5; continue
+            if tok == "getdelta":
+                if n + 5 >= len(toks):
+                    return None
+                vals = [_edh_operand(toks[n + k], motors) for k in range(1, 6)]
+                if any(v is None for v in vals):
+                    return None
+                arm, sel, m0, m1, m2 = int(vals[0]), int(vals[1]), vals[2], vals[3], vals[4]
+                if sel <= 1:
+                    bg = _delta_calc_passive(arm, m0, m1, m2)
+                    if bg is None:
+                        return None
+                    result = bg[0] if sel == 0 else bg[1]
+                else:
+                    p = _delta_fk(m0, m1, m2)
+                    if p is None:
+                        return None
+                    result = p[sel - 2]
+                n += 6; continue
+            if tok in _EDH_OPS:
+                nxt = toks[n + 1].strip() if n + 1 < len(toks) else ""
+                if nxt in _EDH_CMDS:
+                    n += 1; continue
+                v = _edh_operand(nxt, motors)
+                if v is None:
+                    return None
+                if tok == "=":
+                    result = v
+                elif tok == "+":
+                    result += v
+                elif tok == "-":
+                    result -= v
+                elif tok == "*":
+                    result *= v
+                else:
+                    result = result / v if v != 0 else 0.0
+                n += 2; continue
+            return None
+        return result
+    except Exception:
+        return None
+
+
+_passive_bindings = []   # [(qpos_adr, dof_adr, def)]
+_motor_qpos_by_id = {}   # 모터ID → qpos_adr
+
+
+def _init_passive_puppet():
+    global _passive_bindings, _motor_qpos_by_id
+    _passive_bindings = []
+    _motor_qpos_by_id = {}
+    _passive_last_mj.clear()
+    path = os.path.join(release_dir, "delta_passive.json")
+    if not os.path.exists(path):
+        return
+    try:
+        with open(path, "r", encoding="utf-8") as fp:
+            _pj = _json.load(fp)
+            defs = _pj.get("passive_joints", [])
+            _closures = _pj.get("closures", [])
+    except Exception as ex:
+        print(f"[Passive] delta_passive.json 로드 실패: {ex}")
+        return
+    # ★진짜 물리 폐루프 모드 (2026-08-26): MJCF 에 <connect>/<tendon> equality 가 저작되어
+    #   있으면 (closures 존재 + MJCF 물리 모드) 물리가 폐루프를 유지한다 — 퍼펫 불필요.
+    #   퍼펫 qpos 강제는 구속 솔버와 싸우므로 반드시 꺼야 한다.
+    #   URDF/기구학 모드는 equality 가 없으므로 기존 퍼펫 유지.
+    if _closures and USE_MJCF_MODE and USE_PHYSICS_SIMULATION:
+        n_eq = sum(1 for i in range(model.neq)
+                   if model.eq_type[i] in (mujoco.mjtEq.mjEQ_CONNECT, mujoco.mjtEq.mjEQ_TENDON))
+        if n_eq > 0:
+            print(f"[Closure] 물리 폐루프 모드: equality {n_eq}개 (connect+tendon) — 퍼펫 OFF")
+            return
+    for i in range(model.njnt):
+        jn = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, i)
+        if jn and jn.startswith("T") and jn[1:].isdigit():
+            _motor_qpos_by_id[int(jn[1:])] = int(model.jnt_qposadr[i])
+    for pdef in defs:
+        jn = pdef.get("joint")
+        jid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, jn) if jn else -1
+        if jid < 0:
+            continue
+        _passive_bindings.append((int(model.jnt_qposadr[jid]), int(model.jnt_dofadr[jid]), pdef))
+    if _passive_bindings:
+        print(f"[Passive] 퍼펫팅 활성: 종동 조인트 {len(_passive_bindings)}개, 모터 {sorted(_motor_qpos_by_id.keys())}")
+
+
+_passive_last_mj = {}
+
+
+def _apply_passive_puppet_mj():
+    """매 스텝: 현재 모터각으로 종동 조인트 qpos 직접 구동 (+qvel 0 — 드리프트 방지)
+
+    ★unwrap: β 수식의 atan2 경계에서 값이 360° 랩 — qpos 는 시각상 mod360 이지만
+      ±π 관절 한계(limited)의 제약력이 스며들 수 있어 최근접 연속 표현으로 유지.
+      모터 변화로 설명 안 되는 큰 점프(FK 팬텀 분기)는 1°/스텝 서행 (Isaac 러너와 동일)."""
+    if not _passive_bindings:
+        return
+    motors = {}
+    m_step = 0.0
+    for mid, adr in _motor_qpos_by_id.items():
+        v = float(data.qpos[adr]) * 180.0 / math.pi
+        motors[mid] = v
+        pv = _passive_last_mj.get(("m", mid))
+        if pv is not None and abs(v - pv) > m_step:
+            m_step = abs(v - pv)
+        _passive_last_mj[("m", mid)] = v
+    for qadr, dadr, pdef in _passive_bindings:
+        f_val = _edh_eval_formula(pdef.get("formula", ""), motors)
+        if f_val is None:
+            continue
+        m_deg = motors.get(pdef.get("motor_id", -1), 0.0)
+        q_deg = (m_deg + f_val) - float(pdef.get("zero_bake_deg", 0.0))
+        prev = _passive_last_mj.get(qadr)
+        if prev is not None:
+            d_un = ((q_deg - prev + 180.0) % 360.0) - 180.0
+            rate = 1.0 if abs(d_un) > (5.0 + 3.0 * m_step) else 20.0
+            if d_un > rate:
+                d_un = rate
+            elif d_un < -rate:
+                d_un = -rate
+            q_deg = prev + d_un
+        _passive_last_mj[qadr] = q_deg
+        data.qpos[qadr] = q_deg * math.pi / 180.0
+        if 0 <= dadr < len(data.qvel):
+            data.qvel[dadr] = 0.0
+
+
+_init_passive_puppet()
+
+
 def simulation_step():
     """시뮬레이션 스텝 실행"""
     global data, model
@@ -1455,6 +1675,9 @@ def simulation_step():
 
         # 기구학만 계산 (물리 시뮬레이션 없이 위치만 업데이트)
         mujoco.mj_forward(model, data)
+
+    # 종동(passive) 조인트 퍼펫팅 — 스텝 후 최종 자세를 수식으로 강제 (폐루프 유지)
+    _apply_passive_puppet_mj()
 
     # 트랙 벨트 flow 애니메이션 (mocap body 위치 갱신)
     if 'track_belts_mj' in globals() and track_belts_mj:

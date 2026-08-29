@@ -1728,6 +1728,309 @@ for i in range(num_joints):
     joint_name = info[1].decode('utf-8')
     joint_name_to_id[joint_name] = i
 
+
+# ============================================================================
+# 종동(passive) 조인트 퍼펫팅 — delta_passive.json (PyBullet 판, 2026-08-26)
+#   Isaac/MuJoCo 와 동일 규약: q_pass = (m + f(m)) - f0, 매 스텝 모터각으로 수식
+#   평가 → dpass_* 를 resetJointState 로 키네마틱 구동 (기본 모터는 해제).
+#   unwrap(최근접 mod360) + 분기가드(모터 변화로 설명 안 되는 점프 서행) 포함.
+# ============================================================================
+_delta_geo = [55.0, 100.0, 215.0, 24.0]  # deltainit 으로 갱신 (변 길이 규약)
+
+
+def _delta_fk(m0, m1, m2):
+    """COjw_05_Math.Delta_Parallel_ForwardKinematics 포팅 (+z 규약, deg 입력)"""
+    e, f, re_, rf = _delta_geo[3], _delta_geo[0], _delta_geo[2], _delta_geo[1]
+    d2r = math.pi / 180.0
+    t = (f - e) * math.tan(30 * d2r) / 2
+    y1 = -(t + rf * math.cos(-m0 * d2r)); z1 = -rf * math.sin(-m0 * d2r)
+    y2 = (t + rf * math.cos(-m1 * d2r)) * math.sin(30 * d2r); x2 = y2 * math.tan(60 * d2r); z2 = -rf * math.sin(-m1 * d2r)
+    y3 = (t + rf * math.cos(-m2 * d2r)) * math.sin(30 * d2r); x3 = -y3 * math.tan(60 * d2r); z3 = -rf * math.sin(-m2 * d2r)
+    dnm = (y2 - y1) * x3 - (y3 - y1) * x2
+    w1 = y1 * y1 + z1 * z1; w2 = x2 * x2 + y2 * y2 + z2 * z2; w3 = x3 * x3 + y3 * y3 + z3 * z3
+    a1 = (z2 - z1) * (y3 - y1) - (z3 - z1) * (y2 - y1); b1 = -((w2 - w1) * (y3 - y1) - (w3 - w1) * (y2 - y1)) / 2.0
+    a2 = -(z2 - z1) * x3 + (z3 - z1) * x2;              b2 = ((w2 - w1) * x3 - (w3 - w1) * x2) / 2.0
+    a = a1 * a1 + a2 * a2 + dnm * dnm
+    b = 2 * (a1 * b1 + a2 * (b2 - y1 * dnm) - z1 * dnm * dnm)
+    c = (b2 - y1 * dnm) ** 2 + b1 * b1 + dnm * dnm * (z1 * z1 - re_ * re_)
+    d = b * b - 4.0 * a * c
+    if d < 0 or d != d:
+        return None
+    h = -0.5 * (b + math.sqrt(d)) / a
+    return ((a1 * h + b1) / dnm, (a2 * h + b2) / dnm, -h)
+
+
+def _delta_calc_passive(arm, m0, m1, m2):
+    """COjw_05_Math.Delta_Parallel_CalcPassive 포팅 — (beta, gamma) deg 반환"""
+    pt = _delta_fk(m0, m1, m2)
+    if pt is None:
+        return None
+    d2r = math.pi / 180.0
+    psi = 30.0 if arm == 1 else (150.0 if arm == 2 else -90.0)
+    t = m1 if arm == 1 else (m2 if arm == 2 else m0)
+    cp_, sp_ = math.cos(psi * d2r), math.sin(psi * d2r)
+    px = pt[0] * cp_ + pt[1] * sp_; py = -pt[0] * sp_ + pt[1] * cp_; pz = pt[2]
+    a_f = 0.5 * 0.57735 * _delta_geo[0]
+    a_e = 0.5 * 0.57735 * _delta_geo[3]
+    kx = a_f + _delta_geo[1] * math.cos(t * d2r)
+    kz = -_delta_geo[1] * math.sin(t * d2r)
+    vx = (px + a_e) - kx; vy = py; vz = pz - kz
+    vlen = math.sqrt(vx * vx + vy * vy + vz * vz)
+    if vlen < 1e-9:
+        return None
+    gamma = -math.asin(max(-1.0, min(1.0, vy / vlen))) / d2r
+    beta = -t - math.atan2(vz, vx) / d2r
+    return beta, gamma
+
+
+_EDH_OPS = ("=", "+", "-", "*", "/")
+_EDH_CMDS = ("deltainit", "getdelta") + _EDH_OPS
+
+
+def _edh_operand(tok, motors):
+    tok = tok.strip()
+    if not tok:
+        return None
+    if tok[0] == "t":
+        try:
+            return float(motors.get(int(tok[1:]), 0.0))
+        except (ValueError, TypeError):
+            return None
+    try:
+        return float(tok)
+    except ValueError:
+        return None
+
+
+def _edh_eval_formula(formula, motors):
+    """C# Edh_EvalDeltaFormula 포팅 — 실패 시 None. motors: {모터ID: deg}"""
+    try:
+        toks = formula.strip().lower().split(";")
+        result = 0.0
+        n = 0
+        while n < len(toks):
+            tok = toks[n].strip()
+            if not tok:
+                n += 1; continue
+            if tok == "deltainit":
+                if n + 4 >= len(toks):
+                    return None
+                vals = [_edh_operand(toks[n + k], motors) for k in range(1, 5)]
+                if any(v is None for v in vals):
+                    return None
+                _delta_geo[0], _delta_geo[1], _delta_geo[2], _delta_geo[3] = vals
+                n += 5; continue
+            if tok == "getdelta":
+                if n + 5 >= len(toks):
+                    return None
+                vals = [_edh_operand(toks[n + k], motors) for k in range(1, 6)]
+                if any(v is None for v in vals):
+                    return None
+                arm, sel, m0, m1, m2 = int(vals[0]), int(vals[1]), vals[2], vals[3], vals[4]
+                if sel <= 1:
+                    bg = _delta_calc_passive(arm, m0, m1, m2)
+                    if bg is None:
+                        return None
+                    result = bg[0] if sel == 0 else bg[1]
+                else:
+                    pt = _delta_fk(m0, m1, m2)
+                    if pt is None:
+                        return None
+                    result = pt[sel - 2]
+                n += 6; continue
+            if tok in _EDH_OPS:
+                nxt = toks[n + 1].strip() if n + 1 < len(toks) else ""
+                if nxt in _EDH_CMDS:
+                    n += 1; continue  # 피연산자 자리에 명령 → 연산자 무효 (렌더 파서 거동)
+                v = _edh_operand(nxt, motors)
+                if v is None:
+                    return None
+                if tok == "=":
+                    result = v
+                elif tok == "+":
+                    result += v
+                elif tok == "-":
+                    result -= v
+                elif tok == "*":
+                    result *= v
+                else:
+                    result = result / v if v != 0 else 0.0
+                n += 2; continue
+            return None  # 미지원 토큰
+        return result
+    except Exception:
+        return None
+
+
+_passive_defs_pb = []
+_passive_last_pb = {}
+_passive_motor_ids_pb = {}
+_closure_mode_pb = False
+_closure_rods_pb = []      # 두 번째 로드 (거리 스프링): K2(무릎블록)↔P2(플레이트), 길이 L
+# ★스프링 게인은 질량에 맞춰 자동 스케일 (240Hz 외부힘은 명시적분 — K ≫ 0.15·m·f² 이면 폭발.
+#   1g 링크에 K=1500 을 줬다가 dt·ω=160 대폭발로 관절이 엉킨 실측 사고)
+_CLOSURE_ROD_K = 10.0      # N/m — _init 에서 링크 질량 기준 재계산
+_CLOSURE_ROD_C = 0.05      # N·s/m
+
+
+def _link_anchor_to_com_pb(link_idx, anchor):
+    """URDF 링크 프레임 앵커 → PyBullet COM(inertial) 프레임 (createConstraint 규약)"""
+    dyn = p.getDynamicsInfo(robot, link_idx)
+    inv_p_, inv_o_ = p.invertTransform(dyn[3], dyn[4])
+    pos, _ = p.multiplyTransforms(inv_p_, inv_o_, anchor, [0, 0, 0, 1])
+    return pos
+
+
+def _init_passive_puppet_pb():
+    global _passive_defs_pb, _closure_mode_pb, _closure_rods_pb
+    _passive_defs_pb = []
+    _closure_rods_pb = []
+    _closure_mode_pb = False
+    _passive_last_pb.clear()
+    _passive_motor_ids_pb.clear()
+    path = os.path.join(release_dir, "delta_passive.json")
+    if not os.path.exists(path):
+        return
+    try:
+        import json as _json
+        with open(path, "r", encoding="utf-8") as fp:
+            data = _json.load(fp)
+        closures = data.get("closures", [])
+        # 종동 조인트는 어느 모드든 무동력 (자유 관절)
+        for d in data.get("passive_joints", []):
+            jn = d.get("joint")
+            if jn in joint_name_to_id:
+                d["_jid"] = joint_name_to_id[jn]
+                p.setJointMotorControl2(robot, d["_jid"], p.VELOCITY_CONTROL, force=0)
+                if not closures:
+                    _passive_defs_pb.append(d)   # 폐루프 정보 없을 때만 퍼펫 폴백
+        for _nm, _jid in joint_name_to_id.items():
+            if _nm.startswith("T") and _nm[1:].isdigit():
+                _passive_motor_ids_pb[int(_nm[1:])] = _jid
+
+        # ★진짜 물리 폐루프 (2026-08-26): 퍼펫 대신 구속으로 폐루프 유지.
+        #   ①로드팁 point2point ×2 (MJCF <connect> 대응 — 앵커는 COM 프레임 변환 필수)
+        #   ②두 번째 로드 = 거리 스프링 ×3 (MJCF tendon equality 대응 — PyBullet 에 거리
+        #     구속이 없어 매 스텝 K2↔P2 스프링-댐퍼 외력으로 근사. 평행사변형 등가)
+        n_p2p = 0
+        for clo in closures:
+            rj = clo.get("rod_joint") or ""
+            pj_ = clo.get("plate_joint") or ""
+            if rj and rj in joint_name_to_id and pj_ in joint_name_to_id:
+                jid_r = joint_name_to_id[rj]
+                jid_p = joint_name_to_id[pj_]
+                a_r = _link_anchor_to_com_pb(jid_r, clo["rod_xyz"])
+                a_p = _link_anchor_to_com_pb(jid_p, clo["plate_xyz"])
+                cid = p.createConstraint(robot, jid_r, robot, jid_p,
+                                         p.JOINT_POINT2POINT, [0, 0, 0], a_r, a_p)
+                p.changeConstraint(cid, maxForce=500)
+                n_p2p += 1
+            kj = clo.get("knee_joint") or ""
+            ax = clo.get("pair_axis", [0, 0, 0])
+            alen = math.sqrt(ax[0] ** 2 + ax[1] ** 2 + ax[2] ** 2)
+            if kj and kj in joint_name_to_id and pj_ in joint_name_to_id and alen > 1e-9:
+                w = float(clo.get("pair_halfwidth_m", 0.03))
+                u = [ax[0] / alen * w, ax[1] / alen * w, ax[2] / alen * w]
+                knee = clo.get("knee_xyz", [0, 0, 0])
+                plate = clo.get("plate_xyz", [0, 0, 0])
+                _closure_rods_pb.append({
+                    "linkA": p.getJointInfo(robot, joint_name_to_id[kj])[16],  # 무릎 조인트의 parent 링크
+                    "posA": [knee[0] + u[0], knee[1] + u[1], knee[2] + u[2]],
+                    "linkB": joint_name_to_id[pj_],
+                    "posB": [plate[0] + u[0], plate[1] + u[1], plate[2] + u[2]],
+                    "L": float(clo.get("rod_len_m", 0.0)),
+                })
+        if closures:
+            _closure_mode_pb = True
+            # 스프링 게인 자동 스케일: 관련 링크 최소 질량 기준 (안정 한계의 15%)
+            global _CLOSURE_ROD_K, _CLOSURE_ROD_C
+            m_ref = None
+            for rod in _closure_rods_pb:
+                for li in (rod["linkA"], rod["linkB"]):
+                    if li >= 0:
+                        m_li = p.getDynamicsInfo(robot, li)[0]
+                        if m_li > 0 and (m_ref is None or m_li < m_ref):
+                            m_ref = m_li
+            if m_ref is not None:
+                _CLOSURE_ROD_K = max(1.0, min(0.15 * m_ref * 240.0 ** 2, 5000.0))
+                _CLOSURE_ROD_C = 0.6 * math.sqrt(_CLOSURE_ROD_K * m_ref)
+            print(f"[Closure] PyBullet 물리 폐루프: p2p {n_p2p}개 + rod2 스프링 {len(_closure_rods_pb)}개 "
+                  f"(K={_CLOSURE_ROD_K:.1f} C={_CLOSURE_ROD_C:.3f}) — 퍼펫 OFF", flush=True)
+        elif _passive_defs_pb:
+            print(f"[Passive] delta_passive.json: {len(_passive_defs_pb)} joints (PyBullet 퍼펫팅 활성)", flush=True)
+    except Exception as ex:
+        print(f"[Passive] load 실패: {ex}", flush=True)
+
+
+def _link_world_point_pb(link_idx, local_pt):
+    """링크 프레임 로컬 점 → 월드 좌표 + 그 점의 월드 속도"""
+    st = p.getLinkState(robot, link_idx, computeLinkVelocity=1, computeForwardKinematics=1)
+    lw_pos, lw_orn = st[4], st[5]          # URDF 링크 프레임 월드 자세
+    com_pos = st[0]
+    v_com, w_ang = st[6], st[7]
+    pt, _ = p.multiplyTransforms(lw_pos, lw_orn, local_pt, [0, 0, 0, 1])
+    r = [pt[0] - com_pos[0], pt[1] - com_pos[1], pt[2] - com_pos[2]]
+    v = [v_com[0] + w_ang[1] * r[2] - w_ang[2] * r[1],
+         v_com[1] + w_ang[2] * r[0] - w_ang[0] * r[2],
+         v_com[2] + w_ang[0] * r[1] - w_ang[1] * r[0]]
+    return pt, v
+
+
+def _apply_closure_rods_pb():
+    """매 스텝: 두 번째 로드 거리 스프링-댐퍼 (K2↔P2, 목표 길이 L)"""
+    for rod in _closure_rods_pb:
+        pa, va = _link_world_point_pb(rod["linkA"], rod["posA"])
+        pb_, vb = _link_world_point_pb(rod["linkB"], rod["posB"])
+        dx = [pb_[0] - pa[0], pb_[1] - pa[1], pb_[2] - pa[2]]
+        dist = math.sqrt(dx[0] ** 2 + dx[1] ** 2 + dx[2] ** 2)
+        if dist < 1e-9:
+            continue
+        u = [dx[0] / dist, dx[1] / dist, dx[2] / dist]
+        vrel = ((vb[0] - va[0]) * u[0] + (vb[1] - va[1]) * u[1] + (vb[2] - va[2]) * u[2])
+        f = _CLOSURE_ROD_K * (dist - rod["L"]) + _CLOSURE_ROD_C * vrel
+        fa = [f * u[0], f * u[1], f * u[2]]          # A 를 B 쪽으로 (늘어나면 당김)
+        fb = [-f * u[0], -f * u[1], -f * u[2]]
+        p.applyExternalForce(robot, rod["linkA"], fa, pa, p.WORLD_FRAME)
+        p.applyExternalForce(robot, rod["linkB"], fb, pb_, p.WORLD_FRAME)
+
+
+def _apply_passive_puppet_pb():
+    """매 스텝: 폐루프 모드면 rod2 스프링, 아니면 퍼펫 (unwrap+분기가드)"""
+    if _closure_mode_pb:
+        _apply_closure_rods_pb()
+        return
+    if not _passive_defs_pb:
+        return
+    motors = {}
+    m_step = 0.0
+    for _mid, _jid in _passive_motor_ids_pb.items():
+        v = p.getJointState(robot, _jid)[0] * 180.0 / math.pi
+        pv = _passive_last_pb.get(("m", _mid))
+        if pv is not None and abs(v - pv) > m_step:
+            m_step = abs(v - pv)
+        _passive_last_pb[("m", _mid)] = v
+        motors[_mid] = v
+    for d in _passive_defs_pb:
+        f_val = _edh_eval_formula(d.get("formula", ""), motors)
+        if f_val is None:
+            continue
+        m_deg = motors.get(d.get("motor_id", -1), 0.0)
+        q_deg = (m_deg + f_val) - float(d.get("zero_bake_deg", 0.0))
+        prev = _passive_last_pb.get(d["_jid"])
+        if prev is not None:
+            d_un = ((q_deg - prev + 180.0) % 360.0) - 180.0
+            rate = 1.0 if abs(d_un) > (5.0 + 3.0 * m_step) else 20.0
+            if d_un > rate:
+                d_un = rate
+            elif d_un < -rate:
+                d_un = -rate
+            q_deg = prev + d_un
+        _passive_last_pb[d["_jid"]] = q_deg
+        p.resetJointState(robot, d["_jid"], q_deg * math.pi / 180.0, targetVelocity=0.0)
+
+
+_init_passive_puppet_pb()
+
 # 트랙 벨트 flow 애니메이션 초기화 (ENABLE_TRACK_FLOW=True + JSON 있을 때만)
 print(f"[Track] 동적 세그먼트 초기화 시작 (ENABLE_TRACK_FLOW={ENABLE_TRACK_FLOW})", flush=True)
 track_belts = load_track_belts(release_dir) if ENABLE_TRACK_FLOW else []
@@ -1768,7 +2071,10 @@ for i in range(num_joints):
     # REVOLUTE(회전) 또는 PRISMATIC(직선) 조인트만 제어 대상
     # PyBullet은 URDF continuous를 REVOLUTE(type=0)로 로드하되 limit=0/-1로 구분
     # Mimic joint는 제외 (부모 조인트에 의해 자동 제어됨)
-    if joint_type in [p.JOINT_REVOLUTE, p.JOINT_PRISMATIC] and i not in mimic_joints:
+    # ★종동(dpass_*) 조인트도 제외 — 퍼펫 전용. 숫자 추출 매핑이 dpass_1→1 로
+    #   T1 의 소켓 번호를 덮어써 3D 와 동작이 달라지는 실사고 (2026-08-26).
+    if joint_type in [p.JOINT_REVOLUTE, p.JOINT_PRISMATIC] and i not in mimic_joints \
+            and not joint_name.startswith("dpass"):
         joint_idx = len(movable_joints)
         movable_joints.append(i)
 
@@ -2088,6 +2394,9 @@ try:
         
         # 트랙 벨트 flow 애니메이션 업데이트 (모터 각도 기반)
         update_track_belts(track_belts, robot, joint_name_to_id)
+
+        # 종동(passive) 조인트 퍼펫팅 — 매 스텝 모터각 기반 갱신 (델타 폐루프)
+        _apply_passive_puppet_pb()
 
         # 물리 시뮬레이션 한 스텝 실행
         p.stepSimulation()

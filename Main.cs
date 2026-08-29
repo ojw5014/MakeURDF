@@ -9,6 +9,7 @@ using OpenJigWare;
 using BuildAction = OpenJigWare.Ojw.BuildAction;
 using DhStep = OpenJigWare.Ojw.DhStep;
 using DhBuilder = OpenJigWare.Ojw.DhBuilder;
+using DhLineEdit = OpenJigWare.Ojw.DhLineEdit;
 using StlParser = OpenJigWare.Ojw.StlParser;
 using StlBoundingBox = OpenJigWare.Ojw.StlBoundingBox;
 using DhGroup = OpenJigWare.Ojw.C3d.CDhGroup; // EDH 체인 그룹 — 텍스트 계층 DLL 이관 (2026-08-14)
@@ -119,9 +120,11 @@ namespace MakeUrdf
         private int m_nStlDragStepIdx = -1;           // 드래그 중인 STL 스텝 인덱스
         private string m_strStlOriginalDhLines = "";   // 드래그 시작 시 원본 DhLines
 
-        // Capture All 용: cmbExample 에서 마지막으로 선택한 예제 인덱스
+        // Capture All 용: cmbExample 에서 마지막으로 선택한 예제 번호/이름
         //   (직접 텍스트 편집한 경우 0 → 폴더명을 timestamp 로 fallback)
+        //   ※ 2026-08-25 부터 번호는 항목 텍스트의 "N:" 접두에서 파싱 — 리스트 순서와 분리
         private int m_nLastExampleIdx = 0;
+        private string m_strLastExampleName = "";
 
         // === 예제 DH 문자열 (Kinematics에서 가져옴) ===
         private string m_strExample1 =  "[0,0,90,90],[-1,0,1]\r\n" + 
@@ -302,7 +305,7 @@ namespace MakeUrdf
                                         "[0,0,0,0],[6,0,0] // - Axis6\r\n" +
                                         "@[OMX-AI_leader_handle2.stl,-16777216,1.0],[1,6],[0,0,0],[180,0,0]\r\n";
 
-        private string m_strExample5 =  "// *OMX Follower (+Camera)\r\n" +
+        private string m_strExample6 =  "// *OMX Follower (+Camera)\r\n" +
                                         // 천장 카메라 (idx=1) — world 고정 (14번째 필드=1). 로봇이 떨어져도 카메라는 (0,0,500mm) 에 유지.
                                         //   3D 뷰: 빨간 박스 / URDF: sensor 에 world_fixed=\"1\" attribute / PyBullet: 초기 pose 캡쳐 후 고정.
                                         "$camera, 1, 60, 640, 480, 0.05, 5.0, 0, 0, 500, 0, 90, 0, 1\r\n" +
@@ -361,9 +364,10 @@ namespace MakeUrdf
                                         "[0,0,0,0],[16,0,0] // - Axis16\r\n" +
                                         "[10.8,0,90,90],[-1,0,0]\r\n";
 
-        // ex05 에서 카메라 요소($camera 2줄 + camera_frame STL)만 뺀 순수 관절판.
-        // 기구 체인·모터 배치는 ex05 와 동일 — 카메라 유/무 비교용 (14번 예제).
-        private string m_strExample14 = "// *OMX Follower (Joints Only)\r\n" +
+        // ex06(+Camera) 에서 카메라 요소($camera 2줄 + camera_frame STL)만 뺀 순수 관절판.
+        // 기구 체인·모터 배치는 ex06 과 동일 — 카메라 유/무 비교용 (5번 예제).
+        //   ※ 2026-08-25 재번호부여: 구 14번 → 5번 (기본형이 +Camera 앞), 구 5~13 은 +1 밀림.
+        private string m_strExample5 = "// *OMX Follower (Joints Only)\r\n" +
                                         "[0,0,90,90],[-1,0,0]\r\n" +
                                         "@[omx-ai_follower_base_plate.stl,-16777216,1.0],[0,-1],[0,0,11],[0,0,0]\r\n" +
                                         "[0,0,0,-90],[-1,0,0]\r\n" +
@@ -418,12 +422,13 @@ namespace MakeUrdf
         // 델타(병렬) 로봇 — 폐루프 종동각을 DH 10번째 필드의 getdelta 수식이 렌더 시 자동 계산.
         //   기하: testDelta 실측 (변길이 규약: f=55, 상완 100, 하완 215, e=24). z+ = 베이스판→이펙터 (위 보는 조립).
         //   슬라이더 T1~T3 = 모터각 (0°=상완 수평, -가 이펙터쪽). 무릎 β/γ 와 플랫폼은 저절로 따라온다.
-        //   ※ URDF Export 는 직렬 트리 근사라 델타 폐루프를 담지 못함 — 3D 뷰 전용 예제.
+        //   Export 는 delta_closure 로 진짜 물리 폐루프까지 나간다 (§44.13 — MJCF equality /
+        //   PhysX 루프 조인트 / PyBullet p2p+스프링). 이족(다리 2개) 응용은 예제 16.
         private string m_strExample15 = "// *Delta Robot (Parallel) — getdelta 종동각 데모\r\n" +
                                         "// 무릎 스패리컬 = β(면내)/γ(면외) 2각 분해, 수식이 프레임마다 FK로 계산\r\n" +
                                         "// ※ 모터/수식 라인은 관례대로 순수 회전([0,0,0,0])만 담는다 — 이동은 별도 라인\r\n" +
                                         "$deltaik, 0, 1, 2, 3, 55, 100, 215, 24 // IK 0 = 델타 닫힌해 (이펙터판 드래그 → T1~T3)\r\n" +
-                                        "@[#8,-8355712,1.0],[0,-1],[0,0,-3],[0,0,0],[26,6] // 베이스판\r\n" +
+                                        "@[#8,-8355712,1.0],[0,-1],[0,0,-7],[0,0,0],[28,14] // 베이스판\r\n" +
                                         "// ---- 팔 1 (T1, -Y 방향) ----\r\n" +
                                         "[15.877,0,-90,-90],[-1,0,1]\r\n" +
                                         "[0,0,0,0],[1,0,0] // 모터1\r\n" +
@@ -438,7 +443,7 @@ namespace MakeUrdf
                                         "[0,0,0,0],[1,0,0],[0,0],=;getdelta;0;0;t1;t2;t3;+;t1;+;t1;*;-1 // (β+모터) 되감기\r\n" +
                                         "[0,0,0,90],[-1,0,0]\r\n" +
                                         "[-6.928,0,0,0],[-1,0,0],[2,0] // 모서리→플랫폼 중심 (IK 0 끝점)\r\n" +
-                                        "@[#8,-4144960,1.0],[2,0],[0,0,0],[0,0,0],[12,5] // 이펙터판 — 클릭 후 드래그로 IK\r\n" +
+                                        "@[#8,-4144960,1.0],[2,0],[0,0,0],[0,0,0],[15,12] // 이펙터판 — 클릭 후 드래그로 IK\r\n" +
                                         "// ---- 팔 2 (T2, +30°) ----\r\n" +
                                         "[15.877,0,30,-90],[-1,0,1]\r\n" +
                                         "[0,0,0,0],[2,0,0]\r\n" +
@@ -456,7 +461,90 @@ namespace MakeUrdf
                                         "[0,0,0,0],[3,0,0],[0,0],=;getdelta;2;1;t1;t2;t3;-;t3\r\n" +
                                         "[215,0,0,0],[-1,0,0]\r\n";
 
-        private string m_strExample6 =  "// *Humanoid(Full) - 초기포지션 0으로 가는 현상 발견\r\n" +
+        // 델타 이족 (보행 다리) — 델타 2기를 골반 좌우(월드 Y=∓80)에 뒤집어(Alpha 180) 장착.
+        //   좌다리 T1~T3 / 우다리 T4~T6, 이펙터판 = 발(r40). 각 다리의 첫 수식 라인 deltainit 이
+        //   새 델타 그룹을 열어 폐루프(delta_closure)가 다리별로 자동 emit 된다 (§44.15).
+        //   MuJoCo 물리 검증: 6cm 낙하 착지 직립 0.00°/스쿼트 침하 30.8mm(운동학 일치)/
+        //   크롤 게이트 2사이클 81.6mm 전진(전 구간 기울기 ≤0.23°, 폐합 ≤0.022mm).
+        //   ※ 보행 시뮬은 Fixed Base 해제 후 Export (free-floating + 지면, 스폰 z≈0.21m).
+        private string m_strExample16 = "// *Delta Biped (Walking Legs) — 델타 2기 = 다리\r\n" +
+                                        "// 좌다리 T1~T3(Y=-80), 우다리 T4~T6(Y=+80). 발 = 이펙터판 r40\r\n" +
+                                        "// 보행: 체중이동(몸Y 시프트)→반대발 스윙→교대 (크롤 게이트)\r\n" +
+                                        "$deltaik, 0, 1, 2, 3, 55, 100, 215, 24 // IK 0 = 좌다리 발판 드래그\r\n" +
+                                        "$deltaik, 1, 4, 5, 6, 55, 100, 215, 24 // IK 1 = 우다리 발판 드래그\r\n" +
+                                        "@[#8,-8355712,1.0],[0,-1],[0,0,12],[0,0,0],[110,10] // 골반판\r\n" +
+                                        "// ---- 좌다리 (Y=-80, 아래로 플립) ----\r\n" +
+                                        "[80,0,-90,0],[-1,0,1]\r\n" +
+                                        "[0,0,90,180],[-1,0,0] // 방향 복귀 + X축 180 플립 (다리가 아래를 향함)\r\n" +
+                                        "@[#8,-8355712,1.0],[0,-1],[0,0,-7],[0,0,0],[28,14] // 좌 베이스판\r\n" +
+                                        "[15.877,0,-90,-90],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[1,0,0] // 모터1\r\n" +
+                                        "[100,0,0,0],[-1,0,0] // 상완\r\n" +
+                                        "[0,0,0,0],[1,0,0],[0,0],deltainit;55;100;215;24;getdelta;0;0;t1;t2;t3;-;t1 // 무릎 β (새 델타 그룹)\r\n" +
+                                        "[0,0,0,-90],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[1,0,0],[0,0],=;getdelta;0;1;t1;t2;t3;-;t1 // 무릎 γ\r\n" +
+                                        "[215,0,0,0],[-1,0,0] // 하완\r\n" +
+                                        "[0,0,0,0],[1,0,0],[0,0],=;getdelta;0;1;t1;t2;t3;*;-1;-;t1 // γ 되감기\r\n" +
+                                        "[0,0,0,90],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[1,0,0],[0,0],=;getdelta;0;0;t1;t2;t3;+;t1;+;t1;*;-1 // (β+모터) 되감기\r\n" +
+                                        "[0,0,0,90],[-1,0,0]\r\n" +
+                                        "[-6.928,0,0,0],[-1,0,0],[2,0] // 발판 중심 (IK 0 끝점)\r\n" +
+                                        "@[#8,-4144960,1.0],[2,0],[0,0,0],[0,0,0],[40,12] // 좌발\r\n" +
+                                        "[80,0,-90,0],[-1,0,1]\r\n" +
+                                        "[0,0,90,180],[-1,0,0]\r\n" +
+                                        "[15.877,0,30,-90],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[2,0,0]\r\n" +
+                                        "[100,0,0,0],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[2,0,0],[0,0],=;getdelta;1;0;t1;t2;t3;-;t2\r\n" +
+                                        "[0,0,0,-90],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[2,0,0],[0,0],=;getdelta;1;1;t1;t2;t3;-;t2\r\n" +
+                                        "[215,0,0,0],[-1,0,0]\r\n" +
+                                        "[80,0,-90,0],[-1,0,1]\r\n" +
+                                        "[0,0,90,180],[-1,0,0]\r\n" +
+                                        "[15.877,0,150,-90],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[3,0,0]\r\n" +
+                                        "[100,0,0,0],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[3,0,0],[0,0],=;getdelta;2;0;t1;t2;t3;-;t3\r\n" +
+                                        "[0,0,0,-90],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[3,0,0],[0,0],=;getdelta;2;1;t1;t2;t3;-;t3\r\n" +
+                                        "[215,0,0,0],[-1,0,0]\r\n" +
+                                        "// ---- 우다리 (Y=+80) ----\r\n" +
+                                        "[80,0,90,0],[-1,0,1]\r\n" +
+                                        "[0,0,-90,180],[-1,0,0]\r\n" +
+                                        "@[#8,-8355712,1.0],[0,-1],[0,0,-7],[0,0,0],[28,14] // 우 베이스판\r\n" +
+                                        "[15.877,0,-90,-90],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[4,0,0] // 모터4\r\n" +
+                                        "[100,0,0,0],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[4,0,0],[0,0],deltainit;55;100;215;24;getdelta;0;0;t4;t5;t6;-;t4 // 새 델타 그룹 (우)\r\n" +
+                                        "[0,0,0,-90],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[4,0,0],[0,0],=;getdelta;0;1;t4;t5;t6;-;t4\r\n" +
+                                        "[215,0,0,0],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[4,0,0],[0,0],=;getdelta;0;1;t4;t5;t6;*;-1;-;t4\r\n" +
+                                        "[0,0,0,90],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[4,0,0],[0,0],=;getdelta;0;0;t4;t5;t6;+;t4;+;t4;*;-1\r\n" +
+                                        "[0,0,0,90],[-1,0,0]\r\n" +
+                                        "[-6.928,0,0,0],[-1,0,0],[2,1] // 발판 중심 (IK 1 끝점)\r\n" +
+                                        "@[#8,-4144960,1.0],[2,1],[0,0,0],[0,0,0],[40,12] // 우발\r\n" +
+                                        "[80,0,90,0],[-1,0,1]\r\n" +
+                                        "[0,0,-90,180],[-1,0,0]\r\n" +
+                                        "[15.877,0,30,-90],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[5,0,0]\r\n" +
+                                        "[100,0,0,0],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[5,0,0],[0,0],=;getdelta;1;0;t4;t5;t6;-;t5\r\n" +
+                                        "[0,0,0,-90],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[5,0,0],[0,0],=;getdelta;1;1;t4;t5;t6;-;t5\r\n" +
+                                        "[215,0,0,0],[-1,0,0]\r\n" +
+                                        "[80,0,90,0],[-1,0,1]\r\n" +
+                                        "[0,0,-90,180],[-1,0,0]\r\n" +
+                                        "[15.877,0,150,-90],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[6,0,0]\r\n" +
+                                        "[100,0,0,0],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[6,0,0],[0,0],=;getdelta;2;0;t4;t5;t6;-;t6\r\n" +
+                                        "[0,0,0,-90],[-1,0,0]\r\n" +
+                                        "[0,0,0,0],[6,0,0],[0,0],=;getdelta;2;1;t4;t5;t6;-;t6\r\n" +
+                                        "[215,0,0,0],[-1,0,0]\r\n";
+
+        private string m_strExample7 =  "// *Humanoid(Full) - 초기포지션 0으로 가는 현상 발견\r\n" +
                                         // ── 물리 자동기입: 실기(PR2 MAX-E3) 기종/실측 질량 (2026-07-26 버스 스캔) ──
                                         "$servo, T1, 2XC430-W250\r\n" + "$servo, T2, 2XC430-W250\r\n" +
                                         "$servo, T3, 2XC430-W250\r\n" + "$servo, T4, 2XC430-W250\r\n" +
@@ -477,13 +565,25 @@ namespace MakeUrdf
                                         //
                                         //   [A] 다리 6축 = 기능적 클램프 (humanoid 검증값) — 기구적으로는 더 넓지만
                                         //       해부학적으로 무의미하거나 위험한 영역을 잘라 RL 악용을 막는다.
-                                        //       실측 기구한계 안에 있음을 확인함 (예: 무릎 굴곡 기구 127.3 > 클램프 114.6)
-                                        "$jointrange, T15, -5.16, 114.59\r\n" +   // 우 무릎
-                                        "$jointrange, T16, -5.16, 114.59\r\n" +   // 좌 무릎
-                                        "$jointrange, T9,  -68.75, 68.75\r\n" +   // 우 발목피치
-                                        "$jointrange, T11, -68.75, 68.75\r\n" +   // 좌 발목피치
-                                        "$jointrange, T10, -34.38, 34.38\r\n" +   // 우 발목롤
-                                        "$jointrange, T12, -34.38, 34.38\r\n" +   // 좌 발목롤
+                                        //   ★2026-08-28 무릎 재학습: 기구는 -114.52~153.46 (268도) — 사실상 **스톱이 없다**.
+                                        //       종전 -67.76~152.93 은 신전 쪽을 덜 민 값이었다(하한이 46.8도 더 열림).
+                                        //       ⇒ 무릎을 막는 것은 기구가 아니라 이 클램프뿐이다. 굴곡 여유 38.9도,
+                                        //         역굴곡은 기구가 109도나 허용하므로 클램프를 빼면 RL 이 반드시 악용한다.
+                                        //   ★2026-08-28 확인: humanoid 의 patch_joint_limits.py 와 **값이 일치**한다
+                                        //       (T9/T11 ±68.75 "측정 ±90 보다 보수적", T10/T12 ±34.38 "발날 딛기 금지",
+                                        //        T15/T16 -5.16~114.59 "무릎 역굴곡 금지"). 양쪽이 같은 결론에 도달했으므로
+                                        //       이 여섯은 실측(더 넓음)으로 되돌리지 않는다.
+                                        //   ★줄 끝 "// lock" 은 EDH 안의 표식이다(C# 주석이 아니라 문자열 안에 있어야 한다).
+                                        //     ③ sim2real 이 이 줄을 측정값으로 덮어쓰지 않는다 — 기능 클램프는 애초에
+                                        //     기구 한계가 아니므로 어떤 측정값도 이 줄을 대체하면 안 된다.
+                                        //     (없으면 2026-08-28 전축 수동학습 직후 ③ 이 여덟 축을 전부 넓혀 버린다.
+                                        //      다시 열려면 그 줄의 lock 만 지우면 된다)
+                                        "$jointrange, T15, -5.16, 114.59   // lock 기능클램프 우무릎(역굴곡 금지)\r\n" +
+                                        "$jointrange, T16, -5.16, 114.59   // lock 기능클램프 좌무릎(역굴곡 금지)\r\n" +
+                                        "$jointrange, T9,  -68.75, 68.75   // lock 기능클램프 우발목피치\r\n" +
+                                        "$jointrange, T11, -68.75, 68.75   // lock 기능클램프 좌발목피치\r\n" +
+                                        "$jointrange, T10, -34.38, 34.38   // lock 기능클램프 우발목롤(발날 딛기 금지)\r\n" +
+                                        "$jointrange, T12, -34.38, 34.38   // lock 기능클램프 좌발목롤(발날 딛기 금지)\r\n" +
                                         //   [B] 나머지 = MechLimit.exe 실측 기구한계 (2026-07-27, PR2 MAX-E3 #2)
                                         //       저속 구동 중 추종오차 급증점. 좌우 미러 일관성 확인 완료.
                                         //       자기충돌(다리끼리·팔끼리)로 좁아진 값은 미러 관절 동반구동으로 재측정한 값.
@@ -491,29 +591,47 @@ namespace MakeUrdf
                                         //     EDH 의 Dir 필드로 추론하면 17축 중 10축이 틀린다(오늘 대조). 미러 일관성 검사도
                                         //     소용없다 — 같은 틀린 규칙을 좌우에 적용하면 오차가 상쇄돼 일관돼 보인다.
                                         //     joint_map: -1 인 축 = T2,T3,T4,T5,T6,T8,T9,T10,T11,T14,T16 / 나머지 +1
-                                        "$jointrange, T1,  -126.53, 149.00\r\n" + // 우 어깨롤 (+측 무제한 — 안전상한값)
-                                        //   ※T2/T4/T5/T7 은 부호는 고쳤으나 크기가 미확정이다 — 매달림 저PWM 측정이라
-                                        //     중력 한계일 수 있다(R10). 어깨는 팔꿈치로, 힙롤은 무릎으로 접어 재측정 대상.
-                                        "$jointrange, T2,  -90.58, 14.73\r\n" +   // 우 어깨피치
-                                        //   ※T3 는 실측이 없다 — T1 의 미러 대칭값(sign -1 이라 lo/hi 뒤집힘).
-                                        //     이 줄이 빠져 있어서 T3 만 ±180 플레이스홀더로 나가던 것을 2026-07-31 보완.
-                                        "$jointrange, T3,  -149.00, 126.53\r\n" + // 좌 어깨롤 (T1 미러 추정)
-                                        "$jointrange, T4,  -90.58, 16.67\r\n" +   // 좌 어깨피치
-                                        "$jointrange, T5,  -24.58, 36.62\r\n" +   // 우 힙롤 (자기충돌 배제 협조값)
-                                        "$jointrange, T7,  -34.51, 23.61\r\n" +   // 좌 힙롤
+                                        //   ★2026-08-28 수동 학습(TeachLimit) 으로 전축 재확정.
+                                        //     토크를 풀고 사람이 손으로 끝까지 돌린 범위 = hand_taught.
+                                        //     구동 측정의 고질병(서보가 멈춘 각 ≠ 기구가 막힌 각)이 원리적으로 없다.
+                                        //     검증: 미러쌍 8쌍 중 7쌍이 좌우 오차 3도 이내 (사람 손이 같은 벽을 두 번 찾음).
+                                        //     ※아래 값은 "기구 한계"다. 그보다 좁게 쓰는 기능적 클램프는 [A] 절 참조.
+                                        "$jointrange, T1,  -152.93, 161.28\r\n" + // 우 어깨롤 (hand_taught)
+                                        //   ★2026-08-28 해소: 종전 상한 +14.73 은 "중력이 팔을 잡은 각"이었다.
+                                        //     손으로 돌리니 +49.04 까지 간다 — humanoid 가 T2/T4 를 ±π 로 열어 둔 이유
+                                        //     ("잘못된 좁은 한계가 아라베스크 팔 벌림을 막을 위험")가 사라졌다.
+                                        //     이제 양쪽이 이 값을 쓰면 된다.
+                                        "$jointrange, T2,  -92.11, 49.04\r\n" +   // 우 어깨피치 (hand_taught)
+                                        //   ※T3 는 2026-07-31 까지 실측이 없어 T1 의 미러 대칭값을 썼다(줄이 아예 빠져
+                                        //     ±180 플레이스홀더로 나가던 것을 그때 보완). 지금은 T3 도 직접 배운 값이다.
+                                        "$jointrange, T3,  -150.56, 160.75\r\n" +   // 좌 어깨롤 (hand_taught)
+                                        "$jointrange, T4,  -91.85, 46.67\r\n" +   // 좌 어깨피치 (hand_taught)
+                                        "$jointrange, T5,  -24.58, 36.62   // lock 우힙롤 자기충돌 배제 협조값\r\n" +
+                                        "$jointrange, T7,  -34.51, 23.61   // lock 좌힙롤 자기충돌 배제 협조값\r\n" +
                                         //   ★힙피치 = 중력 보상 재측정값 (HipCheck.exe 2026-07-27)
                                         //     매달림 단독 측정(구값 T6 -63.7~20.5 / T8 -67.6~23.6)은 전부 틀렸다.
                                         //     저PWM 에서 추종오차 2.5도를 넘는 것은 서보가 낼 토크를 다 쓴 때뿐이라,
                                         //     그 정지각은 기구 스톱이 아니라 "그 PWM 으로 다리를 들 수 있는 각"이었다.
                                         //     무릎을 힙각의 2.06배로 접어 다리 끝 질량을 힙 축 아래로 되돌리면
                                         //     중력 모멘트가 99% 사라진다(수평 오프셋 110mm -> 0.3mm, FK 산출).
-                                        //     그 조건에서 실측: T6 +101.7/-103.3, T8 +87.5/-103.0 (같은 PWM 23%).
-                                        //     아래 값은 네 방향 최솟값(87.5)에 여유를 둔 보수적 클램프다.
-                                        "$jointrange, T6,  -85.0, 85.0\r\n" +    // 우 힙피치 (실측 가동 >=101)
-                                        "$jointrange, T8,  -85.0, 85.0\r\n" +    // 좌 힙피치 (실측 가동 >=87)
-                                        "$jointrange, T13, -140.06, 98.58\r\n" +  // 우 팔꿈치
-                                        "$jointrange, T14, -140.94, 97.61\r\n" +  // 좌 팔꿈치
-                                        "$jointrange, T17, -41.01, 27.56\r\n" +   // 몸통 요
+                                        //   ★2026-08-28: 종전 ±85 보수 클램프를 **실측값으로 되돌린다**.
+                                        //     humanoid 가 아라베스크에 T6 90도를 쓰고 있어(회신14 계열) ±85 클램프는
+                                        //     그 자세를 **막는다**. mech_limits 품질도 gravity_free(중력보상=신뢰)다.
+                                        //     보수 클램프는 "안전"이 아니라 실기에 있는 가동을 사라지게 하는 쪽이었다.
+                                        "$jointrange, T6,  -106.79, 102.92\r\n" +   // 우 힙피치 (구동측정과 5도 이내 일치) (hand_taught)
+                                        "$jointrange, T8,  -107.84, 102.92\r\n" +   // 좌 힙피치 (구동측정과 8도 이내 일치) (hand_taught)
+                                        //   ※팔꿈치는 수동 학습값(-88.95/-90.26)을 쓰지 않는다. 사람이 "사람 팔꿈치"
+                                        //     감각으로 이상한 각까지 밀지 않아 **덜 돌린 것**이지 기구 한계가 아니다.
+                                        //     수동 학습의 한계: 사람이 끝까지 밀지 않으면 그 자리가 한계로 기록된다.
+                                        "$jointrange, T13, -140.06, 98.58   // lock 우팔꿈치 사용자 확정(기구는 더 넓다)\r\n" +
+                                        "$jointrange, T14, -140.94, 97.61   // lock 좌팔꿈치 사용자 확정(기구는 더 넓다)\r\n" +
+                                        //   ★몸통 요 = 2026-08-28 수동 학습. **기구 스톱이 없는 축**이다.
+                                        //     구동 측정 3회(-43.68~33.75 / -42.01~37.62 / -38.94~39.81)가 ±40도 언저리로
+                                        //     모인 것은 벽이 아니라 마찰이었다 — 손으로 돌리니 -108.90~90.53 까지 간다.
+                                        //     ⇒ humanoid 정책이 기대 온 "+37도 벽"은 실기에 없다. 그 값을 목발 삼은
+                                        //       자세 제약은 전부 근거를 잃는다 (답신 15 로 통보).
+                                        //     사용자 확인: "기구적으로는 한계를 두지 않은 부분이야. 지금 측정치가 맞아"
+                                        "$jointrange, T17, -108.90, 90.53\r\n" +   // 몸통 요 — 기구 스톱 없음, 사용자 확정값 (hand_taught)
                                         //   T3(좌 어깨롤)은 ±150deg 까지 걸림 없음 — 제한 두지 않음
                                         //   ※ Dir=1 축(T3/T7/T10/T14/T15/T16/T17)은 모터각 = −URDF각.
                                         //     위 값은 URDF 공간이므로, $jointrange 가 설정하는 모터 limit(3D 드래그/IK)은
@@ -638,7 +756,7 @@ namespace MakeUrdf
 
         // 예제7: 2륜 디퍼렌셜 드라이브 모바일 로봇
         // X=전방, Z=윗면. 바퀴 반지름=40mm, 좌우 간격=160mm, 바퀴축=Y축
-        private string m_strExample7 =  "// === 2륜 디퍼렌셜 드라이브 (X=전방, Z=윗면) ===\r\n" +
+        private string m_strExample8 =  "// === 2륜 디퍼렌셜 드라이브 (X=전방, Z=윗면) ===\r\n" +
                                         "// 몸체 전방 표시\r\n" +
                                         "[0,0,0,0],[-1,0,1]\r\n" +
                                         "[150,0,0,0],[-1,0,0]\r\n" +
@@ -669,7 +787,7 @@ namespace MakeUrdf
 
         // 예제8: 4륜 드라이브 모바일 로봇
         // X=전방, Z=윗면. 바퀴 반지름=50mm, 좌우 간격=180mm, 전후 간격=160mm
-        private string m_strExample8 =  "// === 4륜 드라이브 (X=전방, Z=윗면) ===\r\n" +
+        private string m_strExample9 =  "// === 4륜 드라이브 (X=전방, Z=윗면) ===\r\n" +
                                         "// 몸체 plate (앞뒤 두 장) + 몸체 전방 표시\r\n" +
                                         "[0,0,0,0],[-1,0,1]\r\n" +
                                         "@[#7,-8531,1.0],[0,-1],[0,0,0],[0,0,0],[260,74,20,4,0]\r\n" +
@@ -715,7 +833,7 @@ namespace MakeUrdf
         // 예제9: 3축 직교좌표 로봇 (3-Axis Cartesian Robot)
         //   Axis1/2/3 모두 prismatic (Dir=2), 색상 그룹별 plate + guide 시각화
         //   (All 3 axes prismatic, with plate + guide block visualization per group)
-        private string m_strExample9 =  "// === 3-Axis Cartesian Robot ===\r\n" +
+        private string m_strExample10 =  "// === 3-Axis Cartesian Robot ===\r\n" +
                                         "[0,0,0,90],[-1,0,1]\r\n" +
                                         "[0,0,0,0],[1,2,0]\r\n" +
                                         "@[#7,-8531,1.0],[1,1],[0,20,0],[0,0,0],[60,20,60,4,0]\r\n" +
@@ -733,7 +851,7 @@ namespace MakeUrdf
                                         "@[#7,-77731,1.0],[1,3],[0,0,10],[0,0,0],[60,-30,20,4,0]\r\n" +
                                         "@[#13,-8531,1.0],[1,3],[0,0,0],[0,0,0],[10,40,60,4,0]\r\n";
 
-        private string m_strExample10 = "\r\n" +
+        private string m_strExample11 = "\r\n" +
                                         "[0,0,90,90],[-1,0,1]\r\n" +
                                         "@[leader_base.stl,-1.6777216,1.0],[0,-1],[0,20,-28.4],[0,0,0]\r\n" +
                                         "[0,0,0,-90],[-1,0,0]\r\n" +
@@ -771,7 +889,7 @@ namespace MakeUrdf
                                         "[0,0,0,0],[6,0,0] // - Axis6\r\n" +
                                         "@[leader_finger_type2.stl,-16777216,1.0],[1,6],[-0.8,0,-26.2],[0,90,-90]\r\n";
 
-        private string m_strExample11 = "// === Tank (Caterpillar tracks) + 6-axis arm ===\r\n" +
+        private string m_strExample12 = "// === Tank (Caterpillar tracks) + 6-axis arm ===\r\n" +
                                         "[-68,37,0,90],[-1,0,1]\r\n" +
                                         "[0,72,90,0],[-1,0,0]\r\n" +
                                         "[0,0,0,0],[11,4,0]\r\n" +
@@ -867,7 +985,7 @@ namespace MakeUrdf
         // 예제12: XYZ 데스크탑 가공기 / 픽앤플레이스 (XYZ Desktop Pick-and-Place / Gantry Machine)
         // 프레임: 하판 + 좌우 기둥 + Y축 레일 (Frame: base plate + L/R pillars + Y-axis rails)
         // 3축 직선 이동: Axis1(X), Axis2(Y), Axis3(Z) — 모두 prismatic (3 prismatic axes)
-        private string m_strExample12 = "// === XYZ 데스크탑 가공기 (XYZ Desktop Gantry Machine) ===\r\n" +
+        private string m_strExample13 = "// === XYZ 데스크탑 가공기 (XYZ Desktop Gantry Machine) ===\r\n" +
                                         "[0,0,90,90],[-1,0,1]\r\n" +
                                         "// 프레임 (Frame)\r\n" +
                                         "@[#7,-8355712,1.0],[0,-1],[0,0,0],[0,0,0],[500,125,530,4,0]\r\n" +
@@ -917,7 +1035,7 @@ namespace MakeUrdf
         //   같은 모터를 회전 (스크류 축 시각화) + 직선 (캐리지 이동) 둘 다로 사용
         //   ($mech declares motor 1 as leadscrew with 10mm pitch:
         //    same motor drives both screw shaft rotation and carriage linear motion)
-        private string m_strExample13 = "// === 리드스크류 직선 액추에이터 (Linear Leadscrew Actuator) ===\r\n" +
+        private string m_strExample14 = "// === 리드스크류 직선 액추에이터 (Linear Leadscrew Actuator) ===\r\n" +
                                         "$mech,1,10\r\n" +
                                         "@[linear_base.stl,-144448,1.0],[0,-1],[0,0,0],[90,90,0]\r\n" +
                                         "[0,0,-90,0],[-1,0,0]\r\n" +
@@ -949,6 +1067,135 @@ namespace MakeUrdf
             InitSnapTab();    // STL 스냅 UI 동적 생성 (tabRight 에 "Snap" 탭 추가, snap.html 포팅)
             this.KeyPreview = true;
             this.KeyDown += new KeyEventHandler(this.Main_KeyDown_SceneEsc);
+        }
+
+        // ========================================
+        // 축 ±버튼 (Designer 등록 — btn{축}{Move|Rotate}{M10|P10|M90|P90|MTxt|PTxt})
+        //   메인 버튼 옆 2×2 패드: 위 [-10][+10](고정량, 진한 색조) / 아래 [-][+](텍스트박스 값, 밝은 색조)
+        //   적용 경로는 휠 스크롤과 동일 (수동 이동 모드 = STL 직접 증감, 일반 = 마지막 스텝 누적)
+        //   Tag = "액션,부호,고정량" (고정량 0 = Move mm / Rot deg 텍스트박스 값 사용)
+        // ========================================
+        private void btnAxisDelta_Click(object sender, EventArgs e)
+        {
+            Button b = sender as Button;
+            if (b == null || b.Tag == null) return;
+            string[] parts = b.Tag.ToString().Split(',');
+            if (parts.Length < 3) return;
+            BuildAction action;
+            if (!Enum.TryParse<BuildAction>(parts[0].Trim(), out action)) return;
+            int nSign;
+            float fFixed;
+            if (!int.TryParse(parts[1].Trim(), out nSign)) return;
+            if (!float.TryParse(parts[2].Trim(), System.Globalization.NumberStyles.Float,
+                                System.Globalization.CultureInfo.InvariantCulture, out fFixed)) return;
+            ApplyAxisDelta(action, nSign, fFixed);
+        }
+
+        /// <summary>축 ±버튼 공용 적용. fFixed>0 = 고정량, 0 = 텍스트박스 값(크기만) 사용.</summary>
+        private void ApplyAxisDelta(BuildAction action, int nSign, float fFixed)
+        {
+            float fMag = fFixed;
+            if (fMag <= 0f)
+            {
+                bool isRot = DhBuilder.IsRotation(action);
+                string strInput = isRot ? txtRotateValue.Text : txtMoveValue.Text;
+                float v;
+                if (!float.TryParse(strInput, out v))
+                {
+                    lblStatus.Text = "Enter a number!";
+                    return;
+                }
+                fMag = Math.Abs(v);
+                if (fMag == 0f)
+                {
+                    lblStatus.Text = "Enter non-zero value!";
+                    return;
+                }
+            }
+            float fDelta = nSign * fMag;
+            ApplyAxisDeltaCore(action, fDelta);
+        }
+
+        /// <summary>축 delta 적용 경로 — ±버튼과 휠 스크롤이 공유.
+        /// ①수동 이동 모드 = STL 직접 증감 ②★선택 라인이 있으면 그 줄의 값 수정
+        /// ③선택 없음 = 지금까지처럼 체인 끝에 새 스텝 누적.</summary>
+        private void ApplyAxisDeltaCore(BuildAction action, float fDelta)
+        {
+            if (m_bManualMoveMode) { ApplyManualWheelStep(action, fDelta); return; }
+            if (ApplySelectedLineDelta(action, fDelta)) return;
+            AccumulateWheelStep(action, fDelta);
+        }
+
+        /// <summary>★선택 라인 편집 — 3D(또는 텍스트)에서 줄을 클릭해 두면 ±버튼·휠이
+        /// "체인 끝에 새 스텝 추가" 대신 그 줄의 값을 직접 증감한다.
+        /// 3D 빈 바닥을 클릭하면 ClearDhEditSelection 이 걸려 자동으로 기존 동작(끝에 추가)으로 돌아온다.
+        /// 값을 넣을 수 없는 줄(모터/수식/초기화/지시자)은 바로 뒤에 새 줄을 끼우고 그 줄로 선택을 옮긴다
+        /// (다음 클릭부터 그 줄에 누적). 선택이 없으면 false 를 반환해 호출 측이 기존 경로로 진행.</summary>
+        private bool ApplySelectedLineDelta(BuildAction action, float fDelta)
+        {
+            if (m_nSelectedTextLine < 0) return false;
+            string[] lines = txtDhParams.Lines;
+            if (m_nSelectedTextLine >= lines.Length) return false;
+
+            DhLineEdit edit = DhBuilder.ApplyLineDelta(lines, m_nSelectedTextLine, action, fDelta);
+            if (edit == null || !edit.Ok || edit.NewLines == null || edit.NewLines.Length == 0)
+                return false;
+
+            int srcLine = m_nSelectedTextLine;
+            List<string> outLines = new List<string>(lines);
+            int newSel;
+            if (edit.Inserted)
+            {
+                outLines.InsertRange(srcLine + 1, edit.NewLines);
+                newSel = srcLine + 1 + edit.CarrierOffset;
+            }
+            else
+            {
+                outLines[srcLine] = edit.NewLines[0];
+                newSel = srcLine;
+            }
+
+            // 텍스트가 원본 — btnEditApply_Click 과 같은 순서 (주석 줄 보존: UpdatePreview 는 부르지 않는다)
+            txtDhParams.Lines = outLines.ToArray();
+            MakeAll(txtDhParams.Text);
+            m_Builder.ImportFromText(txtDhParams.Text);
+
+            int newDh = MapTextLineToDhIndex(newSel);
+            RefreshHistory(m_Builder.MapDhLineToStep(newDh));
+
+            // 선택 유지 (삽입이면 값 운반 줄로 이동) → 연속 클릭이 같은 줄에 누적된다
+            m_bSyncingSelection = true;
+            try
+            {
+                m_nSelectedTextLine = newSel;
+                m_nSelectedDhLine = newDh;
+                if (m_C3d != null)
+                {
+                    if (m_bFaceSnapMode || m_bMergeMode) m_C3d.User_SetPick(-1);
+                    else m_C3d.User_SetPick(newDh);
+                    m_C3d.User_ShowDhBall(m_bShowArrow ? newDh : -1);
+                }
+                HighlightDhTextLine(newSel);
+                string[] cur = txtDhParams.Lines;
+                if (newSel >= 0 && newSel < cur.Length)
+                {
+                    PopulateDhEditFields(newSel, cur[newSel].Trim());
+                    pnDhEdit.Visible = true;
+                }
+            }
+            finally { m_bSyncingSelection = false; }
+
+            string unit = DhBuilder.IsRotation(action) ? "deg" : "mm";
+            lblStatus.Text = edit.Inserted
+                ? String.Format("Line {0} 뒤 삽입: {1} (사유: {2}) → Line {3} 선택",
+                    srcLine + 1, edit.Description, edit.Reason, newSel + 1)
+                : String.Format("Line {0}: {1} {2} → {3}{4}",
+                    newSel + 1, edit.FieldName,
+                    edit.OldValue.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture),
+                    edit.NewValue.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture), unit);
+            lblCurrentValue.Text = String.Format("{0}{1}",
+                edit.NewValue.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture), unit);
+            return true;
         }
 
         // ========================================
@@ -1994,6 +2241,13 @@ namespace MakeUrdf
             m_C3d.AddMouseEvent_Up(OnC3dMouseUp);
             m_C3d.AddMouseEvent_Wheel(OnC3dMouseWheel);
 
+            // 3D 뷰 STL 드래그드롭 — Tools 프로젝트와 동일 UX (관리 폴더 복사 + 즉시 로드).
+            //   MakeUrdf 는 텍스트 기반이므로 @ 라인을 EDH 커서 위치에 삽입하고 Apply 재실행
+            //   (Tools 식 가상 오브젝트 주입은 다음 Apply 에서 소실되므로 텍스트 삽입이 정본)
+            m_C3d.AllowDrop = true;
+            m_C3d.DragEnter += C3d_DragEnter;
+            m_C3d.DragDrop += C3d_DragDrop;
+
             // 카메라 미리보기 / USD Export / View MJCF / View USD / Isaac (USD) 버튼은
             // Main.Designer.cs 에 정의됨 (동적 생성 → Designer 이전, 2026-07-03)
 
@@ -2156,9 +2410,9 @@ namespace MakeUrdf
                 usdBuilder.RobotName = "ojw_robot";
 
                 // 식별 메타데이터 — 문자열만 전달, 기록 로직은 라이브러리(BuildUsda) 소유
-                if (m_nLastExampleIdx > 0 && m_nLastExampleIdx < cmbExample.Items.Count)
+                if (m_nLastExampleIdx > 0 && !string.IsNullOrEmpty(m_strLastExampleName))
                     usdBuilder.ExportSource = string.Format("ex{0:D2} {1}",
-                        m_nLastExampleIdx, cmbExample.Items[m_nLastExampleIdx]);
+                        m_nLastExampleIdx, m_strLastExampleName);
                 else
                     usdBuilder.ExportSource = "manual_dh";
                 bool bMetaSkel, bMetaMesh;
@@ -2183,7 +2437,10 @@ namespace MakeUrdf
                         if (Ojw.C3d.COjwUrdfPhysics_t.IsProcessed(urdfPhysXml))
                         {
                             int nOvrLinks = usdBuilder.ApplyInertialFromUrdf(urdfPhysXml);
-                            Ojw.printf(txtLogHistory, "[USD] 물리 자동기입 반영: {0}개 링크 inertial override\r\n", nOvrLinks);
+                            // 관절 한계·구동력도 URDF 를 정본으로 (없으면 USD 가 ±180°/effort 100 플레이스홀더로 나감)
+                            int nOvrJoints = usdBuilder.ApplyJointLimitsFromUrdf(urdfPhysXml);
+                            Ojw.printf(txtLogHistory, "[USD] 물리 자동기입 반영: 링크 inertial {0}개, 관절 limit {1}개\r\n",
+                                nOvrLinks, nOvrJoints);
                         }
                     }
                 }
@@ -2208,6 +2465,69 @@ namespace MakeUrdf
 
         // btnCameraPreview_Click 삭제 (2026-08-15) — Cam Preview 버튼 제거 후 남은 죽은 핸들러였음.
         //   $camera 미리보기는 "📺 Isaac 영상" 버튼(스트리밍)으로 대체됨.
+
+        // ========================================
+        // 3D 뷰 STL 드래그드롭 (Tools UX 이식, 2026-08-15)
+        // ========================================
+        private void C3d_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy;
+        }
+
+        private void C3d_DragDrop(object sender, DragEventArgs e)
+        {
+            try
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop, false);
+                if (files == null) return;
+                int nAdded = 0;
+                foreach (string srcPath in files)
+                {
+                    string fname = Path.GetFileName(srcPath);
+                    string ext = Path.GetExtension(fname).ToLower();
+                    if (ext != ".stl" && ext != ".sstl" && ext != ".ase" && ext != ".dat" && ext != ".obj")
+                        continue;
+
+                    // STL 관리 폴더 (SetAseFile_Path("stl") → StartupPath\stl\) 로 복사 — Tools 와 동일 정책
+                    string stlDir = Application.StartupPath.TrimEnd('\\') + m_C3d.GetAseFile_Path();
+                    Directory.CreateDirectory(stlDir);
+                    string dstPath = Path.Combine(stlDir, fname);
+                    if (File.Exists(dstPath))
+                    {
+                        DialogResult ret = MessageBox.Show(
+                            string.Format("{0}\r\n관리 폴더에 같은 이름의 파일이 있습니다. 덮어쓸까요?\r\n(아니오 = 기존 파일 그대로 사용)", fname),
+                            "STL 덮어쓰기", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                        if (ret == DialogResult.Yes) File.Copy(srcPath, dstPath, true);
+                    }
+                    else File.Copy(srcPath, dstPath);
+
+                    // EDH 에 @ 라인 삽입 — 커서 라인 뒤 = 그 부품/체인 좌표계에 부착 (스켈레톤 조립 UX)
+                    InsertDhTextLineAtCursor(Ojw.C3d.Edh_BuildStlLine(fname));
+                    nAdded++;
+                    Ojw.printf(txtLogHistory, "[Drop] {0} → {1} 복사 + @ 라인 삽입\r\n", fname, stlDir);
+                }
+                if (nAdded > 0) btnApplyDh_Click(null, EventArgs.Empty); // 3D 반영 (시뮬 핫리로드는 러너 있을 때만)
+            }
+            catch (Exception ex)
+            {
+                Ojw.printf(txtLogHistory, "[Drop] 오류: {0}\r\n", ex.Message);
+            }
+        }
+
+        /// <summary>EDH 텍스트박스의 커서 라인 바로 뒤에 새 라인 삽입 (커서 없으면 맨 끝)</summary>
+        private void InsertDhTextLineAtCursor(string strNewLine)
+        {
+            List<string> lines = new List<string>(txtDhParams.Lines);
+            if (lines.Count == 0)
+            {
+                txtDhParams.Text = strNewLine + "\r\n";
+                return;
+            }
+            int nLine = txtDhParams.GetLineFromCharIndex(txtDhParams.SelectionStart);
+            if (nLine < 0 || nLine >= lines.Count) nLine = lines.Count - 1;
+            lines.Insert(nLine + 1, strNewLine);
+            txtDhParams.Lines = lines.ToArray();
+        }
 
         // ========================================
         // 제어 모드 패널 초기화
@@ -2362,14 +2682,29 @@ namespace MakeUrdf
                 m_bSyncingSelection = true;
                 try
                 {
-                    SelectHistoryByPickGroup(nMotor);
-
                     // 3D 피킹 → DH 텍스트 줄 역방향 선택
-                    int dhLine = FindDhLineFromPickGroups(nGroup, nMotor);
+                    //   ★클릭된 **그 부품**의 줄을 쓴다 — 그룹(A/B)은 관절 볼·링크 봉 등 여러 부품이
+                    //     공유하므로 그룹으로 찾으면 항상 그 그룹의 첫 줄만 잡힌다 (실측: 이름 하나에 2~4줄).
+                    int dhLine = m_C3d.GetEvent_Pick_DhLine();
+                    if (dhLine < 0) dhLine = FindDhLineFromPickGroups(nGroup, nMotor);   // 구 경로 폴백
                     if (dhLine >= 0)
+                    {
+                        // 히스토리도 그 부품의 스텝으로 (그룹 기준은 그룹의 마지막 스텝이라 부품과 어긋난다)
+                        int stepIdx = m_Builder.MapDhLineToStep(dhLine);
+                        if (stepIdx >= 0 && stepIdx < lstHistory.Items.Count)
+                        {
+                            lstHistory.SelectedIndex = stepIdx;
+                            lblStatus.Text = String.Format("Selected: [{0}] {1}",
+                                stepIdx + 1, m_Builder.GetStep(stepIdx).Description);
+                        }
+                        else SelectHistoryByPickGroup(nMotor);
                         SelectDhTextLineByDhIndex(dhLine);
+                    }
                     else
+                    {
+                        SelectHistoryByPickGroup(nMotor);
                         ClearDhEditSelection();
+                    }
                 }
                 finally { m_bSyncingSelection = false; }
             }
@@ -4562,11 +4897,8 @@ namespace MakeUrdf
                     else if (action == BuildAction.BlueMove)  action = BuildAction.BlueRotate;
                 }
                 float delta = (e.Delta > 0) ? -5.0f : 5.0f;
-                // 수동 이동 모드: DH 새 스텝 추가 X → 선택된 STL 의 offset/회전을 직접 증감
-                if (m_bManualMoveMode)
-                    ApplyManualWheelStep(action, delta);
-                else
-                    AccumulateWheelStep(action, delta);
+                // ±버튼과 완전히 같은 경로 (수동이동 → STL 직접 / 선택 라인 → 그 줄 수정 / 없으면 끝에 누적)
+                ApplyAxisDeltaCore(action, delta);
             }
             else
             {
@@ -5918,6 +6250,22 @@ namespace MakeUrdf
                     }
                 }
 
+                // ── 종동(passive) 조인트 메타 출력 (델타 등 폐루프 퍼펫팅용) ────────
+                //   러너/뷰어가 매 스텝 수식을 평가해 dpass_* 조인트를 구동한다.
+                {
+                    string passivePath = Path.Combine(urdfDir, "delta_passive.json");
+                    var lstPassive = m_C3d.GetLastPassiveJointsUrdf();
+                    if (lstPassive != null && lstPassive.Count > 0)
+                    {
+                        File.WriteAllText(passivePath, m_C3d.BuildPassiveJointsJson(), new UTF8Encoding(false));
+                        Ojw.printf(txtLogHistory, "[Export] {0} 저장 완료 (종동 조인트 {1}개 — 퍼펫팅 메타)\r\n", passivePath, lstPassive.Count);
+                    }
+                    else if (File.Exists(passivePath))
+                    {
+                        try { File.Delete(passivePath); } catch { } // 이전 로봇 잔재 제거
+                    }
+                }
+
                 // ── Isaac Sim 전용 URDF 생성 (mimic 제거 등) ──────────
                 List<string> isaacLog;
                 string strIsaacXml = SanitizeUrdfForIsaacSim(strUrdfXml, stlDir, out isaacLog);
@@ -5978,6 +6326,18 @@ namespace MakeUrdf
                         File.WriteAllText(trackJsonPath, trackJson, Encoding.UTF8);
                         Ojw.printf(txtLogHistory, "[Export] {0} 저장 완료 (트랙 {1}개)\r\n",
                             trackJsonPath, trackMetas.Count);
+                    }
+                    else
+                    {
+                        // ★트랙 없는 로봇 Export 시 이전 로봇(탱크 등)의 트랙 JSON 잔존 방지 —
+                        //   낡은 부산물이 PyBullet 뷰어의 트랙 전처리를 오작동시킨다
+                        //   (delta_passive.json/world_cameras.json 과 동일한 "없으면 삭제" 규약)
+                        string trackJsonPath = Path.Combine(urdfDir, "robot_stl_tracks.json");
+                        if (File.Exists(trackJsonPath))
+                        {
+                            File.Delete(trackJsonPath);
+                            Ojw.printf(txtLogHistory, "[Export] {0} 삭제 (이 로봇은 트랙 없음)\r\n", trackJsonPath);
+                        }
                     }
                 }
                 catch (Exception exTrack)
@@ -6544,6 +6904,7 @@ namespace MakeUrdf
                 case 13: return m_strExample13;
                 case 14: return m_strExample14;
                 case 15: return m_strExample15;
+                case 16: return m_strExample16;
             }
             return "";
         }
@@ -6556,7 +6917,18 @@ namespace MakeUrdf
             int idx = cmbExample.SelectedIndex;
             if (idx <= 0) return; // "예제 선택..." 항목
 
-            string dhText = GetExampleDhText(idx);
+            // 예제 번호 = 항목 텍스트의 "N:" 접두 (리스트 표시 순서와 번호 분리 —
+            //   14번(기본형)을 5번(+카메라) 앞에 두는 등 재정렬 가능). 접두 없으면 인덱스.
+            string name = cmbExample.Items[idx].ToString();
+            int nExampleNum = idx;
+            int nColon = name.IndexOf(':');
+            if (nColon > 0)
+            {
+                int nParsed;
+                if (int.TryParse(name.Substring(0, nColon).Trim(), out nParsed)) nExampleNum = nParsed;
+            }
+
+            string dhText = GetExampleDhText(nExampleNum);
             if (string.IsNullOrEmpty(dhText)) return;
 
             // 빌더에 임포트 → 히스토리/텍스트/3D 동기화
@@ -6565,9 +6937,9 @@ namespace MakeUrdf
             UpdatePreview(null);
             ClearDhEditSelection();
             if (tabRight.SelectedTab == tabTest) UpdateMotorList();
-            string name = cmbExample.Items[idx].ToString();
             lblStatus.Text = name + " loaded";
-            m_nLastExampleIdx = idx;   // Capture All 핸들러가 폴더명에 사용
+            m_nLastExampleIdx = nExampleNum;   // Capture All / ExportSource 가 사용 (예제 번호)
+            m_strLastExampleName = name;
             //cmbExample.SelectedIndex = 0;
         }
 
@@ -6594,10 +6966,9 @@ namespace MakeUrdf
 
             // 폴더명: 마지막 cmbExample 선택 인덱스 있으면 ex<NN>_<name>, 없으면 timestamp
             string exName;
-            if (m_nLastExampleIdx > 0 && m_nLastExampleIdx < cmbExample.Items.Count)
+            if (m_nLastExampleIdx > 0 && !string.IsNullOrEmpty(m_strLastExampleName))
             {
-                string label = cmbExample.Items[m_nLastExampleIdx].ToString();
-                label = System.Text.RegularExpressions.Regex.Replace(label, "[^a-zA-Z0-9가-힣]+", "_").Trim('_');
+                string label = System.Text.RegularExpressions.Regex.Replace(m_strLastExampleName, "[^a-zA-Z0-9가-힣]+", "_").Trim('_');
                 exName = string.Format("ex{0:D2}_{1}", m_nLastExampleIdx, label);
             }
             else

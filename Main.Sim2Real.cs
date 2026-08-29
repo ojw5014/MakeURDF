@@ -102,14 +102,17 @@ namespace MakeUrdf
 
         private void S2R_Log(string strMsg)
         {
+            // ★UI 스레드로 넘기는 것이 **먼저**다. 파일 쓰기를 앞에 두면 재귀 호출에서 또 써서
+            //   측정 로그가 전부 두 줄씩 남는다 (2026-08-28 무릎 재학습 로그를 읽다 발견 —
+            //   그동안의 sim2real_log.txt 가 전부 그랬다).
+            if (m_txtS2RLog != null && !m_txtS2RLog.IsDisposed && m_txtS2RLog.InvokeRequired)
+            { m_txtS2RLog.Invoke(new Action(delegate() { S2R_Log(strMsg); })); return; }
             if (m_strS2RLogPath != null)
             {
                 try { File.AppendAllText(m_strS2RLogPath, strMsg + "\r\n", new UTF8Encoding(false)); }
                 catch { }
             }
             if (m_txtS2RLog == null || m_txtS2RLog.IsDisposed) return;
-            if (m_txtS2RLog.InvokeRequired)
-            { m_txtS2RLog.Invoke(new Action(delegate() { S2R_Log(strMsg); })); return; }
             m_txtS2RLog.AppendText(strMsg + "\r\n");
         }
 
