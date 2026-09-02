@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -546,18 +546,52 @@ namespace MakeUrdf
 
         private string m_strExample7 =  "// *Humanoid(Full) - 초기포지션 0으로 가는 현상 발견\r\n" +
                                         // ── 물리 자동기입: 실기(PR2 MAX-E3) 기종/실측 질량 (2026-07-26 버스 스캔) ──
-                                        "$servo, T1, 2XC430-W250\r\n" + "$servo, T2, 2XC430-W250\r\n" +
-                                        "$servo, T3, 2XC430-W250\r\n" + "$servo, T4, 2XC430-W250\r\n" +
-                                        "$servo, T5, 2XC430-W250\r\n" + "$servo, T6, 2XC430-W250\r\n" +
-                                        "$servo, T7, 2XC430-W250\r\n" + "$servo, T8, 2XC430-W250\r\n" +
-                                        "$servo, T9, 2XC430-W250\r\n" + "$servo, T10, 2XC430-W250\r\n" +
-                                        "$servo, T11, 2XC430-W250\r\n" + "$servo, T12, 2XC430-W250\r\n" +
-                                        "$servo, T13, XC430-W240\r\n" + "$servo, T14, XC430-W240\r\n" +
-                                        "$servo, T15, XC430-W240\r\n" + "$servo, T16, XC430-W240\r\n" +
+                                        // ★2026-09-01 정정 — 실기는 2XL430/XL430 이다 (사용자 확인).
+                                        //   종전 2XC430-W250/XC430-W240 선언은 틀렸고, 그 탓에 effort 가
+                                        //   1.6/1.7 N·m 로 나가 있었다. 실제는 두 기종 다 1.4 N·m 다.
+                                        //   저울 실측(2026-09-01): XL430 56g / 2XL430 100g (XC430 63 / 2XC430 106 은 미사용)
+                                        "$servo, T1, 2XL430-W250\r\n" + "$servo, T2, 2XL430-W250\r\n" +
+                                        "$servo, T3, 2XL430-W250\r\n" + "$servo, T4, 2XL430-W250\r\n" +
+                                        "$servo, T5, 2XL430-W250\r\n" + "$servo, T6, 2XL430-W250\r\n" +
+                                        "$servo, T7, 2XL430-W250\r\n" + "$servo, T8, 2XL430-W250\r\n" +
+                                        "$servo, T9, 2XL430-W250\r\n" + "$servo, T10, 2XL430-W250\r\n" +
+                                        "$servo, T11, 2XL430-W250\r\n" + "$servo, T12, 2XL430-W250\r\n" +
+                                        "$servo, T13, XL430-W250\r\n" + "$servo, T14, XL430-W250\r\n" +
+                                        "$servo, T15, XL430-W250\r\n" + "$servo, T16, XL430-W250\r\n" +
                                         "$servo, T17, XL430-W250\r\n" +
-                                        // CM-550 실측 58.8g (통짜계산 33.2g → +25.6), 배터리 LB-020 102g (하부커버에 가산)
-                                        "$extramass, t3_pr25_A01_Cm-550.stl, 25.6\r\n" +
-                                        "$extramass, t3_Pr25_A01_Battery_Bottom_Cover.stl, 102\r\n" +
+                                        // ── 뭉치 질량 보정 ─────────────────────────────────────────────
+                                        //   ★2026-09-01 저울 실측으로 재조정 (회신17 / 답신16-2).
+                                        //     실물: 배터리+케이스 123g / 로봇단독 1511g / 보행구성 1634g.
+                                        //     서보 실측: XL430 56g, 2XL430 100g (XC430 63 / 2XC430 106 은 이 로봇 미사용).
+                                        //     케이블 평균 3g/가닥.
+                                        //   ※배터리는 종전에도 이미 들어 있었다(셀 102g). 부족분은 배터리가 아니라
+                                        //     배선·나사·Pi + "정체 미확인" 이었다 — 회신17 §2 의 격차 분해를 정정한다.
+                                        //
+                                        //   구성:  서보 880.0 (6×100 + 5×56, 실측)  + 배터리 모듈 123.0 (실측)
+                                        //        + CM-550 58.8 (실측)  + 프레임 형상 256.4 (STL×1050)  + 빈 링크 3.0
+                                        //        + 케이블 54.0 (18가닥×3, 실측)  + Pi·마운트·USB 25.0 (추정)
+                                        //        + ★정체 미확인 233.8  = 1634.0
+                                        //   ★미확인 233.8g 은 모델된 프레임 전체(256.4g)와 맞먹는다. 프레임이 금속이거나
+                                        //     STL 에 없는 부품이 있다는 뜻 — 프레임 형상질량에 비례 배분했다(계수 0.9120,
+                                        //     프레임 유효밀도 1050 → 2008 kg/m³). 프레임 부품 하나만 저울에 올리면 확정된다.
+                                        "$extramass, t3_pr25_A01_Cm-550.stl, 25.6\r\n" +      // CM-550 실측 58.8g
+                                        "$extramass, t3_Pr25_A01_Battery_Bottom_Cover.stl, 95.62\r\n" +  // 커버 27.4 + 95.62 = 123.0
+                                        //   프레임: 형상질량 × 0.9120 (미확인분) + 그 링크의 케이블·전장
+                                        "$extramass, ef25-f19.stl, 5.52\r\n" +            // link_1 (+허리 케이블 1.5×2)
+                                        "$extramass, pr25_a01_f23.stl, 10.97\r\n" +       // link_1
+                                        "$extramass, head_1.stl, 45.24\r\n" +             // link_2 (+Pi·USB 25, 케이블 3)
+                                        "$extramass, frame_1_3_1.stl, 21.31\r\n" +        // link_2
+                                        "$extramass, fp04-f10.stl, 1.67\r\n" +            // link_2 / 정강이
+                                        "$extramass, pr25_a01_f19.stl, 5.59\r\n" +        // 팔꿈치·무릎 4축 (+케이블 3)
+                                        "$extramass, frame_4_1_2.stl, 4.54\r\n" +
+                                        "$extramass, pr25_a01_f18.stl, 7.22\r\n" +        // 손
+                                        "$extramass, pr25_a01_f21.stl, 7.22\r\n" +        // 손
+                                        "$extramass, hand_r_3_1.stl, 6.21\r\n" +
+                                        "$extramass, hand_l_3_1.stl, 6.21\r\n" +
+                                        "$extramass, pr25_a01_f22.stl, 10.7\r\n" +        // 허벅지
+                                        "$extramass, foot_2_2.stl, 18.49\r\n" +           // 발
+                                        //   듀얼 6축: 서보 100 은 고정질량표, 여기에 관절 케이블 2가닥 6g
+                                        "$extramass, 2xl_dummy.stl, 6\r\n" +
                                         // ── 관절 가동범위 (URDF 공간, deg) ─────────────────────────────
                                         //   없으면 ±180deg 플레이스홀더가 나가고, RL/솔버가 실물이 못 하는 자세로
                                         //   균형을 훔친다 (humanoid 프로젝트: 무릎 역굴곡·발날 딛기 재학습 2회).
@@ -1142,9 +1176,18 @@ namespace MakeUrdf
                 return false;
 
             int srcLine = m_nSelectedTextLine;
+            bool bBlankSrc = (lines[srcLine].Trim().Length == 0);
             List<string> outLines = new List<string>(lines);
             int newSel;
-            if (edit.Inserted)
+            if (edit.Inserted && bBlankSrc)
+            {
+                // ★빈 줄에 커서를 둔 경우 — 그 줄 **자리에** 쓴다.
+                //   뒤에 끼우면 빈 줄이 위에 남아 "커서 둔 자리"와 어긋난다.
+                outLines.RemoveAt(srcLine);
+                outLines.InsertRange(srcLine, edit.NewLines);
+                newSel = srcLine + edit.CarrierOffset;
+            }
+            else if (edit.Inserted)
             {
                 outLines.InsertRange(srcLine + 1, edit.NewLines);
                 newSel = srcLine + 1 + edit.CarrierOffset;
@@ -1157,6 +1200,7 @@ namespace MakeUrdf
 
             // 텍스트가 원본 — btnEditApply_Click 과 같은 순서 (주석 줄 보존: UpdatePreview 는 부르지 않는다)
             txtDhParams.Lines = outLines.ToArray();
+            ResetDhTextFormatting();
             MakeAll(txtDhParams.Text);
             m_Builder.ImportFromText(txtDhParams.Text);
 
@@ -1187,7 +1231,8 @@ namespace MakeUrdf
 
             string unit = DhBuilder.IsRotation(action) ? "deg" : "mm";
             lblStatus.Text = edit.Inserted
-                ? String.Format("Line {0} 뒤 삽입: {1} (사유: {2}) → Line {3} 선택",
+                ? String.Format(bBlankSrc ? "Line {0} 에 새 줄: {1} → Line {3} 선택"
+                                          : "Line {0} 뒤 삽입: {1} (사유: {2}) → Line {3} 선택",
                     srcLine + 1, edit.Description, edit.Reason, newSel + 1)
                 : String.Format("Line {0}: {1} {2} → {3}{4}",
                     newSel + 1, edit.FieldName,
@@ -2571,6 +2616,9 @@ namespace MakeUrdf
             SetStlFieldsVisible(false);
             // txtDhParams 클릭 이벤트 연결
             txtDhParams.Click += txtDhParams_Click;
+            // ★커서가 어떤 경로로 움직이든(클릭·방향키·Home/End·마우스 드래그) 선택 대상을 따라간다.
+            //   Click 만 걸어 두면 키보드로 줄을 옮겨도 직전에 고른 부품이 계속 ±버튼의 대상으로 남는다.
+            txtDhParams.SelectionChanged += txtDhParams_SelectionChanged;
         }
 
         private void SetDhFieldsVisible(bool visible)
@@ -2986,24 +3034,44 @@ namespace MakeUrdf
         private void txtDhParams_Click(object sender, EventArgs e)
         {
             if (m_bSyncingSelection) return;
-
             int charIdx = txtDhParams.GetCharIndexFromPosition(
                 txtDhParams.PointToClient(Cursor.Position));
-            int textLine = txtDhParams.GetLineFromCharIndex(charIdx);
+            SelectDhByTextLine(txtDhParams.GetLineFromCharIndex(charIdx));
+        }
 
+        /// <summary>커서가 움직이면(방향키·Home/End·드래그 포함) 그 줄로 선택을 옮긴다.
+        /// ★이게 없으면 키보드로 줄을 내려가도 직전에 고른 부품이 ±버튼의 대상으로 남아,
+        ///   "다음 줄로 갔는데 아까 그 모델이 움직인다"가 된다.</summary>
+        private void txtDhParams_SelectionChanged(object sender, EventArgs e)
+        {
+            if (m_bSyncingSelection) return;
+            SelectDhByTextLine(txtDhParams.GetLineFromCharIndex(txtDhParams.SelectionStart));
+        }
+
+        /// <summary>텍스트 줄 하나를 ±버튼·휠의 대상으로 삼는다.
+        ///
+        /// 줄에 부품이 있으면 그 부품을 선택하고(3D 녹색 + 편집칸),
+        /// **빈 줄·주석 줄이면 부품 선택만 풀고 그 줄을 "새로 쓸 자리"로 남긴다.**
+        /// 후자가 핵심 — 선택을 통째로 지우면 ±버튼이 체인 끝에 붙어 버려서
+        /// 사용자가 커서를 둔 자리가 무시된다.</summary>
+        private void SelectDhByTextLine(int textLine)
+        {
             string[] lines = txtDhParams.Lines;
             if (textLine < 0 || textLine >= lines.Length)
             {
-                ClearDhEditSelection();
+                // 텍스트가 아예 없는 영역 — 기존대로 체인 끝에 누적
+                if (m_nSelectedTextLine >= 0) ClearDhEditSelection();
                 return;
             }
 
             string rawLine = lines[textLine].Trim();
             if (rawLine.Length == 0 || rawLine.StartsWith("//"))
             {
-                ClearDhEditSelection();
+                if (m_nSelectedDhLine >= 0 || m_nSelectedTextLine != textLine)
+                    SetDhCaretInsertPoint(textLine);
                 return;
             }
+            if (m_nSelectedTextLine == textLine && m_nSelectedDhLine >= 0) return;  // 이미 그 줄
 
             m_bSyncingSelection = true;
             try
@@ -3136,6 +3204,26 @@ namespace MakeUrdf
         }
 
         /// <summary>이전 줄의 하이라이트 제거</summary>
+        /// <summary>텍스트를 통째로 갈아끼운 뒤 남는 하이라이트 서식을 지운다.
+        /// RichTextBox 는 삽입 지점의 서식을 새로 들어온 글자에 물려주기 때문에,
+        /// 줄을 새로 쓰면 엉뚱한 줄들이 녹색으로 남아 "저게 선택된 건가?" 하게 된다.</summary>
+        private void ResetDhTextFormatting()
+        {
+            bool bPrev = m_bSyncingSelection;
+            m_bSyncingSelection = true;
+            try
+            {
+                int nSel = txtDhParams.SelectionStart, nLen = txtDhParams.SelectionLength;
+                txtDhParams.SelectAll();
+                txtDhParams.SelectionBackColor = txtDhParams.BackColor;
+                txtDhParams.SelectionFont = new Font(txtDhParams.Font, FontStyle.Regular);
+                txtDhParams.Select(nSel, nLen);
+                m_nHighlightedTextLine = -1;
+            }
+            catch { }
+            finally { m_bSyncingSelection = bPrev; }
+        }
+
         private void ClearDhTextLineHighlight()
         {
             if (m_nHighlightedTextLine < 0) return;
@@ -3164,13 +3252,43 @@ namespace MakeUrdf
             m_nHighlightedTextLine = -1;
         }
 
+        /// <summary>빈 줄·주석 줄에 커서가 놓였을 때 — 부품 선택은 풀되 그 줄은 대상으로 남긴다.
+        /// ±버튼을 누르면 그 자리에 a,d,Θ,α 한 줄이 새로 생긴다 (체인 끝이 아니라 커서 자리).</summary>
+        private void SetDhCaretInsertPoint(int textLine)
+        {
+            bool bPrev = m_bSyncingSelection;
+            m_bSyncingSelection = true;
+            try
+            {
+                m_nSelectedDhLine = -1;          // 부품 없음 → 3D 녹색·편집칸 해제
+                m_nSelectedTextLine = textLine;  // ★그 줄은 유지 — 여기에 새 줄을 쓴다
+                ClearDhTextLineHighlight();
+                if (m_C3d != null)
+                {
+                    m_C3d.User_SetPick(-1);
+                    m_C3d.User_ShowDhBall(-1);
+                }
+                if (pnDhEdit != null) pnDhEdit.Visible = false;
+                lblStatus.Text = string.Format("빈 줄 {0} — ±버튼을 누르면 여기에 새 줄이 생깁니다", textLine + 1);
+            }
+            finally { m_bSyncingSelection = bPrev; }
+        }
+
         private void ClearDhEditSelection()
         {
-            m_nSelectedDhLine = -1;
-            m_nSelectedTextLine = -1;
-            ClearDhTextLineHighlight();
-            if (m_C3d != null) m_C3d.User_SetPick(-1);
-            if (pnDhEdit != null) pnDhEdit.Visible = false;
+            // ★재진입 차단 — ClearDhTextLineHighlight 가 텍스트박스 선택을 건드려
+            //   SelectionChanged 를 부르고, 그게 방금 지운 선택을 되살린다.
+            bool bPrev = m_bSyncingSelection;
+            m_bSyncingSelection = true;
+            try
+            {
+                m_nSelectedDhLine = -1;
+                m_nSelectedTextLine = -1;
+                ClearDhTextLineHighlight();
+                if (m_C3d != null) m_C3d.User_SetPick(-1);
+                if (pnDhEdit != null) pnDhEdit.Visible = false;
+            }
+            finally { m_bSyncingSelection = bPrev; }
         }
 
         /// <summary>텍스트박스 줄 번호 → MakeDHSkeleton 0-based DH 인덱스</summary>

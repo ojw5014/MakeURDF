@@ -16,3 +16,4 @@ bin/Release/assembled_model.stl
 bin/Release/stl/_highlight.stl
 bin/Release/stl/_face_highlight.stl
 bin/Release/_EdhToUrdf_headless.exe
+bin/Release/stl/_hover_edge.stl
