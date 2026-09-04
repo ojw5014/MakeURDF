@@ -11,6 +11,7 @@ bin/Release/urdf/
 bin/Release/robot_stl.*
 bin/Release/robot_commands.txt
 bin/Release/formula_view.html
+bin/Release/viewer_config.txt
 bin/Release/param.dat
 bin/Release/assembled_model.stl
 bin/Release/stl/_highlight.stl
