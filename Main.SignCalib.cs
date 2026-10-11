@@ -203,6 +203,9 @@ namespace MakeUrdf
             string strDir = Path.Combine(GetUrdfOutputDir(), "sim2real");
             Directory.CreateDirectory(strDir);
             var cfg = SignCalib_LoadConfig(strDir);
+            int nToolPort, nToolBaud;                                   // 포트·속도 = 로봇팔 세팅 탭 칸 (signcalib.txt 의 port/baud 대신 — 탭이 연결 중이면 해제할지 묻는다)
+            if (!ArmMotor_ToolPort("① 관절방향", true, out nToolPort, out nToolBaud)) return;
+            cfg.nPort = nToolPort; cfg.nBaud = nToolBaud;
             var signs = Ojw.CSim2Real.LoadJointMap(Path.Combine(strDir, "joint_map.json"));
 
             if (MessageBox.Show(string.Format(

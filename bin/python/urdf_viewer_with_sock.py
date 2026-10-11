@@ -69,6 +69,25 @@ if os.path.exists(release_dir):
     os.chdir(release_dir)
     print(f"Working directory changed to: {os.path.abspath(release_dir)}")
 
+# 엔진(PyBullet·MuJoCo C 확장)에 넘길 파일 경로 — 한글 등 비ASCII 경로 대응 (2026-09-30)
+#   두 엔진은 Windows 에서 경로를 UTF-8 바이트로 받아 C 런타임 fopen 에 그대로 넘겨, 한글이 든 절대 경로를
+#   열지 못한다 (PyBullet "Cannot load URDF file", MuJoCo "ParseXML: Error opening file").
+#   작업 폴더를 모델 폴더로 옮겨 둔 뒤이므로 비ASCII 절대 경로는 작업 폴더 기준 상대 경로로 바꿔 넘긴다
+#   → 폴더 이름에 한글·공백이 있어도 열린다. 영문 경로는 손대지 않는다.
+#   한계: 상대 경로 자체(파일·하위 폴더 이름)에 한글이 있거나 다른 드라이브면 여전히 못 연다 — 경고만 남긴다.
+def _engine_path(path):
+    if not path or path.isascii():
+        return path
+    rel = path
+    if os.path.isabs(path):
+        try:
+            rel = os.path.relpath(path, os.getcwd())
+        except ValueError:          # 다른 드라이브 — 상대 경로를 만들 수 없음
+            rel = path
+    if not rel.isascii():
+        print(f"[Path] 비ASCII 경로라 엔진이 못 열 수 있음: {rel}", flush=True)
+    return rel
+
 # URDF 파일 존재 확인
 if not os.path.exists(urdf_file):
     print(f"ERROR: URDF file not found: {urdf_file}")
@@ -205,7 +224,7 @@ scene_ids = []
 for it in scene_items:
     try:
         orn = p.getQuaternionFromEuler(it["rpy"])
-        bid = p.loadURDF(it["url"], it["xyz"], orn, globalScaling=it["scale"])
+        bid = p.loadURDF(_engine_path(it["url"]), it["xyz"], orn, globalScaling=it["scale"])
         scene_ids.append(bid)
         if it["color"] is not None:
             p.changeVisualShape(bid, -1, rgbaColor=it["color"])
@@ -251,6 +270,26 @@ active_scene_tool = None              # dict: type, sx, sy, sz, color, mass, zof
 scene_last_click_state = 0            # 좌클릭 down/up 트리거 dedup 용
 active_moves: Dict[int, JointMoveCommand] = {}  # 현재 실행 중인 조인트 이동 명령들
 joint_number_to_id = {}                # 조인트 번호(예: 11, 12) → PyBullet joint ID 매핑
+# === sag twin 고스트 (예측 실제 자세 표시, 2026-10-02) ===
+#   OpenJigWare DLL 이 joint 메시지 뒤 같은 payload 에 "TWIN,time_ms,delay,id1,deg1,...;" (예측 실제 자세)
+#   / "TWIN_OFF;" (고스트 숨김) 를 붙여 보냄. Play() 는 twin_queue 에 넣기만 하고, 고스트 생성·갱신은
+#   main 루프(process_twin_commands / update_twin_ghost)에서만 한다. TWIN 을 받기 전에는 아무것도 만들지 않음.
+twin_queue = queue.Queue()             # 소켓 스레드 → main 루프 (TWIN / TWIN_OFF)
+twin_state = {
+    'id': None,          # 고스트 body id (첫 TWIN 수신 시 생성)
+    'visible': False,    # 표시 중 여부 (TWIN_OFF 면 False — body 는 남겨 두고 재사용)
+    'failed': False,     # 로드 실패 시 True — 이후 TWIN 마다 재시도·출력하지 않음
+    'moves': {},         # joint index → (시작값, 목표값, 시작 시각, 이동 시간[s]) — native 단위 (rad / m)
+    'last_q': {},        # joint index → 마지막으로 적용한 고스트 관절값 (보간 시작점)
+    'base': None,        # 마지막으로 적용한 base (pos, orn)
+    'cam_hidden': False, # 카메라 sensor 렌더 동안 시야 밖으로 치운 상태
+    'joints': [],        # 갱신 대상 joint index (revolute / prismatic)
+    'meta': {},          # joint index → (prismatic 여부, continuous 여부, lower, upper)
+    'mimic': [],         # mimic 자식 joint index (마스터가 먼저 계산되도록 정렬)
+    'multi': False,      # resetJointStatesMultiDof 사용 가능 여부
+    'bad_ids': set(),    # 모르는 조인트 번호 (한 번만 알림)
+    'err': False,        # 갱신 오류는 한 번만 출력
+}
 
 # 로봇 위치 제어 변수들
 robot_position_sliders = {}            # 로봇 위치 제어 슬라이더들
@@ -431,10 +470,14 @@ def _render_camera_view(robot_id, cam, link_id):
         fov_deg = cam["hfov_rad"] * 180.0 / math.pi
         aspect  = float(cam["w"]) / float(cam["h"])
         proj_mat = p.computeProjectionMatrixFOV(fov_deg, aspect, cam["near"], cam["far"])
-        _, _, rgb, _, _ = p.getCameraImage(
-            width=cam["w"], height=cam["h"],
-            viewMatrix=view_mat, projectionMatrix=proj_mat,
-            renderer=p.ER_BULLET_HARDWARE_OPENGL)
+        _twin_hide_for_camera()   # sag twin 고스트는 센서 영상에서 제외 — 렌더하는 동안만 시야 밖으로
+        try:
+            _, _, rgb, _, _ = p.getCameraImage(
+                width=cam["w"], height=cam["h"],
+                viewMatrix=view_mat, projectionMatrix=proj_mat,
+                renderer=p.ER_BULLET_HARDWARE_OPENGL)
+        finally:
+            _twin_restore_after_camera()   # 바로 원위치 (메인 창에서 고스트가 빠져 보이는 시간 최소화)
         arr = _np.array(rgb, dtype=_np.uint8)
         return arr[:, :, :3] if arr.ndim == 3 else None
     except Exception as ex:
@@ -738,7 +781,8 @@ def parse_socket_message(message):
 
 def Play(command_string):
     """명령 문자열을 받아서 실행 큐에 추가하는 함수.
-       SCENE_CLEAR / SCENE_ADD prefix 도 처리 (scene_queue 로 라우팅)."""
+       SCENE_CLEAR / SCENE_ADD prefix 도 처리 (scene_queue 로 라우팅).
+       TWIN / TWIN_OFF 는 twin_queue 로 (sag twin 고스트 — joint 명령으로 해석하지 않음)."""
     try:
         cmd = command_string.strip().rstrip(';').strip()
 
@@ -787,6 +831,23 @@ def Play(command_string):
                 except Exception as ex:
                     print(f"SCENE_ADD parse error: {ex} / {cmd}")
                     return False
+            return False
+
+        # === sag twin 고스트 명령 (joint 명령으로 파싱하지 않음) ===
+        #   TWIN,time_ms,delay,id1,deg1,...  → 예측 실제 자세 (번호·단위는 joint 명령과 동일)
+        #   TWIN_OFF                         → 고스트 숨김
+        #   소켓 스레드이므로 PyBullet 은 호출하지 않고 twin_queue 에만 넣음 → process_twin_commands()
+        if cmd.startswith('TWIN'):
+            head, _, rest = cmd.partition(',')
+            head = head.strip()
+            if head == 'TWIN_OFF':
+                twin_queue.put(('OFF',))
+                return True
+            if head == 'TWIN':
+                twin_parsed = parse_socket_message(rest)
+                if twin_parsed:
+                    twin_queue.put(('SET', twin_parsed))
+                    return True
             return False
 
         # 기존 joint 명령 처리
@@ -884,7 +945,7 @@ def _spawn_scene_object(obj):
 
         if t.endswith('.urdf'):
             try:
-                return p.loadURDF(t, pos, orn, useFixedBase=(mass <= 0), globalScaling=max(sx, 0.01))
+                return p.loadURDF(_engine_path(t), pos, orn, useFixedBase=(mass <= 0), globalScaling=max(sx, 0.01))
             except Exception as ex:
                 print(f"loadURDF {t} failed: {ex}")
                 return None
@@ -1003,6 +1064,205 @@ def process_scene_commands():
                     print(f"[Scene] +{obj['type']} @ ({obj['x']:.3f},{obj['y']:.3f},{obj['z']:.3f}) mass={obj['mass']}")
     except Exception as e:
         print(f"process_scene_commands error: {e}")
+
+
+####################################################
+# sag twin 고스트 — 예측 실제 자세를 반투명 주황 복제 로봇으로 표시 (2026-10-02)
+#   - 메인 로봇과 같은 URDF(urdf_to_load) 를 한 번 더 로드 → 관절 인덱스가 같아
+#     조인트 번호 매핑(joint_number_to_id)·mimic 정보(mimic_joints) 를 그대로 재사용
+#   - 모든 링크 충돌 그룹/마스크 0 → 바닥·메인 로봇·scene 객체와 접촉 없음 (메인 물리에 영향 없음)
+#   - base 는 메인 로봇 base 자세를 그대로 복사, 관절은 매 프레임 reset 으로 키네마틱 구동
+#       TWIN 에 있는 관절 : 그 값으로 time_ms 동안 선형 보간 (time_ms<=0 이면 즉시)
+#       TWIN 에 없는 관절 : 메인 로봇 현재값 그대로 (continuous 바퀴는 항상 메인 추종)
+#       mimic 관절        : 고스트 마스터 값으로 계산
+#   - 카메라 sensor 렌더(getCameraImage) 동안만 시야 밖으로 잠시 치움 → 센서 영상에는 고스트가 안 나옴
+#   - TWIN_OFF : body 는 지우지 않고 시야 밖으로 숨김 → 다음 TWIN 때 다시 로드하지 않고 재사용
+####################################################
+TWIN_RGBA = [1.0, 0.55, 0.1, 0.35]        # 반투명 주황
+_TWIN_HIDE_POS = [0.0, 0.0, -10000.0]     # 숨김 위치 — 어떤 카메라 시야에도 들어오지 않는 먼 곳
+
+
+def _twin_clamp(value, lower, upper):
+    """관절 한계값 클램프 (continuous 처럼 lower>=upper 면 한계 없음 → 그대로)."""
+    if lower < upper and lower > -1e10 and upper < 1e10:
+        return max(lower, min(upper, value))
+    return value
+
+
+def _mimic_depth(child):
+    """mimic 체인 깊이 (마스터도 mimic 이면 1 이상) — 고스트에서 마스터부터 계산하기 위한 정렬 키."""
+    d = 0
+    while mimic_joints[child]['parent_id'] in mimic_joints and d < 16:
+        child = mimic_joints[child]['parent_id']
+        d += 1
+    return d
+
+
+def _twin_create():
+    """고스트 로봇 생성 (첫 TWIN 수신 시 main 루프에서 1회). 성공 시 True.
+       중간에 실패하면 만든 body 를 지우고 이후 TWIN 은 무시 (매번 재로드·출력 방지)."""
+    st = twin_state
+    gid = None
+    try:
+        gid = p.loadURDF(_engine_path(urdf_to_load), _TWIN_HIDE_POS, [0, 0, 0, 1], useFixedBase=True)
+        n = p.getNumJoints(gid)
+        # 어떤 것과도 충돌·접촉하지 않음 (바닥·메인 로봇·scene 객체, 마우스 피킹·rayTest 포함)
+        for li in range(-1, n):
+            p.setCollisionFilterGroupMask(gid, li, 0, 0)
+        # visual 이 있는 링크 전부 반투명 주황으로
+        vis_links = sorted({v[1] for v in p.getVisualShapeData(gid)}) or list(range(-1, n))
+        for li in vis_links:
+            p.changeVisualShape(gid, li, rgbaColor=TWIN_RGBA)
+        joints, meta = [], {}
+        for j in range(n):
+            info = p.getJointInfo(gid, j)
+            jt, lo, hi = info[2], info[8], info[9]
+            if jt not in (p.JOINT_REVOLUTE, p.JOINT_PRISMATIC):
+                continue
+            joints.append(j)
+            meta[j] = (jt == p.JOINT_PRISMATIC, jt == p.JOINT_REVOLUTE and lo >= hi, lo, hi)
+        mimic_order = sorted((c for c in mimic_joints if c in meta), key=_mimic_depth)
+    except Exception as ex:
+        st['failed'] = True
+        print(f"[Twin] 고스트 생성 실패 - 이후 TWIN 무시: {ex}", flush=True)
+        if gid is not None:
+            try:
+                p.removeBody(gid)
+            except Exception:
+                pass
+        return False
+    st['joints'], st['meta'], st['mimic'] = joints, meta, mimic_order
+    st['multi'] = hasattr(p, 'resetJointStatesMultiDof')
+    st['id'] = gid
+    print(f"[Twin] 고스트 로드: body {gid}, 관절 {len(joints)}개 (충돌 없음, 반투명 주황)", flush=True)
+    return True
+
+
+def _twin_set_visible(show):
+    """고스트 표시/숨김 전환 (main 루프 전용). 표시할 때 고스트가 없으면 생성. 표시 중이면 True."""
+    st = twin_state
+    if not show:
+        if st['id'] is not None and st['visible']:
+            p.resetBasePositionAndOrientation(st['id'], _TWIN_HIDE_POS, [0, 0, 0, 1])
+            st['visible'] = False
+            st['moves'] = {}
+            st['base'] = None
+            print("[Twin] 고스트 숨김 (TWIN_OFF)", flush=True)
+        return False
+    if st['id'] is None and (st['failed'] or not _twin_create()):
+        return False
+    if not st['visible']:
+        st['visible'] = True
+        st['moves'] = {}
+        st['base'] = None
+        update_twin_ghost()     # 숨김 동안 멈춰 있던 관절을 메인 로봇 현재 자세로 맞춘 뒤 보간 시작
+        print("[Twin] 고스트 표시", flush=True)
+    return True
+
+
+def process_twin_commands():
+    """twin_queue 의 TWIN / TWIN_OFF 처리. 매 frame main 루프에서 호출 (큐가 비면 즉시 반환)."""
+    if twin_queue.empty():
+        return
+    st = twin_state
+    try:
+        while True:
+            try:
+                cmd = twin_queue.get_nowait()
+            except queue.Empty:
+                break
+            if cmd[0] == 'OFF':
+                _twin_set_visible(False)
+                continue
+            if not _twin_set_visible(True):         # 첫 TWIN 이면 여기서 고스트 생성
+                continue
+            parsed = cmd[1]
+            now = time.time()
+            duration = parsed['time'] / 1000.0      # ms → s (<=0 이면 즉시)
+            moves = {}
+            for jc in parsed['joint_commands']:
+                jnum = jc['joint_id']
+                jid = joint_number_to_id.get(jnum)
+                meta = st['meta'].get(jid)
+                if meta is None:
+                    if jnum not in st['bad_ids']:      # 모르는 번호는 한 번만 알림
+                        st['bad_ids'].add(jnum)
+                        print(f"[Twin] Invalid joint number: {jnum} (available: {sorted(joint_number_to_id.keys())}) - 이후 생략", flush=True)
+                    continue
+                is_prismatic, is_continuous, lo, hi = meta
+                if is_continuous:
+                    continue                            # 바퀴(RPS 속도 명령)는 메인 로봇 값을 따름
+                # 단위 변환은 joint 명령과 동일: revolute deg → rad, prismatic mm → m
+                target = jc['angle'] * 0.001 if is_prismatic else math.radians(jc['angle'])
+                target = _twin_clamp(target, lo, hi)
+                moves[jid] = (st['last_q'].get(jid, target), target, now, duration)
+            st['moves'] = moves                         # 이번 TWIN 에 없는 관절은 메인 로봇을 따라감
+    except Exception as e:
+        print(f"process_twin_commands error: {e}")
+
+
+def update_twin_ghost():
+    """매 프레임 stepSimulation 직후: 고스트 base·관절 갱신. 고스트가 없거나 숨김이면 즉시 반환."""
+    st = twin_state
+    if st['id'] is None or not st['visible']:
+        return
+    try:
+        gid = st['id']
+        pose = p.getBasePositionAndOrientation(robot)
+        if pose != st['base']:                          # 메인 base 가 움직였을 때만 (fixed base 면 거의 그대로)
+            p.resetBasePositionAndOrientation(gid, pose[0], pose[1])
+            st['base'] = pose
+        joints = st['joints']
+        if not joints:
+            return
+        states = p.getJointStates(robot, joints)
+        now = time.time()
+        moves = st['moves']
+        q = {}
+        for k, jid in enumerate(joints):
+            mv = moves.get(jid)
+            if mv is None:
+                q[jid] = states[k][0]                   # TWIN 에 없는 관절: 메인 로봇 현재값
+            else:
+                start, target, t0, duration = mv
+                if duration <= 0 or now - t0 >= duration:
+                    q[jid] = target
+                else:
+                    q[jid] = start + (target - start) * (now - t0) / duration
+        for child in st['mimic']:                       # mimic: child = offset + multiplier * 고스트 마스터
+            md = mimic_joints[child]
+            parent_q = q.get(md['parent_id'])
+            if parent_q is not None:
+                _, _, lo, hi = st['meta'][child]
+                q[child] = _twin_clamp(md['offset'] + md['multiplier'] * parent_q, lo, hi)
+        values = [q[j] for j in joints]
+        if st['multi']:
+            p.resetJointStatesMultiDof(gid, joints, [[v] for v in values])
+        else:
+            for j, v in zip(joints, values):
+                p.resetJointState(gid, j, v)
+        st['last_q'] = q
+    except Exception as ex:
+        if not st['err']:
+            st['err'] = True
+            print(f"[Twin] 고스트 갱신 오류: {ex}", flush=True)
+
+
+def _twin_hide_for_camera():
+    """카메라 sensor 의 getCameraImage 직전 호출: 표시 중인 고스트를 잠시 시야 밖으로 (센서 영상에서 제외)."""
+    st = twin_state
+    if st['visible'] and not st['cam_hidden']:
+        p.resetBasePositionAndOrientation(st['id'], _TWIN_HIDE_POS, [0, 0, 0, 1])
+        st['cam_hidden'] = True
+
+
+def _twin_restore_after_camera():
+    """getCameraImage 직후 호출: 고스트를 메인 로봇 자리로 되돌림."""
+    st = twin_state
+    if st['cam_hidden']:
+        st['cam_hidden'] = False
+        if st['visible'] and st['base'] is not None:
+            p.resetBasePositionAndOrientation(st['id'], st['base'][0], st['base'][1])
 
 def WaitMotion(milliseconds=None):
     """
@@ -1515,7 +1775,7 @@ def load_track_belts(release_dir_local):
         try:
             vshape = p.createVisualShape(
                 shapeType=p.GEOM_MESH,
-                fileName=stl_abs,
+                fileName=_engine_path(stl_abs),
                 meshScale=[scale, scale, scale],
                 rgbaColor=rgba
             )
@@ -1626,7 +1886,7 @@ if ENABLE_TRACK_FLOW:
         print(f"[Track] URDF to load: {urdf_to_load}", flush=True)
 
 # 로봇 URDF 로드 — fixed/non-fixed 모두 동일하게 [0, 0, SPAWN_Z]
-robot = p.loadURDF(urdf_to_load, [0, 0, SPAWN_Z], useFixedBase=USE_FIXED_BASE)
+robot = p.loadURDF(_engine_path(urdf_to_load), [0, 0, SPAWN_Z], useFixedBase=USE_FIXED_BASE)
 
 # 조인트 정보 수집을 위한 변수들 초기화
 num_joints = p.getNumJoints(robot)
@@ -2312,6 +2572,8 @@ try:
         process_socket_commands(robot, movable_joints)
         # $scene placement live 적용 (MakeUrdf Scene 탭 Apply 버튼 → 즉시 spawn)
         process_scene_commands()
+        # sag twin 고스트 명령 (TWIN / TWIN_OFF) — 첫 TWIN 때 고스트 생성
+        process_twin_commands()
         # viewer 내 좌클릭 직접 배치 (active_scene_tool 설정된 경우)
         process_viewer_click_placement()
 
@@ -2400,6 +2662,8 @@ try:
 
         # 물리 시뮬레이션 한 스텝 실행
         p.stepSimulation()
+        # sag twin 고스트 자세 갱신 (방금 스텝한 메인 로봇 기준, TWIN 을 받은 적 없으면 즉시 반환)
+        update_twin_ghost()
         time.sleep(1./240.)  # 240 FPS로 제한
 
         # === 카메라 sensor 렌더 (update_rate 제한 적용) ===

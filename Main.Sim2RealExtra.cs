@@ -19,31 +19,68 @@ namespace MakeUrdf
     {
         private Thread m_thrExtra = null;
 
-        private bool Extra_Busy()
+        /// <summary>포트를 쓰는 측정 스레드가 도는 중인가 — ⑤⑥⑦⑧⑨·로봇팔 세팅 작업(m_thrExtra), ② 관절리미트, ④ 기립처짐, ① 관절방향</summary>
+        private bool Extra_IsBusy()
         {
-            if ((m_thrExtra != null && m_thrExtra.IsAlive) ||
-                (m_thrMech != null && m_thrMech.IsAlive) ||
-                (m_thrStand != null && m_thrStand.IsAlive))
-            { MessageBox.Show("다른 측정이 진행 중입니다."); return true; }
+            return (m_thrExtra != null && m_thrExtra.IsAlive) ||
+                   (m_thrMech != null && m_thrMech.IsAlive) ||
+                   (m_thrStand != null && m_thrStand.IsAlive) ||
+                   (m_thrSignCalib != null && m_thrSignCalib.IsAlive);   // ① 관절방향도 포트를 쓴다
+        }
+
+        /// <summary>⑤⑥⑦⑧ 시작 전 — 다른 측정이 돌면 거부. 포트·속도와 로봇팔 세팅 탭 연결은 확인창 바로 앞에서 ArmMotor_ToolPort 가 본다</summary>
+        private bool Extra_Busy() { return Extra_Busy(false); }
+
+        /// <summary>시작 전 확인 — 다른 측정이 돌면 거부. bUsesArmConn = 로봇팔 세팅 탭의 연결을 빌려 쓰는 작업(⑨·로봇팔 세팅 작업).
+        /// 포트를 따로 여는 ⑤⑥⑦⑧ 은 확인창 바로 앞에서 ArmMotor_ToolPort 로 포트·속도(로봇팔 세팅 탭 칸)를 얻는다 — 탭이 연결 중이면 거기서 해제할지 묻는다</summary>
+        private bool Extra_Busy(bool bUsesArmConn)
+        {
+            if (Extra_IsBusy()) { MessageBox.Show("다른 측정이 진행 중입니다."); return true; }
             return false;
         }
 
-        private void Extra_Run(string strTitle, Func<string> work)
+        /// <param name="onDone">끝난 뒤 UI 스레드에서 부른다 (null = 없음) — 인자 = work 의 반환값 (null = 중단/실패)</param>
+        /// <param name="strDoneMsg">완료 문구 (null = "   측정 완료 — 이제 전원을 꺼도 됩니다")</param>
+        private void Extra_Run(string strTitle, Func<string> work, Action<string> onDone = null, string strDoneMsg = null)
         {
             S2R_LogFileStart(strTitle);
             S2R_ShowPanel(strTitle);
             m_bMechStop = false;
-            m_thrExtra = new Thread(delegate()
+            Thread thr = null;
+            thr = new Thread(delegate()
             {
-                string strTail = work();
-                S2R_Log("");
-                S2R_Log("=========================================");
-                S2R_Log(strTail != null ? "   측정 완료 — 이제 전원을 꺼도 됩니다" : "   중단/실패 — 위 로그 확인");
-                S2R_Log("=========================================");
-                S2R_Done(strTitle + (strTail != null ? " — 완료" : " — 중단"));
+                string strTail = null;
+                try { strTail = work(); }
+                catch (Exception ex) { strTail = null; try { S2R_Log("★오류: " + ex.Message); } catch { } }
+                try
+                {
+                    S2R_Log("");
+                    S2R_Log("=========================================");
+                    S2R_Log(strTail != null ? ((strDoneMsg != null) ? strDoneMsg : "   측정 완료 — 이제 전원을 꺼도 됩니다") : "   중단/실패 — 위 로그 확인");
+                    S2R_Log("=========================================");
+                    S2R_Done(strTitle + (strTail != null ? " — 완료" : " — 중단"));
+                }
+                catch { }
+                // 마지막 줄 — UI 스레드에서 onDone 뒤 로봇팔 세팅 탭 상태(잠금·버튼)를 다시 본다 (onDone 이 없는 측정도)
+                try { BeginInvoke(new Action(delegate() { Extra_AfterRun(thr, onDone, strTail); })); } catch { }
             });
+            m_thrExtra = thr;
             m_thrExtra.IsBackground = true;
             m_thrExtra.Start();
+        }
+
+        /// <summary>Extra_Run 스레드가 끝날 때 (UI 스레드) — 그 스레드가 정말 끝나기를 잠깐 기다린다 (이 호출을 넣는 것이 스레드의 마지막 줄이라 곧 끝난다,
+        /// 그래야 Extra_IsBusy 가 false). 그다음 onDone, 그다음 로봇팔 세팅 탭의 잠금·버튼을 다시 본다 — 연결 알림 없이 끝나는 측정(연결 없이 도는 ⑨ 등)도
+        /// 여기서 풀리고, 모션 스텝 오류로 남은 3D 모션 표시도 여기서 지워진다</summary>
+        private void Extra_AfterRun(Thread thr, Action<string> onDone, string strTail)
+        {
+            try { if (thr != null) thr.Join(1000); } catch { }
+            if (onDone != null)
+            {
+                try { onDone(strTail); }
+                catch (Exception ex) { try { S2R_Log("★끝난 뒤 처리 오류: " + ex.Message); } catch { } }
+            }
+            try { ArmMotor_UpdateUi(); } catch { }
         }
 
         // ── ? 설명서 — 텍스트 본체는 DLL(GetGuideText) ─────────
@@ -79,8 +116,11 @@ namespace MakeUrdf
             if (Extra_Busy()) return;
             string strDir = Path.Combine(GetUrdfOutputDir(), "sim2real");
             Directory.CreateDirectory(strDir);
+            int nToolPort, nToolBaud;                                   // 포트·속도 = 로봇팔 세팅 탭 칸 (탭이 연결 중이면 해제할지 묻는다)
+            if (!ArmMotor_ToolPort("⑤ 서보동정", true, out nToolPort, out nToolBaud)) return;
             if (MessageBox.Show(
                     "⑤ 서보 동정 (매달림)\r\n\r\n" +
+                    "· 포트: COM" + nToolPort + " @ " + nToolBaud + " (로봇팔 세팅 탭)\r\n" +
                     "★로봇을 매달아 주십시오 — 발이 땅에 닿으면 안 됩니다.\r\n\r\n" +
                     "· EEPROM 전체 덤프 (읽기 전용)\r\n" +
                     "· 축별 최대속도 — 큰 계단이라 팔다리가 빠르게 움직입니다\r\n" +
@@ -92,6 +132,7 @@ namespace MakeUrdf
             Extra_Run("⑤ 서보동정", delegate()
             {
                 var cfg = new Ojw.CSim2Real.CIdentCfg();
+                cfg.nPort = nToolPort; cfg.nBaud = nToolBaud;
                 string strRep;
                 bool bOk = Ojw.CSim2Real.ServoIdent(cfg, strDir,
                     new Ojw.CSim2Real.DLog(S2R_Log),
@@ -108,8 +149,11 @@ namespace MakeUrdf
             Directory.CreateDirectory(strDir);
             if (Ojw.CSim2Real.LoadMechLimits(Path.Combine(strDir, "mech_limits.json")).Count == 0)
             { MessageBox.Show("mech_limits.json 이 없습니다 — 먼저 ② 관절리미트를 하십시오 (R9)."); return; }
+            int nToolPort, nToolBaud;                                   // 포트·속도 = 로봇팔 세팅 탭 칸 (탭이 연결 중이면 해제할지 묻는다)
+            if (!ArmMotor_ToolPort("⑥ 전도경계", true, out nToolPort, out nToolBaud)) return;
             if (MessageBox.Show(
                     "⑥ 전도경계 측정 (기립)\r\n\r\n" +
+                    "· 포트: COM" + nToolPort + " @ " + nToolBaud + " (로봇팔 세팅 탭)\r\n" +
                     "★두 발로 세워 두고, 옆에서 잡아줄 준비를 하십시오.\r\n" +
                     "  전도 '개시'를 감지해 즉시 후퇴합니다 — 실제로 넘기지는 않습니다.\r\n\r\n" +
                     "· 좌우(롤) ±24도 / 전방 20도 / 후방 30도 상한, 0.5도씩\r\n" +
@@ -120,6 +164,7 @@ namespace MakeUrdf
             Extra_Run("⑥ 전도경계", delegate()
             {
                 var cfg = new Ojw.CSim2Real.CTipCfg();
+                cfg.nPort = nToolPort; cfg.nBaud = nToolBaud;
                 string strRep;
                 bool bOk = Ojw.CSim2Real.TipBoundary(cfg, strDir,
                     new Ojw.CSim2Real.DLog(S2R_Log),
@@ -136,8 +181,11 @@ namespace MakeUrdf
             Directory.CreateDirectory(strDir);
             if (Ojw.CSim2Real.LoadMechLimits(Path.Combine(strDir, "mech_limits.json")).Count == 0)
             { MessageBox.Show("mech_limits.json 이 없습니다 — 먼저 ② 관절리미트를 하십시오 (R9)."); return; }
+            int nToolPort, nToolBaud;                                   // 포트·속도 = 로봇팔 세팅 탭 칸 (탭이 연결 중이면 해제할지 묻는다)
+            if (!ArmMotor_ToolPort("⑧ 부하속도", true, out nToolPort, out nToolBaud)) return;
             DialogResult drPosture = MessageBox.Show(
                 "⑧ 부하 vmax (R7) — 자세를 고르십시오.\r\n\r\n" +
+                "· 포트: COM" + nToolPort + " @ " + nToolBaud + " (로봇팔 세팅 탭)\r\n\r\n" +
                 "[예] = 기립 (체중 부하 실속도 — 본측정)\r\n" +
                 "       ★두 발로 세우고, 프레임 지지나 사람 보조 필수.\r\n" +
                 "       다리 6관절에 큰 스텝(20/40도)이 순서대로 나갑니다.\r\n" +
@@ -163,6 +211,7 @@ namespace MakeUrdf
                                 : "⑧ 부하속도(매달림 대조)", delegate()
             {
                 var cfg = new Ojw.CSim2Real.CLoadVmaxCfg();
+                cfg.nPort = nToolPort; cfg.nBaud = nToolBaud;
                 cfg.bStanding = bStanding;
                 cfg.bOneFoot = bOneFoot;
                 string strRep;
@@ -179,8 +228,11 @@ namespace MakeUrdf
             if (Extra_Busy()) return;
             string strDir = Path.Combine(GetUrdfOutputDir(), "sim2real");
             Directory.CreateDirectory(strDir);
+            int nToolPort, nToolBaud;                                   // 포트·속도 = 로봇팔 세팅 탭 칸 (탭이 연결 중이면 해제할지 묻는다)
+            if (!ArmMotor_ToolPort("⑦ 전원측정", true, out nToolPort, out nToolBaud)) return;
             if (MessageBox.Show(
                     "⑦ 전원 프로파일 (기립, 배터리)\r\n\r\n" +
+                    "· 포트: COM" + nToolPort + " @ " + nToolBaud + " (로봇팔 세팅 탭)\r\n" +
                     "★두 발로 세워 두십시오. 웅크림 펌프(무릎 굽혔다 펴기) 25회로\r\n" +
                     "  보행급 부하를 걸며 버스/다리말단 전압 강하를 잽니다.\r\n" +
                     "· 결과: sim2real\\power_profile.json\r\n\r\n" +
@@ -189,6 +241,7 @@ namespace MakeUrdf
             Extra_Run("⑦ 전원측정", delegate()
             {
                 var cfg = new Ojw.CSim2Real.CStandCfg();
+                cfg.nPort = nToolPort; cfg.nBaud = nToolBaud;
                 string strRep;
                 bool bOk = Ojw.CSim2Real.PowerProfile(cfg, strDir, 25,
                     new Ojw.CSim2Real.DLog(S2R_Log),

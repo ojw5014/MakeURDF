@@ -32,6 +32,18 @@
             this.pnDragArea = new System.Windows.Forms.Panel();
             this.lblDragArea = new System.Windows.Forms.Label();
             this.lblMoveGroup = new System.Windows.Forms.Label();
+            this.txtStateXMove = new System.Windows.Forms.TextBox();
+            this.txtStateZMove = new System.Windows.Forms.TextBox();
+            this.txtStateYMove = new System.Windows.Forms.TextBox();
+            this.txtStateXRotate = new System.Windows.Forms.TextBox();
+            this.txtStateZRotate = new System.Windows.Forms.TextBox();
+            this.txtStateYRotate = new System.Windows.Forms.TextBox();
+            this.lblStateJoint = new System.Windows.Forms.Label();
+            this.txtStateJoint = new System.Windows.Forms.TextBox();
+            this.chkStateInit = new System.Windows.Forms.CheckBox();
+            this.lblStateDir = new System.Windows.Forms.Label();
+            this.cmbStateDir = new System.Windows.Forms.ComboBox();
+            this.lblStateNote = new System.Windows.Forms.Label();
             this.btnRedMove = new System.Windows.Forms.Button();
             this.btnBlueMove = new System.Windows.Forms.Button();
             this.btnGreenMove = new System.Windows.Forms.Button();
@@ -63,7 +75,6 @@
             this.btnGreenRotateP90 = new System.Windows.Forms.Button();
             this.btnGreenRotateMTxt = new System.Windows.Forms.Button();
             this.btnGreenRotatePTxt = new System.Windows.Forms.Button();
-            this.lblEtcGroup = new System.Windows.Forms.Label();
             this.btnMotor = new System.Windows.Forms.Button();
             this.cmbMotorId = new System.Windows.Forms.ComboBox();
             this.btnInit = new System.Windows.Forms.Button();
@@ -78,6 +89,7 @@
             this.btnUndo = new System.Windows.Forms.Button();
             this.btnDelete = new System.Windows.Forms.Button();
             this.btnClear = new System.Windows.Forms.Button();
+            this.lblEtcGroup = new System.Windows.Forms.Label();
             this.tabTest = new System.Windows.Forms.TabPage();
             this.lblIkGroup = new System.Windows.Forms.Label();
             this.lblFuncNum = new System.Windows.Forms.Label();
@@ -124,6 +136,151 @@
             this.picGraphQpos = new System.Windows.Forms.PictureBox();
             this.lblPbTgtTitle = new System.Windows.Forms.Label();
             this.picGraphTgt = new System.Windows.Forms.PictureBox();
+            this.tabArmSetup = new System.Windows.Forms.TabPage();
+            this.grpArmConn = new System.Windows.Forms.GroupBox();
+            this.lblArmPort = new System.Windows.Forms.Label();
+            this.txtArmPort = new System.Windows.Forms.TextBox();
+            this.lblArmBaud = new System.Windows.Forms.Label();
+            this.txtArmBaud = new System.Windows.Forms.TextBox();
+            this.btnArmConnect = new System.Windows.Forms.Button();
+            this.btnArmTorque = new System.Windows.Forms.Button();
+            this.lblArmState = new System.Windows.Forms.Label();
+            this.tabArmInner = new System.Windows.Forms.TabControl();
+            this.tabArmPrac = new System.Windows.Forms.TabPage();
+            this.lblPracGuide = new System.Windows.Forms.Label();
+            this.chkPracPrecise = new System.Windows.Forms.CheckBox();
+            this.chkPracDry = new System.Windows.Forms.CheckBox();
+            this.btnPrac1 = new System.Windows.Forms.Button();
+            this.btnPrac2 = new System.Windows.Forms.Button();
+            this.btnPrac3 = new System.Windows.Forms.Button();
+            this.btnPrac4 = new System.Windows.Forms.Button();
+            this.lblPracStep = new System.Windows.Forms.Label();
+            this.picPracChart = new System.Windows.Forms.PictureBox();
+            this.lblPracResult = new System.Windows.Forms.Label();
+            this.btnPracStop = new System.Windows.Forms.Button();
+            this.lblPracBusy = new System.Windows.Forms.Label();
+            this.lblPracDef = new System.Windows.Forms.Label();
+            this.chkPracDefShow = new System.Windows.Forms.CheckBox();
+            this.btnPracDef = new System.Windows.Forms.Button();
+            this.lnkPracEye = new System.Windows.Forms.LinkLabel();
+            this.tabArmMotor = new System.Windows.Forms.TabPage();
+            this.dgvArmMotor = new System.Windows.Forms.DataGridView();
+            this.colArmAxis = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colArmName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colArmDir = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colArmCenter = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colArmLo = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colArmHi = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colArmMirror = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colArmModel = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colArmNowDeg = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colArmChecked = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.colArmNowTick = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colArmRealModel = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colArmNote = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colArmGroup = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colArmBusId = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colArmMechMove = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colArmMechAngle = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colArmInit = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colArmInit2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colArmProto = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.btnArmRead = new System.Windows.Forms.Button();
+            this.btnArmJogMinus = new System.Windows.Forms.Button();
+            this.txtArmJogStep = new System.Windows.Forms.TextBox();
+            this.lblArmJogUnit = new System.Windows.Forms.Label();
+            this.btnArmJogPlus = new System.Windows.Forms.Button();
+            this.btnArmSetZero = new System.Windows.Forms.Button();
+            this.btnArmSave = new System.Windows.Forms.Button();
+            this.btnArmLoad = new System.Windows.Forms.Button();
+            this.btnArmImportAuto = new System.Windows.Forms.Button();
+            this.chkArmFollow = new System.Windows.Forms.CheckBox();
+            this.chkArmAdvanced = new System.Windows.Forms.CheckBox();
+            this.lblArmFile = new System.Windows.Forms.Label();
+            this.lblArmHint = new System.Windows.Forms.Label();
+            this.tabArmDef = new System.Windows.Forms.TabPage();
+            this.lblDefGuide = new System.Windows.Forms.Label();
+            this.lblDefPreset = new System.Windows.Forms.Label();
+            this.cmbDefPreset = new System.Windows.Forms.ComboBox();
+            this.btnDefPresetSave = new System.Windows.Forms.Button();
+            this.lblDefTcp = new System.Windows.Forms.Label();
+            this.cmbDefTcp = new System.Windows.Forms.ComboBox();
+            this.lblDefTcpInfo = new System.Windows.Forms.Label();
+            this.lblDefWrist = new System.Windows.Forms.Label();
+            this.cmbDefWrist = new System.Windows.Forms.ComboBox();
+            this.lblDefWristInfo = new System.Windows.Forms.Label();
+            this.lblDefDown = new System.Windows.Forms.Label();
+            this.lblDefDownSum = new System.Windows.Forms.Label();
+            this.txtDefDownSum = new System.Windows.Forms.TextBox();
+            this.lblDefDownInfo = new System.Windows.Forms.Label();
+            this.lblDefShowNote = new System.Windows.Forms.Label();
+            this.btnDefSave = new System.Windows.Forms.Button();
+            this.lblDefStatus = new System.Windows.Forms.Label();
+            this.chkDefAdv = new System.Windows.Forms.CheckBox();
+            this.lblDefEye = new System.Windows.Forms.Label();
+            this.btnDefEye = new System.Windows.Forms.Button();
+            this.grpDefAdv = new System.Windows.Forms.GroupBox();
+            this.lblDefName = new System.Windows.Forms.Label();
+            this.txtDefName = new System.Windows.Forms.TextBox();
+            this.lblDefBase = new System.Windows.Forms.Label();
+            this.txtDefBase = new System.Windows.Forms.TextBox();
+            this.lblDefPitch = new System.Windows.Forms.Label();
+            this.txtDefPitch = new System.Windows.Forms.TextBox();
+            this.lblDefHold = new System.Windows.Forms.Label();
+            this.txtDefHold = new System.Windows.Forms.TextBox();
+            this.lblDefTcpLen = new System.Windows.Forms.Label();
+            this.txtDefTcpLen = new System.Windows.Forms.TextBox();
+            this.lblDefFixed = new System.Windows.Forms.Label();
+            this.tabArmExp = new System.Windows.Forms.TabPage();
+            this.grpArmPlan = new System.Windows.Forms.GroupBox();
+            this.btnArmPlanMake = new System.Windows.Forms.Button();
+            this.btnArmPlanLoad = new System.Windows.Forms.Button();
+            this.btnArmPlanDry = new System.Windows.Forms.Button();
+            this.lblArmPlan = new System.Windows.Forms.Label();
+            this.grpArmMeasure = new System.Windows.Forms.GroupBox();
+            this.chkArmHold = new System.Windows.Forms.CheckBox();
+            this.btnArmMeasure = new System.Windows.Forms.Button();
+            this.lblArmMeasure = new System.Windows.Forms.Label();
+            this.grpArmLearn = new System.Windows.Forms.GroupBox();
+            this.lblArmData = new System.Windows.Forms.Label();
+            this.lblArmDataInfo = new System.Windows.Forms.Label();
+            this.chkArmUseHold = new System.Windows.Forms.CheckBox();
+            this.lblArmRef = new System.Windows.Forms.Label();
+            this.txtArmRef = new System.Windows.Forms.TextBox();
+            this.btnArmLearn = new System.Windows.Forms.Button();
+            this.lblArmLearn = new System.Windows.Forms.Label();
+            this.grpArmTest = new System.Windows.Forms.GroupBox();
+            this.lblArmResult = new System.Windows.Forms.Label();
+            this.cmbArmResult = new System.Windows.Forms.ComboBox();
+            this.btnArmResultBrowse = new System.Windows.Forms.Button();
+            this.lblArmTouchRow = new System.Windows.Forms.Label();
+            this.lblArmTestR = new System.Windows.Forms.Label();
+            this.txtArmTestR = new System.Windows.Forms.TextBox();
+            this.lblArmTestYaw = new System.Windows.Forms.Label();
+            this.txtArmTestYaw = new System.Windows.Forms.TextBox();
+            this.lblArmTestPitch = new System.Windows.Forms.Label();
+            this.txtArmTestPitch = new System.Windows.Forms.TextBox();
+            this.lblArmTestRep = new System.Windows.Forms.Label();
+            this.txtArmTestRep = new System.Windows.Forms.TextBox();
+            this.chkArmTestHold = new System.Windows.Forms.CheckBox();
+            this.btnArmTestDry = new System.Windows.Forms.Button();
+            this.btnArmTest = new System.Windows.Forms.Button();
+            this.lblArmTest = new System.Windows.Forms.Label();
+            this.grpArmApply = new System.Windows.Forms.GroupBox();
+            this.btnArmApply = new System.Windows.Forms.Button();
+            this.lblArmActive = new System.Windows.Forms.Label();
+            this.lblArmBackup = new System.Windows.Forms.Label();
+            this.cmbArmBackup = new System.Windows.Forms.ComboBox();
+            this.btnArmRollback = new System.Windows.Forms.Button();
+            this.grpArmTwin = new System.Windows.Forms.GroupBox();
+            this.lblArmTwinSrc = new System.Windows.Forms.Label();
+            this.cmbArmTwinSrc = new System.Windows.Forms.ComboBox();
+            this.lblArmTwin = new System.Windows.Forms.Label();
+            this.btnArmStop = new System.Windows.Forms.Button();
+            this.btnArmOpenDir = new System.Windows.Forms.Button();
+            this.lblArmBusy = new System.Windows.Forms.Label();
+            this.tmrArmFollow = new System.Windows.Forms.Timer(this.components);
+            this.tipArmExp = new System.Windows.Forms.ToolTip(this.components);
             this.btnUsdExport = new System.Windows.Forms.Button();
             this.btnSignCalib = new System.Windows.Forms.Button();
             this.btnSignClear = new System.Windows.Forms.Button();
@@ -132,6 +289,7 @@
             this.btnStandDroop = new System.Windows.Forms.Button();
             this.btnS2RGuide = new System.Windows.Forms.Button();
             this.btnIsaacCam = new System.Windows.Forms.Button();
+            this.btnSagComp = new System.Windows.Forms.Button();
             this.btnLoadVmax = new System.Windows.Forms.Button();
             this.btnServoIdent = new System.Windows.Forms.Button();
             this.btnTipBound = new System.Windows.Forms.Button();
@@ -194,6 +352,9 @@
             this.btnApplyDh = new System.Windows.Forms.Button();
             this.lblViewMode = new System.Windows.Forms.Label();
             this.cmbViewMode = new System.Windows.Forms.ComboBox();
+            this.lblSagTwin = new System.Windows.Forms.Label();
+            this.cmbSagTwin = new System.Windows.Forms.ComboBox();
+            this.chkSagCompOn = new System.Windows.Forms.CheckBox();
             this.lblSkeletonSize = new System.Windows.Forms.Label();
             this.txtSkeletonSize = new System.Windows.Forms.TextBox();
             this.lblAxisSize = new System.Windows.Forms.Label();
@@ -237,6 +398,7 @@
             this.chkShowSphere = new System.Windows.Forms.CheckBox();
             this.txtSphereSize = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
             this.tabRight.SuspendLayout();
             this.tabCreate.SuspendLayout();
             this.pnDragArea.SuspendLayout();
@@ -244,6 +406,22 @@
             ((System.ComponentModel.ISupportInitialize)(this.trkAngle)).BeginInit();
             this.tabHistory.SuspendLayout();
             this.tabPlayback.SuspendLayout();
+            this.tabArmSetup.SuspendLayout();
+            this.grpArmConn.SuspendLayout();
+            this.tabArmInner.SuspendLayout();
+            this.tabArmPrac.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picPracChart)).BeginInit();
+            this.tabArmMotor.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvArmMotor)).BeginInit();
+            this.tabArmDef.SuspendLayout();
+            this.grpDefAdv.SuspendLayout();
+            this.tabArmExp.SuspendLayout();
+            this.grpArmPlan.SuspendLayout();
+            this.grpArmMeasure.SuspendLayout();
+            this.grpArmLearn.SuspendLayout();
+            this.grpArmTest.SuspendLayout();
+            this.grpArmApply.SuspendLayout();
+            this.grpArmTwin.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trkSpeed)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.trkFrame)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picWrist)).BeginInit();
@@ -273,6 +451,7 @@
             this.tabRight.Controls.Add(this.tabTest);
             this.tabRight.Controls.Add(this.tabHistory);
             this.tabRight.Controls.Add(this.tabPlayback);
+            this.tabRight.Controls.Add(this.tabArmSetup);
             this.tabRight.Location = new System.Drawing.Point(510, 5);
             this.tabRight.Margin = new System.Windows.Forms.Padding(4);
             this.tabRight.Name = "tabRight";
@@ -280,6 +459,7 @@
             this.tabRight.Size = new System.Drawing.Size(565, 600);
             this.tabRight.TabIndex = 1;
             this.tabRight.SelectedIndexChanged += new System.EventHandler(this.tabRight_SelectedIndexChanged);
+            this.tabRight.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabRight_Selecting);
             // 
             // tabCreate
             // 
@@ -292,6 +472,18 @@
             this.tabCreate.Controls.Add(this.txtRotateValue);
             this.tabCreate.Controls.Add(this.pnDragArea);
             this.tabCreate.Controls.Add(this.lblMoveGroup);
+            this.tabCreate.Controls.Add(this.txtStateXMove);
+            this.tabCreate.Controls.Add(this.txtStateZMove);
+            this.tabCreate.Controls.Add(this.txtStateYMove);
+            this.tabCreate.Controls.Add(this.txtStateXRotate);
+            this.tabCreate.Controls.Add(this.txtStateZRotate);
+            this.tabCreate.Controls.Add(this.txtStateYRotate);
+            this.tabCreate.Controls.Add(this.lblStateJoint);
+            this.tabCreate.Controls.Add(this.txtStateJoint);
+            this.tabCreate.Controls.Add(this.chkStateInit);
+            this.tabCreate.Controls.Add(this.lblStateDir);
+            this.tabCreate.Controls.Add(this.cmbStateDir);
+            this.tabCreate.Controls.Add(this.lblStateNote);
             this.tabCreate.Controls.Add(this.btnRedMove);
             this.tabCreate.Controls.Add(this.btnBlueMove);
             this.tabCreate.Controls.Add(this.btnGreenMove);
@@ -338,6 +530,7 @@
             this.tabCreate.Controls.Add(this.btnDelete);
             this.tabCreate.Controls.Add(this.btnClear);
             this.tabCreate.Controls.Add(this.lblEtcGroup);
+            this.tabCreate.Controls.Add(this.label1);
             this.tabCreate.Location = new System.Drawing.Point(4, 28);
             this.tabCreate.Margin = new System.Windows.Forms.Padding(4);
             this.tabCreate.Name = "tabCreate";
@@ -470,6 +663,144 @@
             this.lblMoveGroup.Text = "──── Move(click하고 3d 화면에서 scrolling) ────";
             this.lblMoveGroup.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // txtStateXMove
+            // 
+            this.txtStateXMove.Font = new System.Drawing.Font("맑은 고딕", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.txtStateXMove.Location = new System.Drawing.Point(0, 142);
+            this.txtStateXMove.Margin = new System.Windows.Forms.Padding(4);
+            this.txtStateXMove.Name = "txtStateXMove";
+            this.txtStateXMove.Size = new System.Drawing.Size(88, 28);
+            this.txtStateXMove.TabIndex = 301;
+            this.txtStateXMove.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtStateXMove.KeyDown += new System.Windows.Forms.KeyEventHandler(this.StateField_KeyDown);
+            this.txtStateXMove.Leave += new System.EventHandler(this.StateField_Leave);
+            // 
+            // txtStateZMove
+            // 
+            this.txtStateZMove.Font = new System.Drawing.Font("맑은 고딕", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.txtStateZMove.Location = new System.Drawing.Point(184, 142);
+            this.txtStateZMove.Margin = new System.Windows.Forms.Padding(4);
+            this.txtStateZMove.Name = "txtStateZMove";
+            this.txtStateZMove.Size = new System.Drawing.Size(88, 28);
+            this.txtStateZMove.TabIndex = 302;
+            this.txtStateZMove.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtStateZMove.KeyDown += new System.Windows.Forms.KeyEventHandler(this.StateField_KeyDown);
+            this.txtStateZMove.Leave += new System.EventHandler(this.StateField_Leave);
+            // 
+            // txtStateYMove
+            // 
+            this.txtStateYMove.Font = new System.Drawing.Font("맑은 고딕", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.txtStateYMove.Location = new System.Drawing.Point(368, 142);
+            this.txtStateYMove.Margin = new System.Windows.Forms.Padding(4);
+            this.txtStateYMove.Name = "txtStateYMove";
+            this.txtStateYMove.Size = new System.Drawing.Size(88, 28);
+            this.txtStateYMove.TabIndex = 303;
+            this.txtStateYMove.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtStateYMove.KeyDown += new System.Windows.Forms.KeyEventHandler(this.StateField_KeyDown);
+            this.txtStateYMove.Leave += new System.EventHandler(this.StateField_Leave);
+            // 
+            // txtStateXRotate
+            // 
+            this.txtStateXRotate.Font = new System.Drawing.Font("맑은 고딕", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.txtStateXRotate.Location = new System.Drawing.Point(0, 231);
+            this.txtStateXRotate.Margin = new System.Windows.Forms.Padding(4);
+            this.txtStateXRotate.Name = "txtStateXRotate";
+            this.txtStateXRotate.Size = new System.Drawing.Size(88, 28);
+            this.txtStateXRotate.TabIndex = 304;
+            this.txtStateXRotate.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtStateXRotate.KeyDown += new System.Windows.Forms.KeyEventHandler(this.StateField_KeyDown);
+            this.txtStateXRotate.Leave += new System.EventHandler(this.StateField_Leave);
+            // 
+            // txtStateZRotate
+            // 
+            this.txtStateZRotate.Font = new System.Drawing.Font("맑은 고딕", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.txtStateZRotate.Location = new System.Drawing.Point(184, 231);
+            this.txtStateZRotate.Margin = new System.Windows.Forms.Padding(4);
+            this.txtStateZRotate.Name = "txtStateZRotate";
+            this.txtStateZRotate.Size = new System.Drawing.Size(88, 28);
+            this.txtStateZRotate.TabIndex = 305;
+            this.txtStateZRotate.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtStateZRotate.KeyDown += new System.Windows.Forms.KeyEventHandler(this.StateField_KeyDown);
+            this.txtStateZRotate.Leave += new System.EventHandler(this.StateField_Leave);
+            // 
+            // txtStateYRotate
+            // 
+            this.txtStateYRotate.Font = new System.Drawing.Font("맑은 고딕", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.txtStateYRotate.Location = new System.Drawing.Point(368, 231);
+            this.txtStateYRotate.Margin = new System.Windows.Forms.Padding(4);
+            this.txtStateYRotate.Name = "txtStateYRotate";
+            this.txtStateYRotate.Size = new System.Drawing.Size(88, 28);
+            this.txtStateYRotate.TabIndex = 306;
+            this.txtStateYRotate.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtStateYRotate.KeyDown += new System.Windows.Forms.KeyEventHandler(this.StateField_KeyDown);
+            this.txtStateYRotate.Leave += new System.EventHandler(this.StateField_Leave);
+            // 
+            // lblStateJoint
+            // 
+            this.lblStateJoint.Location = new System.Drawing.Point(0, 266);
+            this.lblStateJoint.Margin = new System.Windows.Forms.Padding(4);
+            this.lblStateJoint.Name = "lblStateJoint";
+            this.lblStateJoint.Size = new System.Drawing.Size(38, 20);
+            this.lblStateJoint.TabIndex = 307;
+            this.lblStateJoint.Text = "joint";
+            this.lblStateJoint.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.lblStateJoint.ForeColor = System.Drawing.Color.DimGray;
+            // 
+            // txtStateJoint
+            // 
+            this.txtStateJoint.Font = new System.Drawing.Font("맑은 고딕", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.txtStateJoint.Location = new System.Drawing.Point(40, 262);
+            this.txtStateJoint.Margin = new System.Windows.Forms.Padding(4);
+            this.txtStateJoint.Name = "txtStateJoint";
+            this.txtStateJoint.Size = new System.Drawing.Size(56, 28);
+            this.txtStateJoint.TabIndex = 308;
+            this.txtStateJoint.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtStateJoint.KeyDown += new System.Windows.Forms.KeyEventHandler(this.StateField_KeyDown);
+            this.txtStateJoint.Leave += new System.EventHandler(this.StateField_Leave);
+            // 
+            // chkStateInit
+            // 
+            this.chkStateInit.Location = new System.Drawing.Point(104, 264);
+            this.chkStateInit.Margin = new System.Windows.Forms.Padding(4);
+            this.chkStateInit.Name = "chkStateInit";
+            this.chkStateInit.Size = new System.Drawing.Size(150, 24);
+            this.chkStateInit.TabIndex = 309;
+            this.chkStateInit.Text = "New Chain(Init)";
+            this.chkStateInit.UseVisualStyleBackColor = true;
+            this.chkStateInit.CheckedChanged += new System.EventHandler(this.StateMeta_Changed);
+            // 
+            // lblStateDir
+            // 
+            this.lblStateDir.Location = new System.Drawing.Point(258, 266);
+            this.lblStateDir.Margin = new System.Windows.Forms.Padding(4);
+            this.lblStateDir.Name = "lblStateDir";
+            this.lblStateDir.Size = new System.Drawing.Size(26, 20);
+            this.lblStateDir.TabIndex = 310;
+            this.lblStateDir.Text = "dir";
+            this.lblStateDir.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.lblStateDir.ForeColor = System.Drawing.Color.DimGray;
+            // 
+            // cmbStateDir
+            // 
+            this.cmbStateDir.Font = new System.Drawing.Font("맑은 고딕", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.cmbStateDir.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbStateDir.Location = new System.Drawing.Point(286, 262);
+            this.cmbStateDir.Margin = new System.Windows.Forms.Padding(4);
+            this.cmbStateDir.Name = "cmbStateDir";
+            this.cmbStateDir.Size = new System.Drawing.Size(152, 28);
+            this.cmbStateDir.TabIndex = 311;
+            this.cmbStateDir.SelectedIndexChanged += new System.EventHandler(this.StateMeta_Changed);
+            // 
+            // lblStateNote
+            // 
+            this.lblStateNote.Location = new System.Drawing.Point(444, 266);
+            this.lblStateNote.Margin = new System.Windows.Forms.Padding(4);
+            this.lblStateNote.Name = "lblStateNote";
+            this.lblStateNote.Size = new System.Drawing.Size(102, 20);
+            this.lblStateNote.TabIndex = 312;
+            this.lblStateNote.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.lblStateNote.ForeColor = System.Drawing.Color.DimGray;
+            // 
             // btnRedMove
             // 
             this.btnRedMove.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(100)))), ((int)(((byte)(100)))));
@@ -478,7 +809,7 @@
             this.btnRedMove.Location = new System.Drawing.Point(0, 112);
             this.btnRedMove.Margin = new System.Windows.Forms.Padding(4);
             this.btnRedMove.Name = "btnRedMove";
-            this.btnRedMove.Size = new System.Drawing.Size(88, 58);
+            this.btnRedMove.Size = new System.Drawing.Size(88, 28);
             this.btnRedMove.TabIndex = 6;
             this.btnRedMove.Text = "X Move";
             this.btnRedMove.UseVisualStyleBackColor = false;
@@ -492,7 +823,7 @@
             this.btnBlueMove.Location = new System.Drawing.Point(184, 112);
             this.btnBlueMove.Margin = new System.Windows.Forms.Padding(4);
             this.btnBlueMove.Name = "btnBlueMove";
-            this.btnBlueMove.Size = new System.Drawing.Size(88, 58);
+            this.btnBlueMove.Size = new System.Drawing.Size(88, 28);
             this.btnBlueMove.TabIndex = 7;
             this.btnBlueMove.Text = "Z Move";
             this.btnBlueMove.UseVisualStyleBackColor = false;
@@ -506,7 +837,7 @@
             this.btnGreenMove.Location = new System.Drawing.Point(368, 112);
             this.btnGreenMove.Margin = new System.Windows.Forms.Padding(4);
             this.btnGreenMove.Name = "btnGreenMove";
-            this.btnGreenMove.Size = new System.Drawing.Size(88, 58);
+            this.btnGreenMove.Size = new System.Drawing.Size(88, 28);
             this.btnGreenMove.TabIndex = 8;
             this.btnGreenMove.Text = "Y Move";
             this.btnGreenMove.UseVisualStyleBackColor = false;
@@ -530,7 +861,7 @@
             this.btnRedRotate.Location = new System.Drawing.Point(0, 201);
             this.btnRedRotate.Margin = new System.Windows.Forms.Padding(4);
             this.btnRedRotate.Name = "btnRedRotate";
-            this.btnRedRotate.Size = new System.Drawing.Size(88, 58);
+            this.btnRedRotate.Size = new System.Drawing.Size(88, 28);
             this.btnRedRotate.TabIndex = 10;
             this.btnRedRotate.Text = "X Rotate";
             this.btnRedRotate.UseVisualStyleBackColor = false;
@@ -544,7 +875,7 @@
             this.btnBlueRotate.Location = new System.Drawing.Point(184, 201);
             this.btnBlueRotate.Margin = new System.Windows.Forms.Padding(4);
             this.btnBlueRotate.Name = "btnBlueRotate";
-            this.btnBlueRotate.Size = new System.Drawing.Size(88, 58);
+            this.btnBlueRotate.Size = new System.Drawing.Size(88, 28);
             this.btnBlueRotate.TabIndex = 11;
             this.btnBlueRotate.Text = "Z Rotate";
             this.btnBlueRotate.UseVisualStyleBackColor = false;
@@ -558,7 +889,7 @@
             this.btnGreenRotate.Location = new System.Drawing.Point(368, 201);
             this.btnGreenRotate.Margin = new System.Windows.Forms.Padding(4);
             this.btnGreenRotate.Name = "btnGreenRotate";
-            this.btnGreenRotate.Size = new System.Drawing.Size(88, 58);
+            this.btnGreenRotate.Size = new System.Drawing.Size(88, 28);
             this.btnGreenRotate.TabIndex = 12;
             this.btnGreenRotate.Text = "Y Rotate";
             this.btnGreenRotate.UseVisualStyleBackColor = false;
@@ -972,21 +1303,11 @@
             this.btnGreenRotatePTxt.UseVisualStyleBackColor = false;
             this.btnGreenRotatePTxt.Click += new System.EventHandler(this.btnAxisDelta_Click);
             // 
-            // lblEtcGroup
-            // 
-            this.lblEtcGroup.Location = new System.Drawing.Point(0, 269);
-            this.lblEtcGroup.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lblEtcGroup.Name = "lblEtcGroup";
-            this.lblEtcGroup.Size = new System.Drawing.Size(450, 24);
-            this.lblEtcGroup.TabIndex = 13;
-            this.lblEtcGroup.Text = "──── Joint / STL ────";
-            this.lblEtcGroup.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
             // btnMotor
             // 
             this.btnMotor.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(200)))), ((int)(((byte)(80)))));
             this.btnMotor.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnMotor.Location = new System.Drawing.Point(71, 289);
+            this.btnMotor.Location = new System.Drawing.Point(71, 321);
             this.btnMotor.Margin = new System.Windows.Forms.Padding(4);
             this.btnMotor.Name = "btnMotor";
             this.btnMotor.Size = new System.Drawing.Size(66, 30);
@@ -998,7 +1319,7 @@
             // cmbMotorId
             // 
             this.cmbMotorId.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbMotorId.Location = new System.Drawing.Point(0, 291);
+            this.cmbMotorId.Location = new System.Drawing.Point(0, 323);
             this.cmbMotorId.Margin = new System.Windows.Forms.Padding(4);
             this.cmbMotorId.Name = "cmbMotorId";
             this.cmbMotorId.Size = new System.Drawing.Size(63, 26);
@@ -1008,7 +1329,7 @@
             // 
             this.btnInit.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(200)))), ((int)(((byte)(200)))));
             this.btnInit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnInit.Location = new System.Drawing.Point(305, 289);
+            this.btnInit.Location = new System.Drawing.Point(141, 321);
             this.btnInit.Margin = new System.Windows.Forms.Padding(4);
             this.btnInit.Name = "btnInit";
             this.btnInit.Size = new System.Drawing.Size(145, 30);
@@ -1022,10 +1343,10 @@
             this.btnStl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(120)))), ((int)(((byte)(200)))));
             this.btnStl.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnStl.ForeColor = System.Drawing.Color.White;
-            this.btnStl.Location = new System.Drawing.Point(0, 320);
+            this.btnStl.Location = new System.Drawing.Point(305, 320);
             this.btnStl.Margin = new System.Windows.Forms.Padding(4);
             this.btnStl.Name = "btnStl";
-            this.btnStl.Size = new System.Drawing.Size(450, 30);
+            this.btnStl.Size = new System.Drawing.Size(240, 30);
             this.btnStl.TabIndex = 32;
             this.btnStl.Text = "Add STL";
             this.btnStl.UseVisualStyleBackColor = false;
@@ -1036,10 +1357,10 @@
             this.btnStlCenter.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(120)))), ((int)(((byte)(100)))), ((int)(((byte)(180)))));
             this.btnStlCenter.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnStlCenter.ForeColor = System.Drawing.Color.White;
-            this.btnStlCenter.Location = new System.Drawing.Point(0, 349);
+            this.btnStlCenter.Location = new System.Drawing.Point(305, 349);
             this.btnStlCenter.Margin = new System.Windows.Forms.Padding(4);
             this.btnStlCenter.Name = "btnStlCenter";
-            this.btnStlCenter.Size = new System.Drawing.Size(210, 30);
+            this.btnStlCenter.Size = new System.Drawing.Size(119, 30);
             this.btnStlCenter.TabIndex = 33;
             this.btnStlCenter.Text = "STL Center";
             this.btnStlCenter.UseVisualStyleBackColor = false;
@@ -1050,10 +1371,10 @@
             this.btnStlMerge.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(100)))), ((int)(((byte)(120)))));
             this.btnStlMerge.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnStlMerge.ForeColor = System.Drawing.Color.White;
-            this.btnStlMerge.Location = new System.Drawing.Point(240, 348);
+            this.btnStlMerge.Location = new System.Drawing.Point(425, 348);
             this.btnStlMerge.Margin = new System.Windows.Forms.Padding(4);
             this.btnStlMerge.Name = "btnStlMerge";
-            this.btnStlMerge.Size = new System.Drawing.Size(210, 30);
+            this.btnStlMerge.Size = new System.Drawing.Size(119, 30);
             this.btnStlMerge.TabIndex = 34;
             this.btnStlMerge.Text = "Face Align";
             this.btnStlMerge.UseVisualStyleBackColor = false;
@@ -1145,6 +1466,16 @@
             this.btnClear.UseVisualStyleBackColor = true;
             this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
             // 
+            // lblEtcGroup
+            // 
+            this.lblEtcGroup.Location = new System.Drawing.Point(0, 301);
+            this.lblEtcGroup.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblEtcGroup.Name = "lblEtcGroup";
+            this.lblEtcGroup.Size = new System.Drawing.Size(291, 24);
+            this.lblEtcGroup.TabIndex = 13;
+            this.lblEtcGroup.Text = "──── Joint / DH ────";
+            this.lblEtcGroup.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // tabTest
             // 
             this.tabTest.Controls.Add(this.lblIkGroup);
@@ -1174,7 +1505,7 @@
             this.tabTest.Location = new System.Drawing.Point(4, 28);
             this.tabTest.Margin = new System.Windows.Forms.Padding(4);
             this.tabTest.Name = "tabTest";
-            this.tabTest.Size = new System.Drawing.Size(465, 568);
+            this.tabTest.Size = new System.Drawing.Size(557, 568);
             this.tabTest.TabIndex = 1;
             this.tabTest.Text = "Control";
             // 
@@ -1334,7 +1665,7 @@
             // 
             this.lblFkGroup.Location = new System.Drawing.Point(0, 120);
             this.lblFkGroup.Name = "lblFkGroup";
-            this.lblFkGroup.Size = new System.Drawing.Size(360, 18);
+            this.lblFkGroup.Size = new System.Drawing.Size(504, 18);
             this.lblFkGroup.TabIndex = 14;
             this.lblFkGroup.Text = "── FK (Joint Control) ──";
             this.lblFkGroup.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -1343,7 +1674,7 @@
             // 
             this.lblMotorCtrl.Location = new System.Drawing.Point(0, 142);
             this.lblMotorCtrl.Name = "lblMotorCtrl";
-            this.lblMotorCtrl.Size = new System.Drawing.Size(34, 23);
+            this.lblMotorCtrl.Size = new System.Drawing.Size(50, 23);
             this.lblMotorCtrl.TabIndex = 15;
             this.lblMotorCtrl.Text = "Joint:";
             this.lblMotorCtrl.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -1351,25 +1682,25 @@
             // cmbMotorCtrl
             // 
             this.cmbMotorCtrl.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbMotorCtrl.Location = new System.Drawing.Point(34, 142);
+            this.cmbMotorCtrl.Location = new System.Drawing.Point(54, 142);
             this.cmbMotorCtrl.Name = "cmbMotorCtrl";
-            this.cmbMotorCtrl.Size = new System.Drawing.Size(55, 26);
+            this.cmbMotorCtrl.Size = new System.Drawing.Size(100, 26);
             this.cmbMotorCtrl.TabIndex = 16;
             // 
             // lblAngleCtrl
             // 
-            this.lblAngleCtrl.Location = new System.Drawing.Point(92, 142);
+            this.lblAngleCtrl.Location = new System.Drawing.Point(162, 142);
             this.lblAngleCtrl.Name = "lblAngleCtrl";
-            this.lblAngleCtrl.Size = new System.Drawing.Size(34, 23);
+            this.lblAngleCtrl.Size = new System.Drawing.Size(55, 23);
             this.lblAngleCtrl.TabIndex = 17;
             this.lblAngleCtrl.Text = "Angle:";
             this.lblAngleCtrl.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // txtAngleCtrl
             // 
-            this.txtAngleCtrl.Location = new System.Drawing.Point(126, 142);
+            this.txtAngleCtrl.Location = new System.Drawing.Point(221, 142);
             this.txtAngleCtrl.Name = "txtAngleCtrl";
-            this.txtAngleCtrl.Size = new System.Drawing.Size(60, 28);
+            this.txtAngleCtrl.Size = new System.Drawing.Size(75, 28);
             this.txtAngleCtrl.TabIndex = 18;
             this.txtAngleCtrl.Text = "0";
             this.txtAngleCtrl.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
@@ -1377,20 +1708,20 @@
             // lblAngleInfo
             // 
             this.lblAngleInfo.ForeColor = System.Drawing.Color.DarkGreen;
-            this.lblAngleInfo.Location = new System.Drawing.Point(190, 142);
+            this.lblAngleInfo.Location = new System.Drawing.Point(304, 142);
             this.lblAngleInfo.Name = "lblAngleInfo";
-            this.lblAngleInfo.Size = new System.Drawing.Size(160, 23);
+            this.lblAngleInfo.Size = new System.Drawing.Size(200, 23);
             this.lblAngleInfo.TabIndex = 19;
             this.lblAngleInfo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // trkAngle
             // 
             this.trkAngle.LargeChange = 100;
-            this.trkAngle.Location = new System.Drawing.Point(0, 168);
+            this.trkAngle.Location = new System.Drawing.Point(0, 178);
             this.trkAngle.Maximum = 1800;
             this.trkAngle.Minimum = -1800;
             this.trkAngle.Name = "trkAngle";
-            this.trkAngle.Size = new System.Drawing.Size(348, 69);
+            this.trkAngle.Size = new System.Drawing.Size(504, 69);
             this.trkAngle.SmallChange = 10;
             this.trkAngle.TabIndex = 20;
             this.trkAngle.TickFrequency = 300;
@@ -1437,7 +1768,7 @@
             this.tabHistory.Location = new System.Drawing.Point(4, 28);
             this.tabHistory.Margin = new System.Windows.Forms.Padding(4);
             this.tabHistory.Name = "tabHistory";
-            this.tabHistory.Size = new System.Drawing.Size(465, 568);
+            this.tabHistory.Size = new System.Drawing.Size(557, 568);
             this.tabHistory.TabIndex = 2;
             this.tabHistory.Text = "Log";
             // 
@@ -1453,7 +1784,7 @@
             this.txtLogHistory.Name = "txtLogHistory";
             this.txtLogHistory.ReadOnly = true;
             this.txtLogHistory.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtLogHistory.Size = new System.Drawing.Size(465, 568);
+            this.txtLogHistory.Size = new System.Drawing.Size(557, 568);
             this.txtLogHistory.TabIndex = 0;
             this.txtLogHistory.WordWrap = false;
             // 
@@ -1481,7 +1812,7 @@
             this.tabPlayback.Location = new System.Drawing.Point(4, 28);
             this.tabPlayback.Margin = new System.Windows.Forms.Padding(4);
             this.tabPlayback.Name = "tabPlayback";
-            this.tabPlayback.Size = new System.Drawing.Size(465, 568);
+            this.tabPlayback.Size = new System.Drawing.Size(557, 568);
             this.tabPlayback.TabIndex = 3;
             this.tabPlayback.Text = "Playback";
             // 
@@ -1686,6 +2017,1720 @@
             this.picGraphTgt.TabStop = false;
             this.picGraphTgt.DoubleClick += new System.EventHandler(this.picGraphTgt_DoubleClick);
             // 
+            // tabArmSetup
+            // 
+            this.tabArmSetup.Controls.Add(this.grpArmConn);
+            this.tabArmSetup.Controls.Add(this.tabArmInner);
+            this.tabArmSetup.BackColor = System.Drawing.SystemColors.Control;
+            this.tabArmSetup.Location = new System.Drawing.Point(4, 28);
+            this.tabArmSetup.Margin = new System.Windows.Forms.Padding(4);
+            this.tabArmSetup.Name = "tabArmSetup";
+            this.tabArmSetup.Size = new System.Drawing.Size(557, 568);
+            this.tabArmSetup.TabIndex = 4;
+            this.tabArmSetup.Text = "로봇팔 세팅";
+            // 
+            // grpArmConn
+            // 
+            this.grpArmConn.Controls.Add(this.lblArmPort);
+            this.grpArmConn.Controls.Add(this.txtArmPort);
+            this.grpArmConn.Controls.Add(this.lblArmBaud);
+            this.grpArmConn.Controls.Add(this.txtArmBaud);
+            this.grpArmConn.Controls.Add(this.btnArmConnect);
+            this.grpArmConn.Controls.Add(this.btnArmTorque);
+            this.grpArmConn.Controls.Add(this.lblArmState);
+            this.grpArmConn.Location = new System.Drawing.Point(4, 2);
+            this.grpArmConn.Name = "grpArmConn";
+            this.grpArmConn.Size = new System.Drawing.Size(549, 58);
+            this.grpArmConn.TabIndex = 0;
+            this.grpArmConn.TabStop = false;
+            this.grpArmConn.Text = "연결";
+            // 
+            // lblArmPort
+            // 
+            this.lblArmPort.Location = new System.Drawing.Point(6, 24);
+            this.lblArmPort.Name = "lblArmPort";
+            this.lblArmPort.Size = new System.Drawing.Size(40, 23);
+            this.lblArmPort.TabIndex = 0;
+            this.lblArmPort.Text = "포트";
+            this.lblArmPort.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // txtArmPort
+            // 
+            this.txtArmPort.Location = new System.Drawing.Point(48, 21);
+            this.txtArmPort.Name = "txtArmPort";
+            this.txtArmPort.Size = new System.Drawing.Size(64, 28);
+            this.txtArmPort.TabIndex = 1;
+            this.txtArmPort.Text = "COM4";
+            // 
+            // lblArmBaud
+            // 
+            this.lblArmBaud.Location = new System.Drawing.Point(116, 24);
+            this.lblArmBaud.Name = "lblArmBaud";
+            this.lblArmBaud.Size = new System.Drawing.Size(40, 23);
+            this.lblArmBaud.TabIndex = 2;
+            this.lblArmBaud.Text = "속도";
+            this.lblArmBaud.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // txtArmBaud
+            // 
+            this.txtArmBaud.Location = new System.Drawing.Point(158, 21);
+            this.txtArmBaud.Name = "txtArmBaud";
+            this.txtArmBaud.Size = new System.Drawing.Size(76, 28);
+            this.txtArmBaud.TabIndex = 3;
+            this.txtArmBaud.Text = "1000000";
+            // 
+            // btnArmConnect
+            // 
+            this.btnArmConnect.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(130)))), ((int)(((byte)(180)))));
+            this.btnArmConnect.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmConnect.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmConnect.ForeColor = System.Drawing.Color.White;
+            this.btnArmConnect.Location = new System.Drawing.Point(240, 15);
+            this.btnArmConnect.Name = "btnArmConnect";
+            this.btnArmConnect.Size = new System.Drawing.Size(84, 36);
+            this.btnArmConnect.TabIndex = 4;
+            this.btnArmConnect.Text = "연결";
+            this.btnArmConnect.UseVisualStyleBackColor = false;
+            this.btnArmConnect.Click += new System.EventHandler(this.btnArmConnect_Click);
+            // 
+            // btnArmTorque
+            // 
+            this.btnArmTorque.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(80)))), ((int)(((byte)(80)))));
+            this.btnArmTorque.Enabled = false;
+            this.btnArmTorque.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmTorque.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmTorque.ForeColor = System.Drawing.Color.White;
+            this.btnArmTorque.Location = new System.Drawing.Point(328, 15);
+            this.btnArmTorque.Name = "btnArmTorque";
+            this.btnArmTorque.Size = new System.Drawing.Size(84, 36);
+            this.btnArmTorque.TabIndex = 5;
+            this.btnArmTorque.Text = "토크 켜기";
+            this.btnArmTorque.UseVisualStyleBackColor = false;
+            this.btnArmTorque.Click += new System.EventHandler(this.btnArmTorque_Click);
+            // 
+            // lblArmState
+            // 
+            this.lblArmState.ForeColor = System.Drawing.Color.Gray;
+            this.lblArmState.Location = new System.Drawing.Point(416, 12);
+            this.lblArmState.Name = "lblArmState";
+            this.lblArmState.Size = new System.Drawing.Size(128, 42);
+            this.lblArmState.TabIndex = 6;
+            this.lblArmState.Text = "연결 안 됨";
+            this.lblArmState.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // tabArmInner
+            // 
+            this.tabArmInner.Controls.Add(this.tabArmPrac);
+            this.tabArmInner.Controls.Add(this.tabArmMotor);
+            this.tabArmInner.Controls.Add(this.tabArmDef);
+            this.tabArmInner.Controls.Add(this.tabArmExp);
+            this.tabArmInner.Location = new System.Drawing.Point(4, 62);
+            this.tabArmInner.Name = "tabArmInner";
+            this.tabArmInner.SelectedIndex = 0;
+            this.tabArmInner.Size = new System.Drawing.Size(549, 502);
+            this.tabArmInner.TabIndex = 1;
+            this.tabArmInner.SelectedIndexChanged += new System.EventHandler(this.tabArmInner_SelectedIndexChanged);
+            // 
+            // tabArmPrac
+            // 
+            this.tabArmPrac.Controls.Add(this.lblPracGuide);
+            this.tabArmPrac.Controls.Add(this.chkPracPrecise);
+            this.tabArmPrac.Controls.Add(this.chkPracDry);
+            this.tabArmPrac.Controls.Add(this.btnPrac1);
+            this.tabArmPrac.Controls.Add(this.btnPrac2);
+            this.tabArmPrac.Controls.Add(this.btnPrac3);
+            this.tabArmPrac.Controls.Add(this.btnPrac4);
+            this.tabArmPrac.Controls.Add(this.lblPracStep);
+            this.tabArmPrac.Controls.Add(this.picPracChart);
+            this.tabArmPrac.Controls.Add(this.lblPracResult);
+            this.tabArmPrac.Controls.Add(this.btnPracStop);
+            this.tabArmPrac.Controls.Add(this.lblPracBusy);
+            this.tabArmPrac.Controls.Add(this.lblPracDef);
+            this.tabArmPrac.Controls.Add(this.chkPracDefShow);
+            this.tabArmPrac.Controls.Add(this.btnPracDef);
+            this.tabArmPrac.Controls.Add(this.lnkPracEye);
+            this.tabArmPrac.AutoScroll = true;
+            this.tabArmPrac.BackColor = System.Drawing.SystemColors.Control;
+            this.tabArmPrac.Location = new System.Drawing.Point(4, 28);
+            this.tabArmPrac.Name = "tabArmPrac";
+            this.tabArmPrac.Size = new System.Drawing.Size(541, 470);
+            this.tabArmPrac.TabIndex = 0;
+            this.tabArmPrac.Text = "처짐 보정 실습";
+            // 
+            // lblPracGuide
+            // 
+            this.lblPracGuide.Font = new System.Drawing.Font("맑은 고딕", 8.5F);
+            this.lblPracGuide.Location = new System.Drawing.Point(8, 4);
+            this.lblPracGuide.Name = "lblPracGuide";
+            this.lblPracGuide.Size = new System.Drawing.Size(516, 72);
+            this.lblPracGuide.TabIndex = 0;
+            this.lblPracGuide.Text = "로봇팔은 무게 때문에 처져서 3D 가 생각하는 끝 높이와 실제가 다릅니다.\r\n자 없이 바닥을 살짝 눌러 잽니다: 1 오차 재기 → 2 보정 데이터 만들기\r\n→ 3 효과 보기 (같은 점을 다시) → 4 적용 (그 뒤 모든 동작이 자동 보정)\r\n실물: 위에서 먼저 연결하고 팔 둘레를 비우십시오. 연결이 없으면 [3D만] 으로.";
+            // 
+            // chkPracPrecise
+            // 
+            this.chkPracPrecise.AutoSize = true;
+            this.chkPracPrecise.Location = new System.Drawing.Point(10, 104);
+            this.chkPracPrecise.Name = "chkPracPrecise";
+            this.chkPracPrecise.Size = new System.Drawing.Size(232, 22);
+            this.chkPracPrecise.TabIndex = 1;
+            this.chkPracPrecise.Text = "정밀 (점을 더 많이 — 오래 걸림)";
+            this.tipArmExp.SetToolTip(this.chkPracPrecise, "끄면 빠르게 (수업용 — 세 단계 합쳐 약 10분), 켜면 점을 더 많이 (더 정확, 오래 걸림)");
+            this.chkPracPrecise.UseVisualStyleBackColor = true;
+            // 
+            // chkPracDry
+            // 
+            this.chkPracDry.AutoSize = true;
+            this.chkPracDry.Location = new System.Drawing.Point(300, 104);
+            this.chkPracDry.Name = "chkPracDry";
+            this.chkPracDry.Size = new System.Drawing.Size(170, 22);
+            this.chkPracDry.TabIndex = 2;
+            this.chkPracDry.Text = "3D만 (실물 안 움직임)";
+            this.tipArmExp.SetToolTip(this.chkPracDry, "실물 없이 가상 로봇으로 같은 순서를 3D 로 보여 준다 (실제 처짐과 다름, 적용은 안 함)");
+            this.chkPracDry.UseVisualStyleBackColor = true;
+            this.chkPracDry.CheckedChanged += new System.EventHandler(this.chkPracDry_CheckedChanged);
+            // 
+            // btnPrac1
+            // 
+            this.btnPrac1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(130)))), ((int)(((byte)(180)))));
+            this.btnPrac1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnPrac1.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnPrac1.ForeColor = System.Drawing.Color.White;
+            this.btnPrac1.Location = new System.Drawing.Point(8, 130);
+            this.btnPrac1.Name = "btnPrac1";
+            this.btnPrac1.Size = new System.Drawing.Size(125, 44);
+            this.btnPrac1.TabIndex = 3;
+            this.btnPrac1.Text = "1. 오차 재기";
+            this.tipArmExp.SetToolTip(this.btnPrac1, "보정을 모두 끈 채 바닥을 살짝 눌러 점마다 3D 와 실물의 높이 차를 잰다 (처음이면 바닥부터 찾는다)");
+            this.btnPrac1.UseVisualStyleBackColor = false;
+            this.btnPrac1.Click += new System.EventHandler(this.btnPrac1_Click);
+            // 
+            // btnPrac2
+            // 
+            this.btnPrac2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(130)))), ((int)(((byte)(180)))));
+            this.btnPrac2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnPrac2.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnPrac2.ForeColor = System.Drawing.Color.White;
+            this.btnPrac2.Location = new System.Drawing.Point(137, 130);
+            this.btnPrac2.Name = "btnPrac2";
+            this.btnPrac2.Size = new System.Drawing.Size(125, 44);
+            this.btnPrac2.TabIndex = 4;
+            this.btnPrac2.Text = "2. 보정 데이터\r\n만들기";
+            this.tipArmExp.SetToolTip(this.btnPrac2, "공중에서 관절 처짐을 재고, 바닥을 더 눌러 데이터를 모아 보정 모델을 학습한다 (1 다음)");
+            this.btnPrac2.UseVisualStyleBackColor = false;
+            this.btnPrac2.Click += new System.EventHandler(this.btnPrac2_Click);
+            // 
+            // btnPrac3
+            // 
+            this.btnPrac3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(130)))), ((int)(((byte)(180)))));
+            this.btnPrac3.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnPrac3.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnPrac3.ForeColor = System.Drawing.Color.White;
+            this.btnPrac3.Location = new System.Drawing.Point(266, 130);
+            this.btnPrac3.Name = "btnPrac3";
+            this.btnPrac3.Size = new System.Drawing.Size(125, 44);
+            this.btnPrac3.TabIndex = 5;
+            this.btnPrac3.Text = "3. 효과 보기";
+            this.tipArmExp.SetToolTip(this.btnPrac3, "보정을 켜고 1과 같은 점을 다시 눌러 오차가 얼마나 줄었는지 본다 (2 다음)");
+            this.btnPrac3.UseVisualStyleBackColor = false;
+            this.btnPrac3.Click += new System.EventHandler(this.btnPrac3_Click);
+            // 
+            // btnPrac4
+            // 
+            this.btnPrac4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(160)))), ((int)(((byte)(70)))));
+            this.btnPrac4.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnPrac4.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnPrac4.ForeColor = System.Drawing.Color.White;
+            this.btnPrac4.Location = new System.Drawing.Point(395, 130);
+            this.btnPrac4.Name = "btnPrac4";
+            this.btnPrac4.Size = new System.Drawing.Size(129, 44);
+            this.btnPrac4.TabIndex = 6;
+            this.btnPrac4.Text = "4. 적용\r\n(자동 보정)";
+            this.tipArmExp.SetToolTip(this.btnPrac4, "이 보정 모델을 적용한다 — 그 뒤 모든 동작이 자동으로 보정된다 (3 다음, 지금 파일은 백업)");
+            this.btnPrac4.UseVisualStyleBackColor = false;
+            this.btnPrac4.Click += new System.EventHandler(this.btnPrac4_Click);
+            // 
+            // lblPracStep
+            // 
+            this.lblPracStep.Location = new System.Drawing.Point(8, 178);
+            this.lblPracStep.Name = "lblPracStep";
+            this.lblPracStep.Size = new System.Drawing.Size(516, 36);
+            this.lblPracStep.TabIndex = 7;
+            this.lblPracStep.Text = "";
+            this.lblPracStep.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // picPracChart
+            // 
+            this.picPracChart.BackColor = System.Drawing.Color.White;
+            this.picPracChart.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.picPracChart.Location = new System.Drawing.Point(8, 216);
+            this.picPracChart.Name = "picPracChart";
+            this.picPracChart.Size = new System.Drawing.Size(516, 176);
+            this.picPracChart.TabIndex = 8;
+            this.picPracChart.TabStop = false;
+            this.picPracChart.Paint += new System.Windows.Forms.PaintEventHandler(this.picPracChart_Paint);
+            // 
+            // lblPracResult
+            // 
+            this.lblPracResult.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.lblPracResult.ForeColor = System.Drawing.Color.DarkGreen;
+            this.lblPracResult.Location = new System.Drawing.Point(8, 396);
+            this.lblPracResult.Name = "lblPracResult";
+            this.lblPracResult.Size = new System.Drawing.Size(516, 28);
+            this.lblPracResult.TabIndex = 9;
+            this.lblPracResult.Text = "";
+            this.lblPracResult.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // btnPracStop
+            // 
+            this.btnPracStop.BackColor = System.Drawing.Color.Salmon;
+            this.btnPracStop.Enabled = false;
+            this.btnPracStop.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnPracStop.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnPracStop.ForeColor = System.Drawing.Color.Black;
+            this.btnPracStop.Location = new System.Drawing.Point(8, 428);
+            this.btnPracStop.Name = "btnPracStop";
+            this.btnPracStop.Size = new System.Drawing.Size(100, 32);
+            this.btnPracStop.TabIndex = 10;
+            this.btnPracStop.Text = "중단";
+            this.tipArmExp.SetToolTip(this.btnPracStop, "지금 점을 마치고 원위치로 돌아가 토크를 시작 상태로 돌린다");
+            this.btnPracStop.UseVisualStyleBackColor = false;
+            this.btnPracStop.Click += new System.EventHandler(this.btnPracStop_Click);
+            // 
+            // lblPracBusy
+            // 
+            this.lblPracBusy.Font = new System.Drawing.Font("맑은 고딕", 8.5F);
+            this.lblPracBusy.Location = new System.Drawing.Point(112, 428);
+            this.lblPracBusy.Name = "lblPracBusy";
+            this.lblPracBusy.Size = new System.Drawing.Size(412, 36);
+            this.lblPracBusy.TabIndex = 11;
+            this.lblPracBusy.Text = "대기";
+            this.lblPracBusy.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblPracDef
+            // 
+            this.lblPracDef.AutoEllipsis = true;
+            this.lblPracDef.Font = new System.Drawing.Font("맑은 고딕", 8.5F);
+            this.lblPracDef.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.lblPracDef.Location = new System.Drawing.Point(8, 80);
+            this.lblPracDef.Name = "lblPracDef";
+            this.lblPracDef.Size = new System.Drawing.Size(262, 22);
+            this.lblPracDef.TabIndex = 12;
+            this.lblPracDef.Text = "로봇 정의 확인 전";
+            this.lblPracDef.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.tipArmExp.SetToolTip(this.lblPracDef, "측정·실습이 쓰는 로봇 정의 (공구 끝 · 꺾는 손목 · 바닥으로 수직) — 3D 와 맞는지, 수직 눈 확인을 했는지");
+            // 
+            // chkPracDefShow
+            // 
+            this.chkPracDefShow.Location = new System.Drawing.Point(348, 81);
+            this.chkPracDefShow.Name = "chkPracDefShow";
+            this.chkPracDefShow.Size = new System.Drawing.Size(88, 22);
+            this.chkPracDefShow.TabIndex = 13;
+            this.chkPracDefShow.Text = "3D 표시";
+            this.tipArmExp.SetToolTip(this.chkPracDefShow, "3D 에 공구 끝(빨강)·공구축(초록 = 수직, 파랑 = 기울어짐)·꺾는 손목(주황)을 표시");
+            this.chkPracDefShow.UseVisualStyleBackColor = true;
+            this.chkPracDefShow.CheckedChanged += new System.EventHandler(this.chkPracDefShow_CheckedChanged);
+            // 
+            // btnPracDef
+            // 
+            this.btnPracDef.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(90)))), ((int)(((byte)(90)))));
+            this.btnPracDef.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnPracDef.Font = new System.Drawing.Font("맑은 고딕", 8.5F, System.Drawing.FontStyle.Bold);
+            this.btnPracDef.ForeColor = System.Drawing.Color.White;
+            this.btnPracDef.Location = new System.Drawing.Point(440, 78);
+            this.btnPracDef.Name = "btnPracDef";
+            this.btnPracDef.Size = new System.Drawing.Size(84, 24);
+            this.btnPracDef.TabIndex = 14;
+            this.btnPracDef.Text = "정의 바꾸기";
+            this.tipArmExp.SetToolTip(this.btnPracDef, "'로봇 정의' 페이지로 — 어디가 공구 끝인지, 어느 관절로 공구를 꺾는지, 무엇이 '바닥으로 수직' 인지 보고 고친다");
+            this.btnPracDef.UseVisualStyleBackColor = false;
+            this.btnPracDef.Click += new System.EventHandler(this.btnPracDef_Click);
+            // 
+            // lnkPracEye
+            // 
+            this.lnkPracEye.Font = new System.Drawing.Font("맑은 고딕", 8.5F);
+            this.lnkPracEye.Location = new System.Drawing.Point(272, 81);
+            this.lnkPracEye.Name = "lnkPracEye";
+            this.lnkPracEye.Size = new System.Drawing.Size(74, 20);
+            this.lnkPracEye.TabIndex = 15;
+            this.lnkPracEye.TabStop = true;
+            this.lnkPracEye.Text = "눈 확인하기";
+            this.lnkPracEye.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.tipArmExp.SetToolTip(this.lnkPracEye, "수직 눈 확인 ('로봇 정의' 페이지의 [수직 눈 확인] 과 같다) — 팔을 바닥 위 옮기는 높이에서 수직 자세로 펼쳐 실물 펜이 바닥에 수직인지 묻고 기록한다\r\n바닥은 누르지 않고 실습 진행은 그대로. [3D만] 이 켜져 있으면 3D 로만 미리 본다");
+            this.lnkPracEye.Visible = false;
+            this.lnkPracEye.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkPracEye_LinkClicked);
+            // 
+            // tabArmMotor
+            // 
+            this.tabArmMotor.Controls.Add(this.dgvArmMotor);
+            this.tabArmMotor.Controls.Add(this.btnArmRead);
+            this.tabArmMotor.Controls.Add(this.btnArmJogMinus);
+            this.tabArmMotor.Controls.Add(this.txtArmJogStep);
+            this.tabArmMotor.Controls.Add(this.lblArmJogUnit);
+            this.tabArmMotor.Controls.Add(this.btnArmJogPlus);
+            this.tabArmMotor.Controls.Add(this.btnArmSetZero);
+            this.tabArmMotor.Controls.Add(this.btnArmSave);
+            this.tabArmMotor.Controls.Add(this.btnArmLoad);
+            this.tabArmMotor.Controls.Add(this.btnArmImportAuto);
+            this.tabArmMotor.Controls.Add(this.chkArmFollow);
+            this.tabArmMotor.Controls.Add(this.chkArmAdvanced);
+            this.tabArmMotor.Controls.Add(this.lblArmFile);
+            this.tabArmMotor.Controls.Add(this.lblArmHint);
+            this.tabArmMotor.BackColor = System.Drawing.SystemColors.Control;
+            this.tabArmMotor.Location = new System.Drawing.Point(4, 28);
+            this.tabArmMotor.Name = "tabArmMotor";
+            this.tabArmMotor.Size = new System.Drawing.Size(541, 470);
+            this.tabArmMotor.TabIndex = 1;
+            this.tabArmMotor.Text = "모터 세팅";
+            // 
+            // dgvArmMotor
+            // 
+            this.dgvArmMotor.AllowUserToAddRows = false;
+            this.dgvArmMotor.AllowUserToDeleteRows = false;
+            this.dgvArmMotor.AllowUserToResizeRows = false;
+            this.dgvArmMotor.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvArmMotor.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colArmAxis,
+            this.colArmName,
+            this.colArmDir,
+            this.colArmCenter,
+            this.colArmLo,
+            this.colArmHi,
+            this.colArmMirror,
+            this.colArmModel,
+            this.colArmNowDeg,
+            this.colArmChecked,
+            this.colArmNowTick,
+            this.colArmRealModel,
+            this.colArmNote,
+            this.colArmGroup,
+            this.colArmBusId,
+            this.colArmMechMove,
+            this.colArmMechAngle,
+            this.colArmInit,
+            this.colArmInit2,
+            this.colArmProto});
+            this.dgvArmMotor.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
+            this.dgvArmMotor.Location = new System.Drawing.Point(3, 3);
+            this.dgvArmMotor.MultiSelect = false;
+            this.dgvArmMotor.Name = "dgvArmMotor";
+            this.dgvArmMotor.RowHeadersVisible = false;
+            this.dgvArmMotor.RowTemplate.Height = 23;
+            this.dgvArmMotor.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.dgvArmMotor.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
+            this.dgvArmMotor.Size = new System.Drawing.Size(535, 256);
+            this.dgvArmMotor.TabIndex = 0;
+            this.dgvArmMotor.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.dgvArmMotor_CellBeginEdit);
+            this.dgvArmMotor.CellValidating += new System.Windows.Forms.DataGridViewCellValidatingEventHandler(this.dgvArmMotor_CellValidating);
+            this.dgvArmMotor.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvArmMotor_CellValueChanged);
+            this.dgvArmMotor.CurrentCellDirtyStateChanged += new System.EventHandler(this.dgvArmMotor_CurrentCellDirtyStateChanged);
+            this.dgvArmMotor.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dgvArmMotor_DataError);
+            this.dgvArmMotor.SelectionChanged += new System.EventHandler(this.dgvArmMotor_SelectionChanged);
+            // 
+            // colArmAxis
+            // 
+            this.colArmAxis.HeaderText = "ID";
+            this.colArmAxis.Name = "colArmAxis";
+            this.colArmAxis.ReadOnly = true;
+            this.colArmAxis.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmAxis.ToolTipText = "축 번호 = 실물 ID (디자이너 목록 인덱스)";
+            this.colArmAxis.Width = 32;
+            // 
+            // colArmName
+            // 
+            this.colArmName.HeaderText = "이름";
+            this.colArmName.Name = "colArmName";
+            this.colArmName.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmName.ToolTipText = "Nick Name";
+            this.colArmName.Width = 60;
+            // 
+            // colArmDir
+            // 
+            this.colArmDir.HeaderText = "방향";
+            this.colArmDir.Items.AddRange(new object[] {
+            "정",
+            "역"});
+            this.colArmDir.Name = "colArmDir";
+            this.colArmDir.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmDir.ToolTipText = "Motor Dir (정 = Forward / 역 = Backward)";
+            this.colArmDir.Width = 48;
+            // 
+            // colArmCenter
+            // 
+            this.colArmCenter.HeaderText = "영점 틱";
+            this.colArmCenter.Name = "colArmCenter";
+            this.colArmCenter.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmCenter.ToolTipText = "CenterPos — 3D 0° 일 때의 서보 틱";
+            this.colArmCenter.Width = 54;
+            // 
+            // colArmLo
+            // 
+            this.colArmLo.HeaderText = "하한°";
+            this.colArmLo.Name = "colArmLo";
+            this.colArmLo.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmLo.ToolTipText = "Limit(-) — 빈칸 = 없음";
+            this.colArmLo.Width = 48;
+            // 
+            // colArmHi
+            // 
+            this.colArmHi.HeaderText = "상한°";
+            this.colArmHi.Name = "colArmHi";
+            this.colArmHi.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmHi.ToolTipText = "Limit(+) — 빈칸 = 없음";
+            this.colArmHi.Width = 48;
+            // 
+            // colArmMirror
+            // 
+            this.colArmMirror.HeaderText = "미러";
+            this.colArmMirror.Name = "colArmMirror";
+            this.colArmMirror.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmMirror.ToolTipText = "Mirror Axis";
+            this.colArmMirror.Width = 64;
+            // 
+            // colArmModel
+            // 
+            this.colArmModel.HeaderText = "기종";
+            this.colArmModel.Name = "colArmModel";
+            this.colArmModel.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmModel.ToolTipText = "Motor Name";
+            this.colArmModel.Width = 92;
+            // 
+            // colArmNowDeg
+            // 
+            this.colArmNowDeg.HeaderText = "현재각°";
+            this.colArmNowDeg.Name = "colArmNowDeg";
+            this.colArmNowDeg.ReadOnly = true;
+            this.colArmNowDeg.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmNowDeg.ToolTipText = "읽기·따라가기로 읽은 3D 각";
+            this.colArmNowDeg.Width = 54;
+            // 
+            // colArmChecked
+            // 
+            this.colArmChecked.HeaderText = "확인";
+            this.colArmChecked.Name = "colArmChecked";
+            this.colArmChecked.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmChecked.ToolTipText = "방향 확인함";
+            this.colArmChecked.Width = 36;
+            // 
+            // colArmNowTick
+            // 
+            this.colArmNowTick.HeaderText = "현재 틱";
+            this.colArmNowTick.Name = "colArmNowTick";
+            this.colArmNowTick.ReadOnly = true;
+            this.colArmNowTick.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmNowTick.ToolTipText = "읽기·따라가기로 읽은 서보 틱";
+            this.colArmNowTick.Width = 56;
+            // 
+            // colArmRealModel
+            // 
+            this.colArmRealModel.HeaderText = "실물 기종";
+            this.colArmRealModel.Name = "colArmRealModel";
+            this.colArmRealModel.ReadOnly = true;
+            this.colArmRealModel.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmRealModel.ToolTipText = "실물에서 읽은 기종 (주소 0)";
+            this.colArmRealModel.Width = 96;
+            // 
+            // colArmNote
+            // 
+            this.colArmNote.HeaderText = "상태";
+            this.colArmNote.Name = "colArmNote";
+            this.colArmNote.ReadOnly = true;
+            this.colArmNote.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmNote.ToolTipText = "읽기 경고 + 출처";
+            this.colArmNote.Width = 200;
+            // 
+            // colArmGroup
+            // 
+            this.colArmGroup.HeaderText = "그룹";
+            this.colArmGroup.Name = "colArmGroup";
+            this.colArmGroup.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmGroup.ToolTipText = "Group Name (번호)";
+            this.colArmGroup.Visible = false;
+            this.colArmGroup.Width = 40;
+            // 
+            // colArmBusId
+            // 
+            this.colArmBusId.HeaderText = "실물 ID";
+            this.colArmBusId.Name = "colArmBusId";
+            this.colArmBusId.ReadOnly = true;
+            this.colArmBusId.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmBusId.ToolTipText = "ID(Real) — 지금은 축 번호와 같음";
+            this.colArmBusId.Visible = false;
+            this.colArmBusId.Width = 50;
+            // 
+            // colArmMechMove
+            // 
+            this.colArmMechMove.HeaderText = "틱/회전";
+            this.colArmMechMove.Name = "colArmMechMove";
+            this.colArmMechMove.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmMechMove.ToolTipText = "Mech Move";
+            this.colArmMechMove.Visible = false;
+            this.colArmMechMove.Width = 56;
+            // 
+            // colArmMechAngle
+            // 
+            this.colArmMechAngle.HeaderText = "각/회전";
+            this.colArmMechAngle.Name = "colArmMechAngle";
+            this.colArmMechAngle.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmMechAngle.ToolTipText = "Mech Angle";
+            this.colArmMechAngle.Visible = false;
+            this.colArmMechAngle.Width = 56;
+            // 
+            // colArmInit
+            // 
+            this.colArmInit.HeaderText = "초기각°";
+            this.colArmInit.Name = "colArmInit";
+            this.colArmInit.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmInit.ToolTipText = "Init Angle";
+            this.colArmInit.Visible = false;
+            this.colArmInit.Width = 52;
+            // 
+            // colArmInit2
+            // 
+            this.colArmInit2.HeaderText = "초기각2°";
+            this.colArmInit2.Name = "colArmInit2";
+            this.colArmInit2.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmInit2.ToolTipText = "Init Angle2";
+            this.colArmInit2.Visible = false;
+            this.colArmInit2.Width = 52;
+            // 
+            // colArmProto
+            // 
+            this.colArmProto.HeaderText = "프로토콜";
+            this.colArmProto.Name = "colArmProto";
+            this.colArmProto.ReadOnly = true;
+            this.colArmProto.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colArmProto.ToolTipText = "Protocol Version";
+            this.colArmProto.Visible = false;
+            this.colArmProto.Width = 50;
+            // 
+            // btnArmRead
+            // 
+            this.btnArmRead.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(130)))), ((int)(((byte)(180)))));
+            this.btnArmRead.Enabled = false;
+            this.btnArmRead.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmRead.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmRead.ForeColor = System.Drawing.Color.White;
+            this.btnArmRead.Location = new System.Drawing.Point(3, 264);
+            this.btnArmRead.Name = "btnArmRead";
+            this.btnArmRead.Size = new System.Drawing.Size(78, 34);
+            this.btnArmRead.TabIndex = 1;
+            this.btnArmRead.Text = "읽기";
+            this.btnArmRead.UseVisualStyleBackColor = false;
+            this.btnArmRead.Click += new System.EventHandler(this.btnArmRead_Click);
+            // 
+            // btnArmJogMinus
+            // 
+            this.btnArmJogMinus.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(80)))), ((int)(((byte)(80)))));
+            this.btnArmJogMinus.Enabled = false;
+            this.btnArmJogMinus.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmJogMinus.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmJogMinus.ForeColor = System.Drawing.Color.White;
+            this.btnArmJogMinus.Location = new System.Drawing.Point(85, 264);
+            this.btnArmJogMinus.Name = "btnArmJogMinus";
+            this.btnArmJogMinus.Size = new System.Drawing.Size(70, 34);
+            this.btnArmJogMinus.TabIndex = 2;
+            this.btnArmJogMinus.Tag = "-1";
+            this.btnArmJogMinus.Text = "조그 -";
+            this.btnArmJogMinus.UseVisualStyleBackColor = false;
+            this.btnArmJogMinus.Click += new System.EventHandler(this.btnArmJog_Click);
+            // 
+            // txtArmJogStep
+            // 
+            this.txtArmJogStep.Location = new System.Drawing.Point(159, 267);
+            this.txtArmJogStep.Name = "txtArmJogStep";
+            this.txtArmJogStep.Size = new System.Drawing.Size(40, 28);
+            this.txtArmJogStep.TabIndex = 3;
+            this.txtArmJogStep.Text = "3";
+            this.txtArmJogStep.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // lblArmJogUnit
+            // 
+            this.lblArmJogUnit.Location = new System.Drawing.Point(201, 270);
+            this.lblArmJogUnit.Name = "lblArmJogUnit";
+            this.lblArmJogUnit.Size = new System.Drawing.Size(16, 23);
+            this.lblArmJogUnit.TabIndex = 4;
+            this.lblArmJogUnit.Text = "°";
+            this.lblArmJogUnit.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // btnArmJogPlus
+            // 
+            this.btnArmJogPlus.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(80)))), ((int)(((byte)(80)))));
+            this.btnArmJogPlus.Enabled = false;
+            this.btnArmJogPlus.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmJogPlus.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmJogPlus.ForeColor = System.Drawing.Color.White;
+            this.btnArmJogPlus.Location = new System.Drawing.Point(219, 264);
+            this.btnArmJogPlus.Name = "btnArmJogPlus";
+            this.btnArmJogPlus.Size = new System.Drawing.Size(70, 34);
+            this.btnArmJogPlus.TabIndex = 5;
+            this.btnArmJogPlus.Tag = "1";
+            this.btnArmJogPlus.Text = "조그 +";
+            this.btnArmJogPlus.UseVisualStyleBackColor = false;
+            this.btnArmJogPlus.Click += new System.EventHandler(this.btnArmJog_Click);
+            // 
+            // btnArmSetZero
+            // 
+            this.btnArmSetZero.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(160)))), ((int)(((byte)(70)))));
+            this.btnArmSetZero.Enabled = false;
+            this.btnArmSetZero.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmSetZero.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmSetZero.ForeColor = System.Drawing.Color.White;
+            this.btnArmSetZero.Location = new System.Drawing.Point(293, 264);
+            this.btnArmSetZero.Name = "btnArmSetZero";
+            this.btnArmSetZero.Size = new System.Drawing.Size(160, 34);
+            this.btnArmSetZero.TabIndex = 6;
+            this.btnArmSetZero.Text = "현재 위치를 0 으로";
+            this.btnArmSetZero.UseVisualStyleBackColor = false;
+            this.btnArmSetZero.Click += new System.EventHandler(this.btnArmSetZero_Click);
+            // 
+            // btnArmSave
+            // 
+            this.btnArmSave.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(160)))), ((int)(((byte)(70)))));
+            this.btnArmSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmSave.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmSave.ForeColor = System.Drawing.Color.White;
+            this.btnArmSave.Location = new System.Drawing.Point(3, 302);
+            this.btnArmSave.Name = "btnArmSave";
+            this.btnArmSave.Size = new System.Drawing.Size(78, 34);
+            this.btnArmSave.TabIndex = 7;
+            this.btnArmSave.Text = "저장";
+            this.btnArmSave.UseVisualStyleBackColor = false;
+            this.btnArmSave.Click += new System.EventHandler(this.btnArmSave_Click);
+            // 
+            // btnArmLoad
+            // 
+            this.btnArmLoad.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(160)))), ((int)(((byte)(70)))));
+            this.btnArmLoad.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmLoad.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmLoad.ForeColor = System.Drawing.Color.White;
+            this.btnArmLoad.Location = new System.Drawing.Point(85, 302);
+            this.btnArmLoad.Name = "btnArmLoad";
+            this.btnArmLoad.Size = new System.Drawing.Size(90, 34);
+            this.btnArmLoad.TabIndex = 8;
+            this.btnArmLoad.Text = "불러오기";
+            this.btnArmLoad.UseVisualStyleBackColor = false;
+            this.btnArmLoad.Click += new System.EventHandler(this.btnArmLoad_Click);
+            // 
+            // btnArmImportAuto
+            // 
+            this.btnArmImportAuto.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(160)))), ((int)(((byte)(70)))));
+            this.btnArmImportAuto.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmImportAuto.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmImportAuto.ForeColor = System.Drawing.Color.White;
+            this.btnArmImportAuto.Location = new System.Drawing.Point(179, 302);
+            this.btnArmImportAuto.Name = "btnArmImportAuto";
+            this.btnArmImportAuto.Size = new System.Drawing.Size(200, 34);
+            this.btnArmImportAuto.TabIndex = 9;
+            this.btnArmImportAuto.Text = "자동 방향 결과 가져오기";
+            this.btnArmImportAuto.UseVisualStyleBackColor = false;
+            this.btnArmImportAuto.Click += new System.EventHandler(this.btnArmImportAuto_Click);
+            // 
+            // chkArmFollow
+            // 
+            this.chkArmFollow.AutoSize = true;
+            this.chkArmFollow.Enabled = false;
+            this.chkArmFollow.Location = new System.Drawing.Point(3, 342);
+            this.chkArmFollow.Name = "chkArmFollow";
+            this.chkArmFollow.Size = new System.Drawing.Size(230, 22);
+            this.chkArmFollow.TabIndex = 10;
+            this.chkArmFollow.Text = "3D 가 실물 따라가기 (토크 OFF)";
+            this.chkArmFollow.UseVisualStyleBackColor = true;
+            this.chkArmFollow.CheckedChanged += new System.EventHandler(this.chkArmFollow_CheckedChanged);
+            // 
+            // chkArmAdvanced
+            // 
+            this.chkArmAdvanced.AutoSize = true;
+            this.chkArmAdvanced.Location = new System.Drawing.Point(300, 342);
+            this.chkArmAdvanced.Name = "chkArmAdvanced";
+            this.chkArmAdvanced.Size = new System.Drawing.Size(120, 22);
+            this.chkArmAdvanced.TabIndex = 11;
+            this.chkArmAdvanced.Text = "고급 열 보기";
+            this.chkArmAdvanced.UseVisualStyleBackColor = true;
+            this.chkArmAdvanced.CheckedChanged += new System.EventHandler(this.chkArmAdvanced_CheckedChanged);
+            // 
+            // lblArmFile
+            // 
+            this.lblArmFile.Location = new System.Drawing.Point(3, 368);
+            this.lblArmFile.Name = "lblArmFile";
+            this.lblArmFile.Size = new System.Drawing.Size(535, 46);
+            this.lblArmFile.TabIndex = 12;
+            this.lblArmFile.Text = "파일: (없음)";
+            this.lblArmFile.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblArmHint
+            // 
+            this.lblArmHint.Font = new System.Drawing.Font("맑은 고딕", 8F);
+            this.lblArmHint.ForeColor = System.Drawing.Color.DimGray;
+            this.lblArmHint.Location = new System.Drawing.Point(3, 416);
+            this.lblArmHint.Name = "lblArmHint";
+            this.lblArmHint.Size = new System.Drawing.Size(535, 52);
+            this.lblArmHint.TabIndex = 13;
+            this.lblArmHint.Text = "방향 확인: 토크 OFF 에서 '3D 가 실물 따라가기' 를 켜고 관절을 손으로 돌려 보십시오. 3D 가 반대로 돌면 그 줄의 '방향' 을 바꿉니다. 토크 ON 이면 조그 ± 로 몇 도씩 움직여 비교합니다. 영점: 관절을 3D 의 0° 모양에 맞춰 잡고 '현재 위치를 0 으로'. Control 탭·마우스로 바꾼 3D 자세는 실물로 가지 않습니다.";
+            this.lblArmHint.TextAlign = System.Drawing.ContentAlignment.TopLeft;
+            // 
+            // tabArmDef
+            // 
+            this.tabArmDef.Controls.Add(this.lblDefGuide);
+            this.tabArmDef.Controls.Add(this.lblDefPreset);
+            this.tabArmDef.Controls.Add(this.cmbDefPreset);
+            this.tabArmDef.Controls.Add(this.btnDefPresetSave);
+            this.tabArmDef.Controls.Add(this.lblDefTcp);
+            this.tabArmDef.Controls.Add(this.cmbDefTcp);
+            this.tabArmDef.Controls.Add(this.lblDefTcpInfo);
+            this.tabArmDef.Controls.Add(this.lblDefWrist);
+            this.tabArmDef.Controls.Add(this.cmbDefWrist);
+            this.tabArmDef.Controls.Add(this.lblDefWristInfo);
+            this.tabArmDef.Controls.Add(this.lblDefDown);
+            this.tabArmDef.Controls.Add(this.lblDefDownSum);
+            this.tabArmDef.Controls.Add(this.txtDefDownSum);
+            this.tabArmDef.Controls.Add(this.lblDefDownInfo);
+            this.tabArmDef.Controls.Add(this.lblDefShowNote);
+            this.tabArmDef.Controls.Add(this.btnDefSave);
+            this.tabArmDef.Controls.Add(this.lblDefStatus);
+            this.tabArmDef.Controls.Add(this.chkDefAdv);
+            this.tabArmDef.Controls.Add(this.grpDefAdv);
+            this.tabArmDef.Controls.Add(this.lblDefEye);
+            this.tabArmDef.Controls.Add(this.btnDefEye);
+            this.tabArmDef.AutoScroll = true;
+            this.tabArmDef.BackColor = System.Drawing.SystemColors.Control;
+            this.tabArmDef.Location = new System.Drawing.Point(4, 28);
+            this.tabArmDef.Name = "tabArmDef";
+            this.tabArmDef.Size = new System.Drawing.Size(541, 470);
+            this.tabArmDef.TabIndex = 2;
+            this.tabArmDef.Text = "로봇 정의";
+            // 
+            // lblDefGuide
+            // 
+            this.lblDefGuide.Font = new System.Drawing.Font("맑은 고딕", 8.5F);
+            this.lblDefGuide.Location = new System.Drawing.Point(8, 4);
+            this.lblDefGuide.Name = "lblDefGuide";
+            this.lblDefGuide.Size = new System.Drawing.Size(516, 34);
+            this.lblDefGuide.TabIndex = 0;
+            this.lblDefGuide.Text = "측정·실습이 쓰는 로봇 정의 — 공구 끝, 공구를 꺾는 손목, '바닥으로 수직' 의 뜻.\r\n보통은 그대로 두십시오. 3D 와 맞을 때만 저장됩니다 (sagarm.txt).";
+            this.lblDefGuide.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblDefPreset
+            // 
+            this.lblDefPreset.Location = new System.Drawing.Point(8, 47);
+            this.lblDefPreset.Name = "lblDefPreset";
+            this.lblDefPreset.Size = new System.Drawing.Size(104, 20);
+            this.lblDefPreset.TabIndex = 1;
+            this.lblDefPreset.Text = "본보기";
+            this.lblDefPreset.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // cmbDefPreset
+            // 
+            this.cmbDefPreset.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbDefPreset.FormattingEnabled = true;
+            this.cmbDefPreset.Location = new System.Drawing.Point(120, 43);
+            this.cmbDefPreset.Name = "cmbDefPreset";
+            this.cmbDefPreset.Size = new System.Drawing.Size(264, 26);
+            this.cmbDefPreset.TabIndex = 2;
+            this.tipArmExp.SetToolTip(this.cmbDefPreset, "고르면 칸만 채웁니다 (저장 안 함) — [확인·저장] 을 눌러야 sagarm.txt 에 들어갑니다");
+            this.cmbDefPreset.SelectedIndexChanged += new System.EventHandler(this.cmbDefPreset_SelectedIndexChanged);
+            // 
+            // btnDefPresetSave
+            // 
+            this.btnDefPresetSave.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(90)))), ((int)(((byte)(90)))));
+            this.btnDefPresetSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnDefPresetSave.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnDefPresetSave.ForeColor = System.Drawing.Color.White;
+            this.btnDefPresetSave.Location = new System.Drawing.Point(390, 42);
+            this.btnDefPresetSave.Name = "btnDefPresetSave";
+            this.btnDefPresetSave.Size = new System.Drawing.Size(134, 28);
+            this.btnDefPresetSave.TabIndex = 3;
+            this.btnDefPresetSave.Text = "본보기로 저장…";
+            this.tipArmExp.SetToolTip(this.btnDefPresetSave, "지금 칸의 정의를 본보기로 저장 — <urdf>\\sagarm_defs\\<이름>.txt (sagarm.txt 는 바꾸지 않음)");
+            this.btnDefPresetSave.UseVisualStyleBackColor = false;
+            this.btnDefPresetSave.Click += new System.EventHandler(this.btnDefPresetSave_Click);
+            // 
+            // lblDefTcp
+            // 
+            this.lblDefTcp.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.lblDefTcp.Location = new System.Drawing.Point(8, 81);
+            this.lblDefTcp.Name = "lblDefTcp";
+            this.lblDefTcp.Size = new System.Drawing.Size(108, 20);
+            this.lblDefTcp.TabIndex = 4;
+            this.lblDefTcp.Text = "① 공구 끝";
+            this.lblDefTcp.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.tipArmExp.SetToolTip(this.lblDefTcp, "공구 끝(TCP) = 고른 IK 수식 체인의 끝 — 첫 '!' 바로 앞 DH 줄 ('!' 가 없으면 체인 마지막 DH 줄)");
+            // 
+            // cmbDefTcp
+            // 
+            this.cmbDefTcp.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbDefTcp.FormattingEnabled = true;
+            this.cmbDefTcp.Location = new System.Drawing.Point(120, 77);
+            this.cmbDefTcp.Name = "cmbDefTcp";
+            this.cmbDefTcp.Size = new System.Drawing.Size(160, 26);
+            this.cmbDefTcp.TabIndex = 5;
+            this.tipArmExp.SetToolTip(this.cmbDefTcp, "공구 끝(TCP) = 이 수식 체인의 끝 — 첫 '!' 바로 앞 DH 줄 ('!' 가 없으면 체인 마지막 DH 줄)");
+            this.cmbDefTcp.SelectedIndexChanged += new System.EventHandler(this.cmbDefTcp_SelectedIndexChanged);
+            // 
+            // lblDefTcpInfo
+            // 
+            this.lblDefTcpInfo.Location = new System.Drawing.Point(286, 81);
+            this.lblDefTcpInfo.Name = "lblDefTcpInfo";
+            this.lblDefTcpInfo.Size = new System.Drawing.Size(238, 20);
+            this.lblDefTcpInfo.TabIndex = 6;
+            this.lblDefTcpInfo.Text = "";
+            this.lblDefTcpInfo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblDefWrist
+            // 
+            this.lblDefWrist.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.lblDefWrist.Location = new System.Drawing.Point(8, 115);
+            this.lblDefWrist.Name = "lblDefWrist";
+            this.lblDefWrist.Size = new System.Drawing.Size(108, 20);
+            this.lblDefWrist.TabIndex = 7;
+            this.lblDefWrist.Text = "② 꺾는 손목";
+            this.lblDefWrist.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.tipArmExp.SetToolTip(this.lblDefWrist, "공구를 바닥으로 수직으로 꺾는 관절 — 공구 끝 앞 마지막 관절");
+            // 
+            // cmbDefWrist
+            // 
+            this.cmbDefWrist.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbDefWrist.FormattingEnabled = true;
+            this.cmbDefWrist.Location = new System.Drawing.Point(120, 111);
+            this.cmbDefWrist.Name = "cmbDefWrist";
+            this.cmbDefWrist.Size = new System.Drawing.Size(90, 26);
+            this.cmbDefWrist.TabIndex = 8;
+            this.tipArmExp.SetToolTip(this.cmbDefWrist, "공구를 바닥으로 수직으로 꺾는 관절 — 공구 끝 앞 마지막 관절");
+            this.cmbDefWrist.SelectedIndexChanged += new System.EventHandler(this.cmbDefWrist_SelectedIndexChanged);
+            // 
+            // lblDefWristInfo
+            // 
+            this.lblDefWristInfo.Location = new System.Drawing.Point(216, 115);
+            this.lblDefWristInfo.Name = "lblDefWristInfo";
+            this.lblDefWristInfo.Size = new System.Drawing.Size(308, 20);
+            this.lblDefWristInfo.TabIndex = 9;
+            this.lblDefWristInfo.Text = "";
+            this.lblDefWristInfo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblDefDown
+            // 
+            this.lblDefDown.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.lblDefDown.Location = new System.Drawing.Point(8, 149);
+            this.lblDefDown.Name = "lblDefDown";
+            this.lblDefDown.Size = new System.Drawing.Size(108, 20);
+            this.lblDefDown.TabIndex = 10;
+            this.lblDefDown.Text = "③ 바닥으로 수직";
+            this.lblDefDown.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.tipArmExp.SetToolTip(this.lblDefDown, "공구축(손목 → 공구 끝)이 아래(−Z)를 향할 때의 관절 합. 3D 와 0.5° 안이어야 저장됩니다. 실물이 이 값에서 수직이 아니면 고칠 곳은 이 칸이 아니라 모터 영점입니다");
+            // 
+            // lblDefDownSum
+            // 
+            this.lblDefDownSum.Location = new System.Drawing.Point(120, 149);
+            this.lblDefDownSum.Name = "lblDefDownSum";
+            this.lblDefDownSum.Size = new System.Drawing.Size(140, 20);
+            this.lblDefDownSum.TabIndex = 11;
+            this.lblDefDownSum.Text = "관절 합 12+13+14 =";
+            this.lblDefDownSum.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.tipArmExp.SetToolTip(this.lblDefDownSum, "공구축(손목 → 공구 끝)이 아래(−Z)를 향할 때의 관절 합. 3D 와 0.5° 안이어야 저장됩니다. 실물이 이 값에서 수직이 아니면 고칠 곳은 이 칸이 아니라 모터 영점입니다");
+            // 
+            // txtDefDownSum
+            // 
+            this.txtDefDownSum.Location = new System.Drawing.Point(262, 145);
+            this.txtDefDownSum.Name = "txtDefDownSum";
+            this.txtDefDownSum.Size = new System.Drawing.Size(56, 28);
+            this.txtDefDownSum.TabIndex = 12;
+            this.txtDefDownSum.Text = "90";
+            this.txtDefDownSum.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.tipArmExp.SetToolTip(this.txtDefDownSum, "공구축(손목 → 공구 끝)이 아래(−Z)를 향할 때의 관절 합. 3D 와 0.5° 안이어야 저장됩니다. 실물이 이 값에서 수직이 아니면 고칠 곳은 이 칸이 아니라 모터 영점입니다");
+            this.txtDefDownSum.TextChanged += new System.EventHandler(this.txtDefDownSum_TextChanged);
+            // 
+            // lblDefDownInfo
+            // 
+            this.lblDefDownInfo.Location = new System.Drawing.Point(322, 149);
+            this.lblDefDownInfo.Name = "lblDefDownInfo";
+            this.lblDefDownInfo.Size = new System.Drawing.Size(202, 20);
+            this.lblDefDownInfo.TabIndex = 13;
+            this.lblDefDownInfo.Text = "°";
+            this.lblDefDownInfo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblDefShowNote
+            // 
+            this.lblDefShowNote.Font = new System.Drawing.Font("맑은 고딕", 8.5F);
+            this.lblDefShowNote.ForeColor = System.Drawing.Color.DimGray;
+            this.lblDefShowNote.Location = new System.Drawing.Point(8, 184);
+            this.lblDefShowNote.Name = "lblDefShowNote";
+            this.lblDefShowNote.Size = new System.Drawing.Size(376, 20);
+            this.lblDefShowNote.TabIndex = 14;
+            this.lblDefShowNote.Text = "이 페이지를 보는 동안 3D 에 공구 끝·공구축·손목 표시";
+            this.lblDefShowNote.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // btnDefSave
+            // 
+            this.btnDefSave.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(130)))), ((int)(((byte)(180)))));
+            this.btnDefSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnDefSave.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnDefSave.ForeColor = System.Drawing.Color.White;
+            this.btnDefSave.Location = new System.Drawing.Point(390, 178);
+            this.btnDefSave.Name = "btnDefSave";
+            this.btnDefSave.Size = new System.Drawing.Size(134, 30);
+            this.btnDefSave.TabIndex = 15;
+            this.btnDefSave.Text = "확인·저장";
+            this.tipArmExp.SetToolTip(this.btnDefSave, "3D 와 맞으면 sagarm.txt 에 저장 — 측정·실습이 이 정의를 씁니다 (실습 기록과 다르면 다음은 1단계부터)");
+            this.btnDefSave.UseVisualStyleBackColor = false;
+            this.btnDefSave.Click += new System.EventHandler(this.btnDefSave_Click);
+            // 
+            // lblDefStatus
+            // 
+            this.lblDefStatus.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.lblDefStatus.Location = new System.Drawing.Point(8, 214);
+            this.lblDefStatus.Name = "lblDefStatus";
+            this.lblDefStatus.Size = new System.Drawing.Size(516, 40);
+            this.lblDefStatus.TabIndex = 16;
+            this.lblDefStatus.Text = "";
+            this.lblDefStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // chkDefAdv
+            // 
+            this.chkDefAdv.Location = new System.Drawing.Point(8, 258);
+            this.chkDefAdv.Name = "chkDefAdv";
+            this.chkDefAdv.Size = new System.Drawing.Size(120, 22);
+            this.chkDefAdv.TabIndex = 17;
+            this.chkDefAdv.Text = "고급 보기";
+            this.tipArmExp.SetToolTip(this.chkDefAdv, "관절 번호·이름·공구 끝 거리와 고정 규약을 봅니다");
+            this.chkDefAdv.UseVisualStyleBackColor = true;
+            this.chkDefAdv.CheckedChanged += new System.EventHandler(this.chkDefAdv_CheckedChanged);
+            // 
+            // lblDefEye
+            // 
+            this.lblDefEye.AutoEllipsis = true;
+            this.lblDefEye.Font = new System.Drawing.Font("맑은 고딕", 8.5F);
+            this.lblDefEye.Location = new System.Drawing.Point(132, 258);
+            this.lblDefEye.Name = "lblDefEye";
+            this.lblDefEye.Size = new System.Drawing.Size(254, 22);
+            this.lblDefEye.TabIndex = 19;
+            this.lblDefEye.Text = "";
+            this.lblDefEye.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // btnDefEye
+            // 
+            this.btnDefEye.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(90)))), ((int)(((byte)(90)))));
+            this.btnDefEye.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnDefEye.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnDefEye.ForeColor = System.Drawing.Color.White;
+            this.btnDefEye.Location = new System.Drawing.Point(390, 256);
+            this.btnDefEye.Name = "btnDefEye";
+            this.btnDefEye.Size = new System.Drawing.Size(134, 24);
+            this.btnDefEye.TabIndex = 20;
+            this.btnDefEye.Text = "수직 눈 확인";
+            this.tipArmExp.SetToolTip(this.btnDefEye, "저장된 정의로 팔을 바닥 위 옮기는 높이(가운데 점 위)에서 '바닥으로 수직' 자세로 펼쳐 실물 펜이 바닥에 수직인지 묻는다 — [예] 면 기록\r\n바닥은 누르지 않고 실습 진행은 그대로. 실물 ③ 측정·⑤ 닿기 시험·실습 2·3단계 전에 이 로봇·정의·모터 영점으로 한 번\r\n연결이 없으면 3D 로만 미리 본다 (기록하지 않음)");
+            this.btnDefEye.UseVisualStyleBackColor = false;
+            this.btnDefEye.Click += new System.EventHandler(this.btnDefEye_Click);
+            // 
+            // grpDefAdv
+            // 
+            this.grpDefAdv.Controls.Add(this.lblDefName);
+            this.grpDefAdv.Controls.Add(this.txtDefName);
+            this.grpDefAdv.Controls.Add(this.lblDefBase);
+            this.grpDefAdv.Controls.Add(this.txtDefBase);
+            this.grpDefAdv.Controls.Add(this.lblDefPitch);
+            this.grpDefAdv.Controls.Add(this.txtDefPitch);
+            this.grpDefAdv.Controls.Add(this.lblDefHold);
+            this.grpDefAdv.Controls.Add(this.txtDefHold);
+            this.grpDefAdv.Controls.Add(this.lblDefTcpLen);
+            this.grpDefAdv.Controls.Add(this.txtDefTcpLen);
+            this.grpDefAdv.Controls.Add(this.lblDefFixed);
+            this.grpDefAdv.Location = new System.Drawing.Point(8, 282);
+            this.grpDefAdv.Name = "grpDefAdv";
+            this.grpDefAdv.Size = new System.Drawing.Size(516, 180);
+            this.grpDefAdv.TabIndex = 18;
+            this.grpDefAdv.TabStop = false;
+            this.grpDefAdv.Text = "고급 — 관절 번호 · 이름 · 공구 끝 거리";
+            this.grpDefAdv.Visible = false;
+            // 
+            // lblDefName
+            // 
+            this.lblDefName.Location = new System.Drawing.Point(10, 23);
+            this.lblDefName.Name = "lblDefName";
+            this.lblDefName.Size = new System.Drawing.Size(96, 20);
+            this.lblDefName.TabIndex = 0;
+            this.lblDefName.Text = "이름";
+            this.lblDefName.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // txtDefName
+            // 
+            this.txtDefName.Location = new System.Drawing.Point(110, 20);
+            this.txtDefName.Name = "txtDefName";
+            this.txtDefName.Size = new System.Drawing.Size(140, 28);
+            this.txtDefName.TabIndex = 1;
+            this.txtDefName.Text = "OMX follower";
+            this.tipArmExp.SetToolTip(this.txtDefName, "정의 이름 (1~40자, // = | # 은 쓸 수 없음)");
+            this.txtDefName.TextChanged += new System.EventHandler(this.txtDefName_TextChanged);
+            // 
+            // lblDefBase
+            // 
+            this.lblDefBase.Location = new System.Drawing.Point(262, 23);
+            this.lblDefBase.Name = "lblDefBase";
+            this.lblDefBase.Size = new System.Drawing.Size(110, 20);
+            this.lblDefBase.TabIndex = 2;
+            this.lblDefBase.Text = "베이스(요) 관절";
+            this.lblDefBase.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // txtDefBase
+            // 
+            this.txtDefBase.Location = new System.Drawing.Point(376, 20);
+            this.txtDefBase.Name = "txtDefBase";
+            this.txtDefBase.Size = new System.Drawing.Size(130, 28);
+            this.txtDefBase.TabIndex = 3;
+            this.txtDefBase.Text = "11";
+            this.tipArmExp.SetToolTip(this.txtDefBase, "베이스(요) 관절 번호 — 공구 끝 체인의 첫 관절");
+            this.txtDefBase.TextChanged += new System.EventHandler(this.txtDefBase_TextChanged);
+            // 
+            // lblDefPitch
+            // 
+            this.lblDefPitch.Location = new System.Drawing.Point(10, 53);
+            this.lblDefPitch.Name = "lblDefPitch";
+            this.lblDefPitch.Size = new System.Drawing.Size(96, 20);
+            this.lblDefPitch.TabIndex = 4;
+            this.lblDefPitch.Text = "피치 관절 2개";
+            this.lblDefPitch.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // txtDefPitch
+            // 
+            this.txtDefPitch.Location = new System.Drawing.Point(110, 50);
+            this.txtDefPitch.Name = "txtDefPitch";
+            this.txtDefPitch.Size = new System.Drawing.Size(140, 28);
+            this.txtDefPitch.TabIndex = 5;
+            this.txtDefPitch.Text = "12,13";
+            this.tipArmExp.SetToolTip(this.txtDefPitch, "피치 관절 두 개 (베이스 쪽부터, 예: 12,13) — 관절 합 = 이 둘 + 손목");
+            this.txtDefPitch.TextChanged += new System.EventHandler(this.txtDefPitch_TextChanged);
+            // 
+            // lblDefHold
+            // 
+            this.lblDefHold.Location = new System.Drawing.Point(262, 53);
+            this.lblDefHold.Name = "lblDefHold";
+            this.lblDefHold.Size = new System.Drawing.Size(110, 20);
+            this.lblDefHold.TabIndex = 6;
+            this.lblDefHold.Text = "토크만 관절";
+            this.lblDefHold.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // txtDefHold
+            // 
+            this.txtDefHold.Location = new System.Drawing.Point(376, 50);
+            this.txtDefHold.Name = "txtDefHold";
+            this.txtDefHold.Size = new System.Drawing.Size(130, 28);
+            this.txtDefHold.TabIndex = 7;
+            this.txtDefHold.Text = "15,16";
+            this.tipArmExp.SetToolTip(this.txtDefHold, "토크만 켜서 고정하는 관절 (그리퍼 — 공구 끝 체인 밖, 비우면 없음)");
+            this.txtDefHold.TextChanged += new System.EventHandler(this.txtDefHold_TextChanged);
+            // 
+            // lblDefTcpLen
+            // 
+            this.lblDefTcpLen.Location = new System.Drawing.Point(10, 83);
+            this.lblDefTcpLen.Name = "lblDefTcpLen";
+            this.lblDefTcpLen.Size = new System.Drawing.Size(98, 20);
+            this.lblDefTcpLen.TabIndex = 8;
+            this.lblDefTcpLen.Text = "공구 끝 거리 mm";
+            this.lblDefTcpLen.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // txtDefTcpLen
+            // 
+            this.txtDefTcpLen.Location = new System.Drawing.Point(110, 80);
+            this.txtDefTcpLen.Name = "txtDefTcpLen";
+            this.txtDefTcpLen.Size = new System.Drawing.Size(140, 28);
+            this.txtDefTcpLen.TabIndex = 9;
+            this.txtDefTcpLen.Text = "103.2";
+            this.tipArmExp.SetToolTip(this.txtDefTcpLen, "손목 원점 → 공구 끝 기대 거리 (mm, 10~500) — 3D 와 0.5mm 안이어야. 비우면 확인 안 함");
+            this.txtDefTcpLen.TextChanged += new System.EventHandler(this.txtDefTcpLen_TextChanged);
+            // 
+            // lblDefFixed
+            // 
+            this.lblDefFixed.Font = new System.Drawing.Font("맑은 고딕", 8.5F);
+            this.lblDefFixed.ForeColor = System.Drawing.Color.Gray;
+            this.lblDefFixed.Location = new System.Drawing.Point(10, 112);
+            this.lblDefFixed.Name = "lblDefFixed";
+            this.lblDefFixed.Size = new System.Drawing.Size(496, 62);
+            this.lblDefFixed.TabIndex = 10;
+            this.lblDefFixed.Text = "고정 규약: 아래 = 3D 의 −Z · 바닥은 3D 의 XY 평면과 평행 (높이는 바닥 찾기가 잼) · 로봇 베이스는 수평 · 펜은 손목 → 공구 끝 직선 위 · 확인 허용 0.5 mm / 0.5° · 실습 목표 자세 Ry 90 (= 이 정의의 수직)";
+            this.lblDefFixed.TextAlign = System.Drawing.ContentAlignment.TopLeft;
+            // 
+            // tabArmExp
+            // 
+            this.tabArmExp.Controls.Add(this.grpArmPlan);
+            this.tabArmExp.Controls.Add(this.grpArmMeasure);
+            this.tabArmExp.Controls.Add(this.grpArmLearn);
+            this.tabArmExp.Controls.Add(this.grpArmTest);
+            this.tabArmExp.Controls.Add(this.grpArmApply);
+            this.tabArmExp.Controls.Add(this.grpArmTwin);
+            this.tabArmExp.Controls.Add(this.btnArmStop);
+            this.tabArmExp.Controls.Add(this.btnArmOpenDir);
+            this.tabArmExp.Controls.Add(this.lblArmBusy);
+            this.tabArmExp.AutoScroll = true;
+            this.tabArmExp.BackColor = System.Drawing.SystemColors.Control;
+            this.tabArmExp.Location = new System.Drawing.Point(4, 28);
+            this.tabArmExp.Name = "tabArmExp";
+            this.tabArmExp.Size = new System.Drawing.Size(541, 470);
+            this.tabArmExp.TabIndex = 3;
+            this.tabArmExp.Text = "고급";
+            // 
+            // grpArmPlan
+            // 
+            this.grpArmPlan.Controls.Add(this.btnArmPlanMake);
+            this.grpArmPlan.Controls.Add(this.btnArmPlanLoad);
+            this.grpArmPlan.Controls.Add(this.btnArmPlanDry);
+            this.grpArmPlan.Controls.Add(this.lblArmPlan);
+            this.grpArmPlan.Location = new System.Drawing.Point(3, 3);
+            this.grpArmPlan.Name = "grpArmPlan";
+            this.grpArmPlan.Size = new System.Drawing.Size(515, 68);
+            this.grpArmPlan.TabIndex = 0;
+            this.grpArmPlan.TabStop = false;
+            this.grpArmPlan.Text = "② 측정 계획";
+            // 
+            // btnArmPlanMake
+            // 
+            this.btnArmPlanMake.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(160)))), ((int)(((byte)(70)))));
+            this.btnArmPlanMake.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmPlanMake.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmPlanMake.ForeColor = System.Drawing.Color.White;
+            this.btnArmPlanMake.Location = new System.Drawing.Point(8, 18);
+            this.btnArmPlanMake.Name = "btnArmPlanMake";
+            this.btnArmPlanMake.Size = new System.Drawing.Size(100, 30);
+            this.btnArmPlanMake.TabIndex = 0;
+            this.btnArmPlanMake.Text = "계획 만들기";
+            this.btnArmPlanMake.UseVisualStyleBackColor = false;
+            this.btnArmPlanMake.Click += new System.EventHandler(this.btnArmPlanMake_Click);
+            // 
+            // btnArmPlanLoad
+            // 
+            this.btnArmPlanLoad.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(160)))), ((int)(((byte)(70)))));
+            this.btnArmPlanLoad.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmPlanLoad.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmPlanLoad.ForeColor = System.Drawing.Color.White;
+            this.btnArmPlanLoad.Location = new System.Drawing.Point(112, 18);
+            this.btnArmPlanLoad.Name = "btnArmPlanLoad";
+            this.btnArmPlanLoad.Size = new System.Drawing.Size(80, 30);
+            this.btnArmPlanLoad.TabIndex = 1;
+            this.btnArmPlanLoad.Text = "불러오기";
+            this.btnArmPlanLoad.UseVisualStyleBackColor = false;
+            this.btnArmPlanLoad.Click += new System.EventHandler(this.btnArmPlanLoad_Click);
+            // 
+            // btnArmPlanDry
+            // 
+            this.btnArmPlanDry.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(130)))), ((int)(((byte)(180)))));
+            this.btnArmPlanDry.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmPlanDry.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmPlanDry.ForeColor = System.Drawing.Color.White;
+            this.btnArmPlanDry.Location = new System.Drawing.Point(196, 18);
+            this.btnArmPlanDry.Name = "btnArmPlanDry";
+            this.btnArmPlanDry.Size = new System.Drawing.Size(100, 30);
+            this.btnArmPlanDry.TabIndex = 2;
+            this.btnArmPlanDry.Text = "3D 미리보기";
+            this.tipArmExp.SetToolTip(this.btnArmPlanDry, "3D 만 — 실물은 움직이지 않는다");
+            this.btnArmPlanDry.UseVisualStyleBackColor = false;
+            this.btnArmPlanDry.Click += new System.EventHandler(this.btnArmPlanDry_Click);
+            // 
+            // lblArmPlan
+            // 
+            this.lblArmPlan.Location = new System.Drawing.Point(300, 14);
+            this.lblArmPlan.Name = "lblArmPlan";
+            this.lblArmPlan.Size = new System.Drawing.Size(208, 50);
+            this.lblArmPlan.TabIndex = 3;
+            this.lblArmPlan.Text = "계획 없음";
+            this.lblArmPlan.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // grpArmMeasure
+            // 
+            this.grpArmMeasure.Controls.Add(this.chkArmHold);
+            this.grpArmMeasure.Controls.Add(this.btnArmMeasure);
+            this.grpArmMeasure.Controls.Add(this.lblArmMeasure);
+            this.grpArmMeasure.Location = new System.Drawing.Point(3, 75);
+            this.grpArmMeasure.Name = "grpArmMeasure";
+            this.grpArmMeasure.Size = new System.Drawing.Size(515, 68);
+            this.grpArmMeasure.TabIndex = 1;
+            this.grpArmMeasure.TabStop = false;
+            this.grpArmMeasure.Text = "③ 바닥 측정 (실물)";
+            // 
+            // chkArmHold
+            // 
+            this.chkArmHold.AutoSize = true;
+            this.chkArmHold.Checked = true;
+            this.chkArmHold.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkArmHold.Location = new System.Drawing.Point(10, 24);
+            this.chkArmHold.Name = "chkArmHold";
+            this.chkArmHold.Size = new System.Drawing.Size(118, 22);
+            this.chkArmHold.TabIndex = 0;
+            this.chkArmHold.Text = "손목 수직 유지";
+            this.tipArmExp.SetToolTip(this.chkArmHold, "측정 때 손목 수직 유지 — 데이터셋 hold 칸으로 남는다");
+            this.chkArmHold.UseVisualStyleBackColor = true;
+            this.chkArmHold.CheckedChanged += new System.EventHandler(this.chkArmHold_CheckedChanged);
+            // 
+            // btnArmMeasure
+            // 
+            this.btnArmMeasure.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(80)))), ((int)(((byte)(80)))));
+            this.btnArmMeasure.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmMeasure.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmMeasure.ForeColor = System.Drawing.Color.White;
+            this.btnArmMeasure.Location = new System.Drawing.Point(132, 18);
+            this.btnArmMeasure.Name = "btnArmMeasure";
+            this.btnArmMeasure.Size = new System.Drawing.Size(112, 30);
+            this.btnArmMeasure.TabIndex = 1;
+            this.btnArmMeasure.Text = "측정 시작";
+            this.tipArmExp.SetToolTip(this.btnArmMeasure, "실물이 움직인다 — 확인창 뒤에 시작 ([중단] 은 언제든)");
+            this.btnArmMeasure.UseVisualStyleBackColor = false;
+            this.btnArmMeasure.Click += new System.EventHandler(this.btnArmMeasure_Click);
+            // 
+            // lblArmMeasure
+            // 
+            this.lblArmMeasure.Location = new System.Drawing.Point(248, 14);
+            this.lblArmMeasure.Name = "lblArmMeasure";
+            this.lblArmMeasure.Size = new System.Drawing.Size(260, 50);
+            this.lblArmMeasure.TabIndex = 2;
+            this.lblArmMeasure.Text = "";
+            this.lblArmMeasure.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // grpArmLearn
+            // 
+            this.grpArmLearn.Controls.Add(this.lblArmData);
+            this.grpArmLearn.Controls.Add(this.lblArmDataInfo);
+            this.grpArmLearn.Controls.Add(this.chkArmUseHold);
+            this.grpArmLearn.Controls.Add(this.lblArmRef);
+            this.grpArmLearn.Controls.Add(this.txtArmRef);
+            this.grpArmLearn.Controls.Add(this.btnArmLearn);
+            this.grpArmLearn.Controls.Add(this.lblArmLearn);
+            this.grpArmLearn.Location = new System.Drawing.Point(3, 147);
+            this.grpArmLearn.Name = "grpArmLearn";
+            this.grpArmLearn.Size = new System.Drawing.Size(515, 116);
+            this.grpArmLearn.TabIndex = 2;
+            this.grpArmLearn.TabStop = false;
+            this.grpArmLearn.Text = "④ 학습 → 결과 파일";
+            // 
+            // lblArmData
+            // 
+            this.lblArmData.Location = new System.Drawing.Point(8, 20);
+            this.lblArmData.Name = "lblArmData";
+            this.lblArmData.Size = new System.Drawing.Size(50, 23);
+            this.lblArmData.TabIndex = 0;
+            this.lblArmData.Text = "데이터";
+            this.lblArmData.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // lblArmDataInfo
+            // 
+            this.lblArmDataInfo.Location = new System.Drawing.Point(60, 18);
+            this.lblArmDataInfo.Name = "lblArmDataInfo";
+            this.lblArmDataInfo.Size = new System.Drawing.Size(448, 28);
+            this.lblArmDataInfo.TabIndex = 1;
+            this.lblArmDataInfo.Text = "floor_dataset_fc.csv";
+            this.lblArmDataInfo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // chkArmUseHold
+            // 
+            this.chkArmUseHold.AutoSize = true;
+            this.chkArmUseHold.Checked = true;
+            this.chkArmUseHold.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkArmUseHold.Location = new System.Drawing.Point(10, 50);
+            this.chkArmUseHold.Name = "chkArmUseHold";
+            this.chkArmUseHold.Size = new System.Drawing.Size(122, 22);
+            this.chkArmUseHold.TabIndex = 2;
+            this.chkArmUseHold.Text = "손목 유지 켬 행도";
+            this.tipArmExp.SetToolTip(this.chkArmUseHold, "손목 유지 켬(hold=1)으로 잰 행도 학습에 넣는다");
+            this.chkArmUseHold.UseVisualStyleBackColor = true;
+            // 
+            // lblArmRef
+            // 
+            this.lblArmRef.Location = new System.Drawing.Point(138, 50);
+            this.lblArmRef.Name = "lblArmRef";
+            this.lblArmRef.Size = new System.Drawing.Size(134, 23);
+            this.lblArmRef.TabIndex = 3;
+            this.lblArmRef.Text = "기준 mm (빈칸=평균)";
+            this.lblArmRef.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // txtArmRef
+            // 
+            this.txtArmRef.Location = new System.Drawing.Point(274, 48);
+            this.txtArmRef.Name = "txtArmRef";
+            this.txtArmRef.Size = new System.Drawing.Size(56, 28);
+            this.txtArmRef.TabIndex = 4;
+            this.txtArmRef.Text = "";
+            this.txtArmRef.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.tipArmExp.SetToolTip(this.txtArmRef, "기준 높이 Ref (mm) — 비우면 학습 평균, 숫자면 그 높이로 고정 (fcref)");
+            // 
+            // btnArmLearn
+            // 
+            this.btnArmLearn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(160)))), ((int)(((byte)(70)))));
+            this.btnArmLearn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmLearn.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmLearn.ForeColor = System.Drawing.Color.White;
+            this.btnArmLearn.Location = new System.Drawing.Point(404, 46);
+            this.btnArmLearn.Name = "btnArmLearn";
+            this.btnArmLearn.Size = new System.Drawing.Size(104, 30);
+            this.btnArmLearn.TabIndex = 5;
+            this.btnArmLearn.Text = "학습";
+            this.btnArmLearn.UseVisualStyleBackColor = false;
+            this.btnArmLearn.Click += new System.EventHandler(this.btnArmLearn_Click);
+            // 
+            // lblArmLearn
+            // 
+            this.lblArmLearn.ForeColor = System.Drawing.Color.DarkGreen;
+            this.lblArmLearn.Location = new System.Drawing.Point(8, 80);
+            this.lblArmLearn.Name = "lblArmLearn";
+            this.lblArmLearn.Size = new System.Drawing.Size(500, 32);
+            this.lblArmLearn.TabIndex = 6;
+            this.lblArmLearn.Text = "";
+            this.lblArmLearn.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // grpArmTest
+            // 
+            this.grpArmTest.Controls.Add(this.lblArmResult);
+            this.grpArmTest.Controls.Add(this.cmbArmResult);
+            this.grpArmTest.Controls.Add(this.btnArmResultBrowse);
+            this.grpArmTest.Controls.Add(this.lblArmTouchRow);
+            this.grpArmTest.Controls.Add(this.lblArmTestR);
+            this.grpArmTest.Controls.Add(this.txtArmTestR);
+            this.grpArmTest.Controls.Add(this.lblArmTestYaw);
+            this.grpArmTest.Controls.Add(this.txtArmTestYaw);
+            this.grpArmTest.Controls.Add(this.lblArmTestPitch);
+            this.grpArmTest.Controls.Add(this.txtArmTestPitch);
+            this.grpArmTest.Controls.Add(this.lblArmTestRep);
+            this.grpArmTest.Controls.Add(this.txtArmTestRep);
+            this.grpArmTest.Controls.Add(this.chkArmTestHold);
+            this.grpArmTest.Controls.Add(this.btnArmTestDry);
+            this.grpArmTest.Controls.Add(this.btnArmTest);
+            this.grpArmTest.Controls.Add(this.lblArmTest);
+            this.grpArmTest.Location = new System.Drawing.Point(3, 267);
+            this.grpArmTest.Name = "grpArmTest";
+            this.grpArmTest.Size = new System.Drawing.Size(515, 184);
+            this.grpArmTest.TabIndex = 3;
+            this.grpArmTest.TabStop = false;
+            this.grpArmTest.Text = "⑤ 결과 파일 닿기 시험 (보정 끔 ↔ 켬)";
+            // 
+            // lblArmResult
+            // 
+            this.lblArmResult.Location = new System.Drawing.Point(8, 20);
+            this.lblArmResult.Name = "lblArmResult";
+            this.lblArmResult.Size = new System.Drawing.Size(40, 23);
+            this.lblArmResult.TabIndex = 0;
+            this.lblArmResult.Text = "파일";
+            this.lblArmResult.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // cmbArmResult
+            // 
+            this.cmbArmResult.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbArmResult.FormattingEnabled = true;
+            this.cmbArmResult.Location = new System.Drawing.Point(50, 20);
+            this.cmbArmResult.Name = "cmbArmResult";
+            this.cmbArmResult.Size = new System.Drawing.Size(418, 26);
+            this.cmbArmResult.TabIndex = 1;
+            this.cmbArmResult.SelectedIndexChanged += new System.EventHandler(this.cmbArmResult_SelectedIndexChanged);
+            // 
+            // btnArmResultBrowse
+            // 
+            this.btnArmResultBrowse.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(90)))), ((int)(((byte)(90)))));
+            this.btnArmResultBrowse.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmResultBrowse.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmResultBrowse.ForeColor = System.Drawing.Color.White;
+            this.btnArmResultBrowse.Location = new System.Drawing.Point(472, 19);
+            this.btnArmResultBrowse.Name = "btnArmResultBrowse";
+            this.btnArmResultBrowse.Size = new System.Drawing.Size(36, 28);
+            this.btnArmResultBrowse.TabIndex = 2;
+            this.btnArmResultBrowse.Text = "…";
+            this.btnArmResultBrowse.UseVisualStyleBackColor = false;
+            this.btnArmResultBrowse.Click += new System.EventHandler(this.btnArmResultBrowse_Click);
+            // 
+            // lblArmTouchRow
+            // 
+            this.lblArmTouchRow.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.lblArmTouchRow.Location = new System.Drawing.Point(8, 58);
+            this.lblArmTouchRow.Name = "lblArmTouchRow";
+            this.lblArmTouchRow.Size = new System.Drawing.Size(66, 23);
+            this.lblArmTouchRow.TabIndex = 7;
+            this.lblArmTouchRow.Text = "닿기 시험";
+            this.lblArmTouchRow.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblArmTestR
+            // 
+            this.lblArmTestR.Location = new System.Drawing.Point(76, 58);
+            this.lblArmTestR.Name = "lblArmTestR";
+            this.lblArmTestR.Size = new System.Drawing.Size(34, 23);
+            this.lblArmTestR.TabIndex = 8;
+            this.lblArmTestR.Text = "반경";
+            this.lblArmTestR.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // txtArmTestR
+            // 
+            this.txtArmTestR.Location = new System.Drawing.Point(112, 56);
+            this.txtArmTestR.Name = "txtArmTestR";
+            this.txtArmTestR.Size = new System.Drawing.Size(120, 28);
+            this.txtArmTestR.TabIndex = 9;
+            this.txtArmTestR.Text = "255,235,175,145,125";
+            this.tipArmExp.SetToolTip(this.txtArmTestR, "닿기 시험 반경 (mm, 쉼표로 여러 개) — 학습 반경 사이 값 (배운 점을 다시 재지 않는다)");
+            // 
+            // lblArmTestYaw
+            // 
+            this.lblArmTestYaw.Location = new System.Drawing.Point(234, 58);
+            this.lblArmTestYaw.Name = "lblArmTestYaw";
+            this.lblArmTestYaw.Size = new System.Drawing.Size(20, 23);
+            this.lblArmTestYaw.TabIndex = 10;
+            this.lblArmTestYaw.Text = "요";
+            this.lblArmTestYaw.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // txtArmTestYaw
+            // 
+            this.txtArmTestYaw.Location = new System.Drawing.Point(256, 56);
+            this.txtArmTestYaw.Name = "txtArmTestYaw";
+            this.txtArmTestYaw.Size = new System.Drawing.Size(56, 28);
+            this.txtArmTestYaw.TabIndex = 11;
+            this.txtArmTestYaw.Text = "0";
+            this.txtArmTestYaw.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.tipArmExp.SetToolTip(this.txtArmTestYaw, "닿기 시험 요 (도, 쉼표로 여러 개) — 점 = 요 × 반경");
+            // 
+            // lblArmTestPitch
+            // 
+            this.lblArmTestPitch.Location = new System.Drawing.Point(314, 58);
+            this.lblArmTestPitch.Name = "lblArmTestPitch";
+            this.lblArmTestPitch.Size = new System.Drawing.Size(50, 23);
+            this.lblArmTestPitch.TabIndex = 12;
+            this.lblArmTestPitch.Text = "공구 Ry";
+            this.lblArmTestPitch.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.tipArmExp.SetToolTip(this.lblArmTestPitch, "공구 피치 Ry (도) — 90 = 수직 아래, 90 이하. 손목 해는 관절 합(피치 관절 2개 + 손목) = 로봇 정의의 '바닥으로 수직' 관절 합 + (90 − Ry) 쪽 (OMX: 12+13+14 = 180 − Ry). 데이터셋·판정의 '피치 110' = Ry 70.");
+            // 
+            // txtArmTestPitch
+            // 
+            this.txtArmTestPitch.Location = new System.Drawing.Point(366, 56);
+            this.txtArmTestPitch.Name = "txtArmTestPitch";
+            this.txtArmTestPitch.Size = new System.Drawing.Size(36, 28);
+            this.txtArmTestPitch.TabIndex = 13;
+            this.txtArmTestPitch.Text = "90";
+            this.txtArmTestPitch.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.tipArmExp.SetToolTip(this.txtArmTestPitch, "공구 피치 Ry (도) — 90 = 수직 아래, 90 이하. 손목 해는 관절 합(피치 관절 2개 + 손목) = 로봇 정의의 '바닥으로 수직' 관절 합 + (90 − Ry) 쪽 (OMX: 12+13+14 = 180 − Ry). 데이터셋·판정의 '피치 110' = Ry 70.");
+            // 
+            // lblArmTestRep
+            // 
+            this.lblArmTestRep.Location = new System.Drawing.Point(404, 58);
+            this.lblArmTestRep.Name = "lblArmTestRep";
+            this.lblArmTestRep.Size = new System.Drawing.Size(32, 23);
+            this.lblArmTestRep.TabIndex = 14;
+            this.lblArmTestRep.Text = "반복";
+            this.lblArmTestRep.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // txtArmTestRep
+            // 
+            this.txtArmTestRep.Location = new System.Drawing.Point(438, 56);
+            this.txtArmTestRep.Name = "txtArmTestRep";
+            this.txtArmTestRep.Size = new System.Drawing.Size(28, 28);
+            this.txtArmTestRep.TabIndex = 15;
+            this.txtArmTestRep.Text = "2";
+            this.txtArmTestRep.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.tipArmExp.SetToolTip(this.txtArmTestRep, "점마다 보정 끔 → 켬 을 몇 번 (2 = 끔·켬·끔·켬)");
+            // 
+            // chkArmTestHold
+            // 
+            this.chkArmTestHold.AutoSize = true;
+            this.chkArmTestHold.Location = new System.Drawing.Point(78, 94);
+            this.chkArmTestHold.Name = "chkArmTestHold";
+            this.chkArmTestHold.Size = new System.Drawing.Size(84, 22);
+            this.chkArmTestHold.TabIndex = 16;
+            this.chkArmTestHold.Text = "손목 유지";
+            this.tipArmExp.SetToolTip(this.chkArmTestHold, "닿기 시험 때 손목 수직 유지 (끔 = 실사용 조건)");
+            this.chkArmTestHold.UseVisualStyleBackColor = true;
+            // 
+            // btnArmTestDry
+            // 
+            this.btnArmTestDry.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(130)))), ((int)(((byte)(180)))));
+            this.btnArmTestDry.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmTestDry.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmTestDry.ForeColor = System.Drawing.Color.White;
+            this.btnArmTestDry.Location = new System.Drawing.Point(166, 90);
+            this.btnArmTestDry.Name = "btnArmTestDry";
+            this.btnArmTestDry.Size = new System.Drawing.Size(96, 30);
+            this.btnArmTestDry.TabIndex = 17;
+            this.btnArmTestDry.Text = "3D 닿기";
+            this.tipArmExp.SetToolTip(this.btnArmTestDry, "3D 만 — 실물은 움직이지 않는다");
+            this.btnArmTestDry.UseVisualStyleBackColor = false;
+            this.btnArmTestDry.Click += new System.EventHandler(this.btnArmTestDry_Click);
+            // 
+            // btnArmTest
+            // 
+            this.btnArmTest.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(80)))), ((int)(((byte)(80)))));
+            this.btnArmTest.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmTest.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmTest.ForeColor = System.Drawing.Color.White;
+            this.btnArmTest.Location = new System.Drawing.Point(266, 90);
+            this.btnArmTest.Name = "btnArmTest";
+            this.btnArmTest.Size = new System.Drawing.Size(104, 30);
+            this.btnArmTest.TabIndex = 18;
+            this.btnArmTest.Text = "실물 닿기";
+            this.tipArmExp.SetToolTip(this.btnArmTest, "실물이 움직인다 — 확인창 뒤에 시작 ([중단] 은 언제든)");
+            this.btnArmTest.UseVisualStyleBackColor = false;
+            this.btnArmTest.Click += new System.EventHandler(this.btnArmTest_Click);
+            // 
+            // lblArmTest
+            // 
+            this.lblArmTest.ForeColor = System.Drawing.Color.DarkGreen;
+            this.lblArmTest.Location = new System.Drawing.Point(8, 128);
+            this.lblArmTest.Name = "lblArmTest";
+            this.lblArmTest.Size = new System.Drawing.Size(500, 52);
+            this.lblArmTest.TabIndex = 23;
+            this.lblArmTest.Text = "";
+            this.lblArmTest.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // grpArmApply
+            // 
+            this.grpArmApply.Controls.Add(this.btnArmApply);
+            this.grpArmApply.Controls.Add(this.lblArmActive);
+            this.grpArmApply.Controls.Add(this.lblArmBackup);
+            this.grpArmApply.Controls.Add(this.cmbArmBackup);
+            this.grpArmApply.Controls.Add(this.btnArmRollback);
+            this.grpArmApply.Location = new System.Drawing.Point(3, 455);
+            this.grpArmApply.Name = "grpArmApply";
+            this.grpArmApply.Size = new System.Drawing.Size(515, 102);
+            this.grpArmApply.TabIndex = 4;
+            this.grpArmApply.TabStop = false;
+            this.grpArmApply.Text = "⑥ 적용 (활성 모델 바꾸기)";
+            // 
+            // btnArmApply
+            // 
+            this.btnArmApply.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(160)))), ((int)(((byte)(70)))));
+            this.btnArmApply.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmApply.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmApply.ForeColor = System.Drawing.Color.White;
+            this.btnArmApply.Location = new System.Drawing.Point(8, 18);
+            this.btnArmApply.Name = "btnArmApply";
+            this.btnArmApply.Size = new System.Drawing.Size(120, 30);
+            this.btnArmApply.TabIndex = 0;
+            this.btnArmApply.Text = "선택 파일 적용";
+            this.btnArmApply.UseVisualStyleBackColor = false;
+            this.btnArmApply.Click += new System.EventHandler(this.btnArmApply_Click);
+            // 
+            // lblArmActive
+            // 
+            this.lblArmActive.ForeColor = System.Drawing.Color.DarkBlue;
+            this.lblArmActive.Location = new System.Drawing.Point(132, 14);
+            this.lblArmActive.Name = "lblArmActive";
+            this.lblArmActive.Size = new System.Drawing.Size(376, 50);
+            this.lblArmActive.TabIndex = 1;
+            this.lblArmActive.Text = "";
+            this.lblArmActive.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblArmBackup
+            // 
+            this.lblArmBackup.Location = new System.Drawing.Point(8, 70);
+            this.lblArmBackup.Name = "lblArmBackup";
+            this.lblArmBackup.Size = new System.Drawing.Size(40, 23);
+            this.lblArmBackup.TabIndex = 2;
+            this.lblArmBackup.Text = "백업";
+            this.lblArmBackup.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // cmbArmBackup
+            // 
+            this.cmbArmBackup.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbArmBackup.FormattingEnabled = true;
+            this.cmbArmBackup.Location = new System.Drawing.Point(50, 70);
+            this.cmbArmBackup.Name = "cmbArmBackup";
+            this.cmbArmBackup.Size = new System.Drawing.Size(336, 26);
+            this.cmbArmBackup.TabIndex = 3;
+            // 
+            // btnArmRollback
+            // 
+            this.btnArmRollback.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(120)))), ((int)(((byte)(60)))));
+            this.btnArmRollback.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmRollback.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmRollback.ForeColor = System.Drawing.Color.White;
+            this.btnArmRollback.Location = new System.Drawing.Point(394, 67);
+            this.btnArmRollback.Name = "btnArmRollback";
+            this.btnArmRollback.Size = new System.Drawing.Size(114, 30);
+            this.btnArmRollback.TabIndex = 4;
+            this.btnArmRollback.Text = "되돌리기";
+            this.btnArmRollback.UseVisualStyleBackColor = false;
+            this.btnArmRollback.Click += new System.EventHandler(this.btnArmRollback_Click);
+            // 
+            // grpArmTwin
+            // 
+            this.grpArmTwin.Controls.Add(this.lblSagTwin);
+            this.grpArmTwin.Controls.Add(this.cmbSagTwin);
+            this.grpArmTwin.Controls.Add(this.chkSagCompOn);
+            this.grpArmTwin.Controls.Add(this.lblArmTwinSrc);
+            this.grpArmTwin.Controls.Add(this.cmbArmTwinSrc);
+            this.grpArmTwin.Controls.Add(this.lblArmTwin);
+            this.grpArmTwin.Location = new System.Drawing.Point(3, 561);
+            this.grpArmTwin.Name = "grpArmTwin";
+            this.grpArmTwin.Size = new System.Drawing.Size(515, 128);
+            this.grpArmTwin.TabIndex = 5;
+            this.grpArmTwin.TabStop = false;
+            this.grpArmTwin.Text = "⑦ 쌍둥이 (실물이 있을 자세)";
+            // 
+            // lblArmTwinSrc
+            // 
+            this.lblArmTwinSrc.Location = new System.Drawing.Point(8, 60);
+            this.lblArmTwinSrc.Name = "lblArmTwinSrc";
+            this.lblArmTwinSrc.Size = new System.Drawing.Size(90, 20);
+            this.lblArmTwinSrc.TabIndex = 3;
+            this.lblArmTwinSrc.Text = "쌍둥이 모델:";
+            this.lblArmTwinSrc.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // cmbArmTwinSrc
+            // 
+            this.cmbArmTwinSrc.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbArmTwinSrc.FormattingEnabled = true;
+            this.cmbArmTwinSrc.Items.AddRange(new object[] {
+            "적용 중 모델",
+            "선택한 결과 파일"});
+            this.cmbArmTwinSrc.Location = new System.Drawing.Point(100, 56);
+            this.cmbArmTwinSrc.Name = "cmbArmTwinSrc";
+            this.cmbArmTwinSrc.Size = new System.Drawing.Size(150, 26);
+            this.cmbArmTwinSrc.TabIndex = 4;
+            this.cmbArmTwinSrc.SelectedIndexChanged += new System.EventHandler(this.cmbArmTwinSrc_SelectedIndexChanged);
+            // 
+            // lblArmTwin
+            // 
+            this.lblArmTwin.Location = new System.Drawing.Point(8, 84);
+            this.lblArmTwin.Name = "lblArmTwin";
+            this.lblArmTwin.Size = new System.Drawing.Size(500, 40);
+            this.lblArmTwin.TabIndex = 5;
+            this.lblArmTwin.Text = "";
+            this.lblArmTwin.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // btnArmStop
+            // 
+            this.btnArmStop.BackColor = System.Drawing.Color.Salmon;
+            this.btnArmStop.Enabled = false;
+            this.btnArmStop.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmStop.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmStop.ForeColor = System.Drawing.Color.Black;
+            this.btnArmStop.Location = new System.Drawing.Point(3, 693);
+            this.btnArmStop.Name = "btnArmStop";
+            this.btnArmStop.Size = new System.Drawing.Size(110, 30);
+            this.btnArmStop.TabIndex = 6;
+            this.btnArmStop.Text = "중단";
+            this.btnArmStop.UseVisualStyleBackColor = false;
+            this.btnArmStop.Click += new System.EventHandler(this.btnArmStop_Click);
+            // 
+            // btnArmOpenDir
+            // 
+            this.btnArmOpenDir.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(90)))), ((int)(((byte)(90)))));
+            this.btnArmOpenDir.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnArmOpenDir.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold);
+            this.btnArmOpenDir.ForeColor = System.Drawing.Color.White;
+            this.btnArmOpenDir.Location = new System.Drawing.Point(117, 693);
+            this.btnArmOpenDir.Name = "btnArmOpenDir";
+            this.btnArmOpenDir.Size = new System.Drawing.Size(100, 30);
+            this.btnArmOpenDir.TabIndex = 7;
+            this.btnArmOpenDir.Text = "폴더 열기";
+            this.btnArmOpenDir.UseVisualStyleBackColor = false;
+            this.btnArmOpenDir.Click += new System.EventHandler(this.btnArmOpenDir_Click);
+            // 
+            // lblArmBusy
+            // 
+            this.lblArmBusy.Location = new System.Drawing.Point(221, 693);
+            this.lblArmBusy.Name = "lblArmBusy";
+            this.lblArmBusy.Size = new System.Drawing.Size(297, 40);
+            this.lblArmBusy.TabIndex = 8;
+            this.lblArmBusy.Text = "대기";
+            this.lblArmBusy.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // tmrArmFollow
+            // 
+            this.tmrArmFollow.Interval = 100;
+            this.tmrArmFollow.Tick += new System.EventHandler(this.tmrArmFollow_Tick);
+            // 
+            // tipArmExp
+            // 
+            this.tipArmExp.AutoPopDelay = 20000;
+            this.tipArmExp.InitialDelay = 400;
+            this.tipArmExp.ReshowDelay = 100;
+            // 
             // btnUsdExport
             // 
             this.btnUsdExport.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
@@ -1802,6 +3847,21 @@
             this.btnIsaacCam.Text = "📺 Isaac 영상";
             this.btnIsaacCam.UseVisualStyleBackColor = false;
             this.btnIsaacCam.Click += new System.EventHandler(this.btnIsaacCam_Click);
+            // 
+            // btnSagComp
+            // 
+            this.btnSagComp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.btnSagComp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnSagComp.Font = new System.Drawing.Font("맑은 고딕", 8.5F, System.Drawing.FontStyle.Bold);
+            this.btnSagComp.ForeColor = System.Drawing.Color.DeepSkyBlue;
+            this.btnSagComp.Location = new System.Drawing.Point(1397, 632);
+            this.btnSagComp.Name = "btnSagComp";
+            this.btnSagComp.Size = new System.Drawing.Size(144, 38);
+            this.btnSagComp.TabIndex = 313;
+            this.btnSagComp.Text = "9) 처짐보상";
+            this.btnSagComp.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnSagComp.UseVisualStyleBackColor = false;
+            this.btnSagComp.Click += new System.EventHandler(this.btnSagComp_Click);
             // 
             // btnLoadVmax
             // 
@@ -2504,6 +4564,45 @@
             this.cmbViewMode.TabIndex = 39;
             this.cmbViewMode.SelectedIndexChanged += new System.EventHandler(this.cmbViewMode_SelectedIndexChanged);
             // 
+            // lblSagTwin
+            // 
+            this.lblSagTwin.Location = new System.Drawing.Point(8, 24);
+            this.lblSagTwin.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblSagTwin.Name = "lblSagTwin";
+            this.lblSagTwin.Size = new System.Drawing.Size(90, 20);
+            this.lblSagTwin.TabIndex = 0;
+            this.lblSagTwin.Text = "처짐 쌍둥이:";
+            this.lblSagTwin.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // cmbSagTwin
+            // 
+            this.cmbSagTwin.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbSagTwin.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.cmbSagTwin.Items.AddRange(new object[] {
+            "끔",
+            "3D",
+            "3D+시뮬 겹쳐",
+            "3D+시뮬 실물"});
+            this.cmbSagTwin.Location = new System.Drawing.Point(100, 18);
+            this.cmbSagTwin.Margin = new System.Windows.Forms.Padding(4);
+            this.cmbSagTwin.Name = "cmbSagTwin";
+            this.cmbSagTwin.Size = new System.Drawing.Size(150, 33);
+            this.cmbSagTwin.TabIndex = 1;
+            this.cmbSagTwin.SelectedIndexChanged += new System.EventHandler(this.cmbSagTwin_SelectedIndexChanged);
+            // 
+            // chkSagCompOn
+            // 
+            this.chkSagCompOn.AutoSize = true;
+            this.chkSagCompOn.ForeColor = System.Drawing.Color.Black;
+            this.chkSagCompOn.Location = new System.Drawing.Point(262, 22);
+            this.chkSagCompOn.Margin = new System.Windows.Forms.Padding(4);
+            this.chkSagCompOn.Name = "chkSagCompOn";
+            this.chkSagCompOn.Size = new System.Drawing.Size(170, 22);
+            this.chkSagCompOn.TabIndex = 2;
+            this.chkSagCompOn.Text = "처짐 보정 켬";
+            this.chkSagCompOn.UseVisualStyleBackColor = true;
+            this.chkSagCompOn.CheckedChanged += new System.EventHandler(this.chkSagCompOn_CheckedChanged);
+            // 
             // lblSkeletonSize
             // 
             this.lblSkeletonSize.Location = new System.Drawing.Point(635, 701);
@@ -2995,6 +5094,16 @@
             this.label2.Text = "Examples:";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // label1
+            // 
+            this.label1.Location = new System.Drawing.Point(305, 301);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(239, 24);
+            this.label1.TabIndex = 225;
+            this.label1.Text = "──── STL ────";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // Main
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
@@ -3007,6 +5116,7 @@
             this.Controls.Add(this.btnStandDroop);
             this.Controls.Add(this.btnS2RGuide);
             this.Controls.Add(this.btnIsaacCam);
+            this.Controls.Add(this.btnSagComp);
             this.Controls.Add(this.btnLoadVmax);
             this.Controls.Add(this.btnServoIdent);
             this.Controls.Add(this.btnTipBound);
@@ -3098,6 +5208,36 @@
             this.tabHistory.PerformLayout();
             this.tabPlayback.ResumeLayout(false);
             this.tabPlayback.PerformLayout();
+            this.tabArmSetup.ResumeLayout(false);
+            this.tabArmSetup.PerformLayout();
+            this.grpArmConn.ResumeLayout(false);
+            this.grpArmConn.PerformLayout();
+            this.tabArmInner.ResumeLayout(false);
+            this.tabArmInner.PerformLayout();
+            this.tabArmPrac.ResumeLayout(false);
+            this.tabArmPrac.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picPracChart)).EndInit();
+            this.tabArmMotor.ResumeLayout(false);
+            this.tabArmMotor.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvArmMotor)).EndInit();
+            this.tabArmDef.ResumeLayout(false);
+            this.tabArmDef.PerformLayout();
+            this.grpDefAdv.ResumeLayout(false);
+            this.grpDefAdv.PerformLayout();
+            this.tabArmExp.ResumeLayout(false);
+            this.tabArmExp.PerformLayout();
+            this.grpArmPlan.ResumeLayout(false);
+            this.grpArmPlan.PerformLayout();
+            this.grpArmMeasure.ResumeLayout(false);
+            this.grpArmMeasure.PerformLayout();
+            this.grpArmLearn.ResumeLayout(false);
+            this.grpArmLearn.PerformLayout();
+            this.grpArmTest.ResumeLayout(false);
+            this.grpArmTest.PerformLayout();
+            this.grpArmApply.ResumeLayout(false);
+            this.grpArmApply.PerformLayout();
+            this.grpArmTwin.ResumeLayout(false);
+            this.grpArmTwin.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trkSpeed)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.trkFrame)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picWrist)).EndInit();
@@ -3123,6 +5263,7 @@
         private System.Windows.Forms.Button btnStandDroop;
         private System.Windows.Forms.Button btnS2RGuide;
         private System.Windows.Forms.Button btnIsaacCam;
+        private System.Windows.Forms.Button btnSagComp;
         private System.Windows.Forms.Button btnLoadVmax;
         private System.Windows.Forms.Button btnServoIdent;
         private System.Windows.Forms.Button btnTipBound;
@@ -3166,6 +5307,18 @@
         private System.Windows.Forms.Panel pnDragArea;
         private System.Windows.Forms.Label lblDragArea;
         private System.Windows.Forms.Label lblMoveGroup;
+        private System.Windows.Forms.TextBox txtStateXMove;
+        private System.Windows.Forms.TextBox txtStateZMove;
+        private System.Windows.Forms.TextBox txtStateYMove;
+        private System.Windows.Forms.TextBox txtStateXRotate;
+        private System.Windows.Forms.TextBox txtStateZRotate;
+        private System.Windows.Forms.TextBox txtStateYRotate;
+        private System.Windows.Forms.Label lblStateJoint;
+        private System.Windows.Forms.TextBox txtStateJoint;
+        private System.Windows.Forms.CheckBox chkStateInit;
+        private System.Windows.Forms.Label lblStateDir;
+        private System.Windows.Forms.ComboBox cmbStateDir;
+        private System.Windows.Forms.Label lblStateNote;
         private System.Windows.Forms.Button btnRedMove;
         private System.Windows.Forms.Button btnBlueMove;
         private System.Windows.Forms.Button btnGreenMove;
@@ -3246,6 +5399,9 @@
         private System.Windows.Forms.Button btnApplyDh;
         private System.Windows.Forms.Label lblViewMode;
         private System.Windows.Forms.ComboBox cmbViewMode;
+        private System.Windows.Forms.Label lblSagTwin;
+        private System.Windows.Forms.ComboBox cmbSagTwin;
+        private System.Windows.Forms.CheckBox chkSagCompOn;
         private System.Windows.Forms.Label lblSkeletonSize;
         private System.Windows.Forms.TextBox txtSkeletonSize;
         private System.Windows.Forms.Label lblAxisSize;
@@ -3271,6 +5427,152 @@
         private System.Windows.Forms.PictureBox picGraphQpos;
         private System.Windows.Forms.Label lblPbTgtTitle;
         private System.Windows.Forms.PictureBox picGraphTgt;
+        // ── tabArmSetup 컨트롤 (로봇팔 세팅 — 연결 줄·모터 세팅·측정·학습·시험, 코드는 Main.ArmMotor.cs / Main.ArmSetup.cs) ──
+        private System.Windows.Forms.TabPage tabArmSetup;
+        private System.Windows.Forms.GroupBox grpArmConn;
+        private System.Windows.Forms.Label lblArmPort;
+        private System.Windows.Forms.TextBox txtArmPort;
+        private System.Windows.Forms.Label lblArmBaud;
+        private System.Windows.Forms.TextBox txtArmBaud;
+        private System.Windows.Forms.Button btnArmConnect;
+        private System.Windows.Forms.Button btnArmTorque;
+        private System.Windows.Forms.Label lblArmState;
+        private System.Windows.Forms.TabControl tabArmInner;
+        private System.Windows.Forms.TabPage tabArmPrac;
+        private System.Windows.Forms.Label lblPracGuide;
+        private System.Windows.Forms.CheckBox chkPracPrecise;
+        private System.Windows.Forms.CheckBox chkPracDry;
+        private System.Windows.Forms.Button btnPrac1;
+        private System.Windows.Forms.Button btnPrac2;
+        private System.Windows.Forms.Button btnPrac3;
+        private System.Windows.Forms.Button btnPrac4;
+        private System.Windows.Forms.Label lblPracStep;
+        private System.Windows.Forms.PictureBox picPracChart;
+        private System.Windows.Forms.Label lblPracResult;
+        private System.Windows.Forms.Button btnPracStop;
+        private System.Windows.Forms.Label lblPracBusy;
+        private System.Windows.Forms.Label lblPracDef;
+        private System.Windows.Forms.CheckBox chkPracDefShow;
+        private System.Windows.Forms.Button btnPracDef;
+        private System.Windows.Forms.LinkLabel lnkPracEye;
+        private System.Windows.Forms.TabPage tabArmMotor;
+        private System.Windows.Forms.DataGridView dgvArmMotor;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colArmAxis;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colArmName;
+        private System.Windows.Forms.DataGridViewComboBoxColumn colArmDir;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colArmCenter;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colArmLo;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colArmHi;
+        private System.Windows.Forms.DataGridViewComboBoxColumn colArmMirror;
+        private System.Windows.Forms.DataGridViewComboBoxColumn colArmModel;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colArmNowDeg;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn colArmChecked;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colArmNowTick;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colArmRealModel;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colArmNote;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colArmGroup;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colArmBusId;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colArmMechMove;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colArmMechAngle;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colArmInit;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colArmInit2;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colArmProto;
+        private System.Windows.Forms.Button btnArmRead;
+        private System.Windows.Forms.Button btnArmJogMinus;
+        private System.Windows.Forms.TextBox txtArmJogStep;
+        private System.Windows.Forms.Label lblArmJogUnit;
+        private System.Windows.Forms.Button btnArmJogPlus;
+        private System.Windows.Forms.Button btnArmSetZero;
+        private System.Windows.Forms.Button btnArmSave;
+        private System.Windows.Forms.Button btnArmLoad;
+        private System.Windows.Forms.Button btnArmImportAuto;
+        private System.Windows.Forms.CheckBox chkArmFollow;
+        private System.Windows.Forms.CheckBox chkArmAdvanced;
+        private System.Windows.Forms.Label lblArmFile;
+        private System.Windows.Forms.Label lblArmHint;
+        private System.Windows.Forms.TabPage tabArmDef;
+        private System.Windows.Forms.Label lblDefGuide;
+        private System.Windows.Forms.Label lblDefPreset;
+        private System.Windows.Forms.ComboBox cmbDefPreset;
+        private System.Windows.Forms.Button btnDefPresetSave;
+        private System.Windows.Forms.Label lblDefTcp;
+        private System.Windows.Forms.ComboBox cmbDefTcp;
+        private System.Windows.Forms.Label lblDefTcpInfo;
+        private System.Windows.Forms.Label lblDefWrist;
+        private System.Windows.Forms.ComboBox cmbDefWrist;
+        private System.Windows.Forms.Label lblDefWristInfo;
+        private System.Windows.Forms.Label lblDefDown;
+        private System.Windows.Forms.Label lblDefDownSum;
+        private System.Windows.Forms.TextBox txtDefDownSum;
+        private System.Windows.Forms.Label lblDefDownInfo;
+        private System.Windows.Forms.Label lblDefShowNote;
+        private System.Windows.Forms.Button btnDefSave;
+        private System.Windows.Forms.Label lblDefStatus;
+        private System.Windows.Forms.CheckBox chkDefAdv;
+        private System.Windows.Forms.Label lblDefEye;
+        private System.Windows.Forms.Button btnDefEye;
+        private System.Windows.Forms.GroupBox grpDefAdv;
+        private System.Windows.Forms.Label lblDefName;
+        private System.Windows.Forms.TextBox txtDefName;
+        private System.Windows.Forms.Label lblDefBase;
+        private System.Windows.Forms.TextBox txtDefBase;
+        private System.Windows.Forms.Label lblDefPitch;
+        private System.Windows.Forms.TextBox txtDefPitch;
+        private System.Windows.Forms.Label lblDefHold;
+        private System.Windows.Forms.TextBox txtDefHold;
+        private System.Windows.Forms.Label lblDefTcpLen;
+        private System.Windows.Forms.TextBox txtDefTcpLen;
+        private System.Windows.Forms.Label lblDefFixed;
+        private System.Windows.Forms.TabPage tabArmExp;
+        private System.Windows.Forms.GroupBox grpArmPlan;
+        private System.Windows.Forms.Button btnArmPlanMake;
+        private System.Windows.Forms.Button btnArmPlanLoad;
+        private System.Windows.Forms.Button btnArmPlanDry;
+        private System.Windows.Forms.Label lblArmPlan;
+        private System.Windows.Forms.GroupBox grpArmMeasure;
+        private System.Windows.Forms.CheckBox chkArmHold;
+        private System.Windows.Forms.Button btnArmMeasure;
+        private System.Windows.Forms.Label lblArmMeasure;
+        private System.Windows.Forms.GroupBox grpArmLearn;
+        private System.Windows.Forms.Label lblArmData;
+        private System.Windows.Forms.Label lblArmDataInfo;
+        private System.Windows.Forms.CheckBox chkArmUseHold;
+        private System.Windows.Forms.Label lblArmRef;
+        private System.Windows.Forms.TextBox txtArmRef;
+        private System.Windows.Forms.Button btnArmLearn;
+        private System.Windows.Forms.Label lblArmLearn;
+        private System.Windows.Forms.GroupBox grpArmTest;
+        private System.Windows.Forms.Label lblArmResult;
+        private System.Windows.Forms.ComboBox cmbArmResult;
+        private System.Windows.Forms.Button btnArmResultBrowse;
+        private System.Windows.Forms.Label lblArmTouchRow;
+        private System.Windows.Forms.Label lblArmTestR;
+        private System.Windows.Forms.TextBox txtArmTestR;
+        private System.Windows.Forms.Label lblArmTestYaw;
+        private System.Windows.Forms.TextBox txtArmTestYaw;
+        private System.Windows.Forms.Label lblArmTestPitch;
+        private System.Windows.Forms.TextBox txtArmTestPitch;
+        private System.Windows.Forms.Label lblArmTestRep;
+        private System.Windows.Forms.TextBox txtArmTestRep;
+        private System.Windows.Forms.CheckBox chkArmTestHold;
+        private System.Windows.Forms.Button btnArmTestDry;
+        private System.Windows.Forms.Button btnArmTest;
+        private System.Windows.Forms.Label lblArmTest;
+        private System.Windows.Forms.GroupBox grpArmApply;
+        private System.Windows.Forms.Button btnArmApply;
+        private System.Windows.Forms.Label lblArmActive;
+        private System.Windows.Forms.Label lblArmBackup;
+        private System.Windows.Forms.ComboBox cmbArmBackup;
+        private System.Windows.Forms.Button btnArmRollback;
+        private System.Windows.Forms.GroupBox grpArmTwin;
+        private System.Windows.Forms.Label lblArmTwinSrc;
+        private System.Windows.Forms.ComboBox cmbArmTwinSrc;
+        private System.Windows.Forms.Label lblArmTwin;
+        private System.Windows.Forms.Button btnArmStop;
+        private System.Windows.Forms.Button btnArmOpenDir;
+        private System.Windows.Forms.Label lblArmBusy;
+        private System.Windows.Forms.Timer tmrArmFollow;
+        private System.Windows.Forms.ToolTip tipArmExp;
         // ── tabTest 컨트롤 ──
         private System.Windows.Forms.Label lblIkGroup;
         private System.Windows.Forms.Label lblFuncNum;
@@ -3335,5 +5637,6 @@
         private System.Windows.Forms.CheckBox chkShowSphere;
         private System.Windows.Forms.TextBox txtSphereSize;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label1;
     }
 }

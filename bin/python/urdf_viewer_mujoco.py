@@ -55,6 +55,10 @@ last_ctrl_values: Dict[int, float] = {}  # 마지막으로 설정한 ctrl 값 (U
 #   추후 (Phase 2): MJCF 에 pre-allocated slot pool 추가하거나 MjSpec API 사용해 동적 spawn.
 _mj_scene_active_tool = None
 _mj_scene_pending: List[dict] = []
+# === 처짐 쌍둥이(TWIN) 수신 큐 (2026-10-02) ===
+#   'TWIN,time,delay,id,deg,...;' / 'TWIN_OFF;' — 소켓 스레드는 파싱 결과를 여기에 넣기만 하고,
+#   고스트 생성·자세 계산·그리기는 메인 루프(_twin_tick)에서만 한다. 설명은 아래 '처짐 쌍둥이' 블록.
+_twin_queue = queue.Queue()   # 파싱된 TWIN 명령(dict) / None(=TWIN_OFF)
 
 # MuJoCo 모델 및 데이터 (전역)
 model = None
@@ -75,6 +79,25 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 release_dir = os.path.join(script_dir, "..", "Release")  # python/../Release
 mjcf_file = os.path.join(release_dir, "robot_stl.xml")    # MuJoCo MJCF 설정 파일
 urdf_file = os.path.join(release_dir, "robot_stl.urdf")   # URDF 로봇 모델 (MJCF에서 include)
+
+# 엔진(PyBullet·MuJoCo C 확장)에 넘길 파일 경로 — 한글 등 비ASCII 경로 대응 (2026-09-30)
+#   두 엔진은 Windows 에서 경로를 UTF-8 바이트로 받아 C 런타임 fopen 에 그대로 넘겨, 한글이 든 절대 경로를
+#   열지 못한다 (PyBullet "Cannot load URDF file", MuJoCo "ParseXML: Error opening file").
+#   작업 폴더를 모델 폴더로 옮겨 둔 뒤이므로 비ASCII 절대 경로는 작업 폴더 기준 상대 경로로 바꿔 넘긴다
+#   → 폴더 이름에 한글·공백이 있어도 열린다. 영문 경로는 손대지 않는다.
+#   한계: 상대 경로 자체(파일·하위 폴더 이름)에 한글이 있거나 다른 드라이브면 여전히 못 연다 — 경고만 남긴다.
+def _engine_path(path):
+    if not path or path.isascii():
+        return path
+    rel = path
+    if os.path.isabs(path):
+        try:
+            rel = os.path.relpath(path, os.getcwd())
+        except ValueError:          # 다른 드라이브 — 상대 경로를 만들 수 없음
+            rel = path
+    if not rel.isascii():
+        print(f"[Path] 비ASCII 경로라 엔진이 못 열 수 있음: {rel}", flush=True)
+    return rel
 
 ####################################################
 # 설정 파일 읽기 (C#에서 생성)
@@ -276,6 +299,8 @@ def Play(command_string):
     특수 명령:
         clear; - 모든 active_moves 삭제 (UI 슬라이더 제어 복원)
         reset; - 모든 조인트를 0으로 리셋
+        TWIN,time,delay,id,deg,...; - 처짐 쌍둥이(실물 예측 자세) 고스트 — 조인트 명령 아님
+        TWIN_OFF; - 고스트 숨김
     """
     global active_moves, last_ctrl_values, _mj_scene_active_tool, _mj_scene_pending
 
@@ -331,6 +356,19 @@ def Play(command_string):
                 except Exception as ex:
                     print(f"[Scene/MuJoCo] SCENE_ADD parse error: {ex}")
                     return False
+            return False
+
+        # === 처짐 쌍둥이(TWIN) 명령 ===
+        #   조인트 명령으로 해석하지 않고 고스트 큐에만 넣는다 (MuJoCo 호출은 메인 루프에서만).
+        twin_head = cmd_raw.split(',', 1)[0].strip().upper()
+        if twin_head == 'TWIN_OFF':
+            _twin_queue.put(None)
+            return True
+        if twin_head == 'TWIN':
+            twin_cmd = parse_socket_message(cmd_raw.split(',', 1)[1]) if ',' in cmd_raw else None
+            if twin_cmd:
+                _twin_queue.put(twin_cmd)
+                return True
             return False
 
         # 특수 명령 처리 (기존)
@@ -1194,7 +1232,7 @@ try:
         print(f"\nLoading MJCF: {os.path.basename(mjcf_to_load)}")
 
         # C#에서 이미 free-floating/fixed 구조로 생성된 MJCF를 그대로 로드
-        model = mujoco.MjModel.from_xml_path(mjcf_to_load)
+        model = mujoco.MjModel.from_xml_path(_engine_path(mjcf_to_load))   # scene·트랙 전처리 파일도 같은 폴더
         data = mujoco.MjData(model)
 
         # 지면 (plane geom) 색을 진한 파란색 (deep navy) 으로 — checkerboard 텍스처 대신 단일 컬러
@@ -1262,7 +1300,7 @@ try:
             raise FileNotFoundError(f"URDF file not found: {urdf_file}\nC#에서 먼저 URDF를 생성해주세요.")
 
         print(f"\nLoading URDF: {os.path.basename(urdf_file)}")
-        model = mujoco.MjModel.from_xml_path(urdf_file)
+        model = mujoco.MjModel.from_xml_path(_engine_path(urdf_file))
         data = mujoco.MjData(model)
         print(f"Robot loaded successfully! (URDF mode - no actuators, kinematics only)")
 
@@ -1685,6 +1723,190 @@ def simulation_step():
         # URDF 한계 우회: 차동 구동 → base 속도 직접 설정
         apply_kinematic_tank_drive(model, data, track_belts_mj)
 
+####################################################
+# 처짐 쌍둥이(TWIN) 고스트 (2026-10-02)
+#   DLL 이 조인트 메시지 뒤에 'TWIN,time,delay,id,deg,...;' 를 붙여 보낸다 = 처짐을 반영한 실물 예측 자세
+#   (절대 각도, 조인트 메시지와 같은 ID→T{id} 매핑·단위). 같은 로봇을 반투명 주황으로 겹쳐 그린다.
+#   - 본체와 같은 model 로 만든 별도 MjData(_twin_data) → 관절 인덱스가 같아 joint_number_to_qpos·mimic 을 그대로 쓴다
+#   - 갱신: 본체 qpos 복사(베이스 자세·TWIN 에 없는 관절은 본체를 따름) → TWIN 관절 보간값 → mimic·종동 관절
+#     → mj_kinematics(위치만, 충돌 검출 없음) → viewer.user_scn 에 동적 geom 추가 후 색 덮어쓰기
+#   - 물리 모델·본체 data 는 건드리지 않는다 → 충돌·접촉 없음, 본체 물리 영향 없음
+#   - user_scn 은 뷰어 창 그림에만 섞인다. 카메라/센서 이미지(mujoco.Renderer 등 model·data 로 만드는 장면)에는
+#     들어가지 않으므로 따로 숨길 필요가 없다 (이 스크립트는 오프스크린 렌더를 하지 않음)
+#   - user_scn 은 고스트 전용 (그릴 때마다 비우고 다시 채움)
+#   - TWIN 을 한 번도 받지 않으면 아무것도 만들지 않는다 (기존 동작 그대로)
+####################################################
+_TWIN_RGBA = np.array([1.0, 0.55, 0.1, 0.35], dtype=np.float32)   # 반투명 주황
+_TWIN_DRAW_DT = 1.0 / 60.0   # 고스트를 다시 그리는 최소 간격(초) — 화면 갱신이면 충분, 물리 루프(500Hz) 부담 줄임
+
+_twin_data = None            # 고스트 전용 MjData — 첫 TWIN 처리 때 메인 루프에서 생성
+_twin_visible = False        # TWIN 수신 → True, TWIN_OFF → False
+_twin_moves: Dict[int, JointMoveCommand] = {}   # 마지막 TWIN 에 실린 관절: qpos 인덱스 → 보간 (끝나도 목표 유지)
+_twin_opt = None             # 고스트 전용 MjvOption — geom 만 (텍스처·사이트·텐던·관성 상자 끔)
+_twin_pert = None            # 고스트 전용 MjvPerturb — 선택 강조 없음
+_twin_skip_qpos = set()      # 속도 구동 관절(vel_*) — TWIN 값이 각도가 아니므로 본체를 따름
+_twin_bad_ids = set()        # 모델에 없는 관절 번호 (번호마다 한 번만 알림)
+_twin_last_draw = 0.0        # 마지막으로 고스트를 그린 시각
+_twin_dirty = False          # 표시/숨김 전환 → 다음 프레임에 바로 그림
+_twin_failed = False         # 고스트 처리 예외 → 이후 TWIN 무시 (본체 뷰어는 계속)
+
+
+def _twin_move_value(mv, now):
+    """고스트 보간 명령의 현재 값 (라디안) — 조인트 명령과 같은 선형 보간, 시간 0 이하면 즉시 목표"""
+    if mv.duration <= 0:
+        return mv.target_angle
+    progress = (now - mv.start_time) / mv.duration
+    if progress >= 1.0:
+        return mv.target_angle
+    if progress <= 0.0:
+        return mv.start_angle
+    return mv.start_angle + (mv.target_angle - mv.start_angle) * progress
+
+
+def _twin_create():
+    """첫 TWIN 때 한 번만 — 고스트 MjData·표시 옵션 생성 (메인 루프 스레드)"""
+    global _twin_data, _twin_opt, _twin_pert, _twin_skip_qpos
+    _twin_opt = mujoco.MjvOption()
+    _twin_opt.flags[:] = 0          # geom 만 그림: 텍스처·텐던·스킨·flex·관성 상자 등 끔
+    _twin_opt.sitegroup[:] = 0      # 사이트 표시 끔
+    _twin_pert = mujoco.MjvPerturb()
+    _twin_skip_qpos = set()
+    for qidx, aidx in qpos_to_actuator.items():
+        aname = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_ACTUATOR, aidx) or ""
+        if aname.startswith("vel_"):
+            _twin_skip_qpos.add(qidx)
+    _twin_data = mujoco.MjData(model)   # 본체와 같은 모델 → 같은 관절 인덱스
+    print("[Twin] 고스트 생성: 실물 예측 자세를 반투명 주황으로 표시 (충돌·접촉 없음)", flush=True)
+
+
+def _twin_apply(cmd):
+    """TWIN 한 건 — 실린 관절만 고스트 목표로. 보간 시작값 = 지금 고스트에 보이는 값"""
+    global _twin_moves, _twin_visible, _twin_dirty
+    if _twin_data is None:
+        _twin_create()
+    elif not _twin_visible:
+        print("[Twin] 고스트 다시 표시", flush=True)
+    now = time.time()
+    prev_moves = _twin_moves if _twin_visible else {}   # 숨김 중이었으면 본체 현재 자세에서 시작
+    duration = cmd['time'] / 1000.0 if cmd['time'] > 0 else 0.0
+    new_moves = {}
+    for jc in cmd['joint_commands']:
+        jnum = jc['joint_id']
+        qidx = joint_number_to_qpos.get(jnum)
+        if qidx is None:
+            if jnum not in _twin_bad_ids:
+                _twin_bad_ids.add(jnum)
+                print(f"[Twin] 알 수 없는 관절 번호 무시: {jnum} (사용 가능: {sorted(joint_number_to_qpos.keys())})", flush=True)
+            continue
+        if qidx in _twin_skip_qpos:
+            continue
+        prev = prev_moves.get(qidx)
+        start = _twin_move_value(prev, now) if prev is not None else float(data.qpos[qidx])
+        new_moves[qidx] = JointMoveCommand(joint_id=qidx, target_angle=math.radians(jc['angle']),
+                                           duration=duration, start_time=now, start_angle=start)
+    _twin_moves = new_moves      # 이번 TWIN 에 없는 관절은 본체를 따름
+    _twin_visible = True
+    _twin_dirty = True           # 새 목표를 다음 프레임에 바로 반영 (시간 0 이면 그 자세로 즉시)
+
+
+def _twin_hide():
+    """TWIN_OFF — 고스트 숨김 (MjData 는 두고 다음 TWIN 때 다시 씀)"""
+    global _twin_visible, _twin_moves, _twin_dirty
+    if _twin_data is None or not _twin_visible:
+        return
+    _twin_visible = False
+    _twin_moves = {}
+    _twin_dirty = True
+    print("[Twin] 고스트 숨김 (TWIN_OFF)", flush=True)
+
+
+def _twin_update_pose(now):
+    """고스트 자세 = 본체 qpos(베이스 포함) + TWIN 관절 보간값 → mimic·종동 관절 → 순기구학만"""
+    q = _twin_data.qpos
+    q[:] = data.qpos
+    for qidx, mv in _twin_moves.items():
+        q[qidx] = _twin_move_value(mv, now)
+    # mimic: 고스트의 부모 값 기준 (update_mimic_joints_kinematics 와 같은 식)
+    for mimic_data in mimic_joints.values():
+        q[mimic_data['child_idx']] = mimic_data['offset'] + mimic_data['multiplier'] * q[mimic_data['parent_idx']]
+    # 종동(passive) 퍼펫 관절: 고스트 모터각으로 수식 재평가 (실패하면 본체 값 유지)
+    if _passive_bindings:
+        motors = {mid: float(q[adr]) * 180.0 / math.pi for mid, adr in _motor_qpos_by_id.items()}
+        for qadr, _dadr, pdef in _passive_bindings:
+            f_val = _edh_eval_formula(pdef.get("formula", ""), motors)
+            if f_val is None:
+                continue
+            m_deg = motors.get(pdef.get("motor_id", -1), 0.0)
+            q[qadr] = ((m_deg + f_val) - float(pdef.get("zero_bake_deg", 0.0))) * math.pi / 180.0
+    if model.nmocap:
+        _twin_data.mocap_pos[:] = data.mocap_pos      # 트랙 벨트 등 mocap 은 본체 위치 그대로
+        _twin_data.mocap_quat[:] = data.mocap_quat
+    mujoco.mj_kinematics(model, _twin_data)           # 위치만 계산 (충돌 검출·접촉 없음)
+
+
+def _twin_draw(viewer_handle):
+    """user_scn 을 고스트 geom 으로 다시 채움 (숨김이면 비우기만) — viewer.sync() 전에 호출"""
+    scn = viewer_handle.user_scn
+    if scn is None:
+        return
+    with viewer_handle.lock():
+        scn.ngeom = 0
+        if not _twin_visible:
+            return
+        _twin_opt.geomgroup[:] = viewer_handle.opt.geomgroup    # 뷰어에서 켜고 끈 geom 그룹을 따름
+        _twin_opt.flags[mujoco.mjtVisFlag.mjVIS_CONVEXHULL] = viewer_handle.opt.flags[mujoco.mjtVisFlag.mjVIS_CONVEXHULL]
+        # 동적 geom 만 (지면·scene 정적 물체·조명/카메라 표시 제외)
+        mujoco.mjv_addGeoms(model, _twin_data, _twin_opt, _twin_pert, mujoco.mjtCatBit.mjCAT_DYNAMIC, scn)
+        decor = int(mujoco.mjtCatBit.mjCAT_DECOR)
+        geoms = scn.geoms
+        for i in range(scn.ngeom):
+            g = geoms[i]
+            g.rgba[:] = _TWIN_RGBA
+            g.transparent = 1
+            g.category = decor       # DECOR 는 그림자를 드리우지 않음 → 고스트 그림자 없음
+
+
+def _twin_tick(viewer_handle):
+    """메인 루프 매 프레임 (viewer.sync() 직전): TWIN 큐 처리 → 고스트 갱신. 표시 중이 아니고 받은 것도 없으면 바로 반환"""
+    global _twin_last_draw, _twin_dirty, _twin_failed
+    if not _twin_visible and not _twin_dirty and _twin_queue.empty():
+        return
+    try:
+        while not _twin_queue.empty():       # 꺼내는 쪽은 메인 루프뿐 — empty() 뒤 get 은 막히지 않음
+            cmd = _twin_queue.get_nowait()
+            if _twin_failed:
+                continue                     # 고스트 꺼짐 — 큐만 비움
+            if cmd is None:
+                _twin_hide()
+            else:
+                _twin_apply(cmd)
+        if _twin_data is None or _twin_failed:
+            return
+        now = time.time()
+        if _twin_visible:
+            # 시계가 뒤로 가도(now < 마지막) 멈추지 않게 다시 그림
+            if _twin_dirty or not (0.0 <= now - _twin_last_draw < _TWIN_DRAW_DT):
+                _twin_update_pose(now)
+                _twin_draw(viewer_handle)
+                _twin_last_draw = now
+                _twin_dirty = False
+        elif _twin_dirty:
+            _twin_draw(viewer_handle)        # 숨김 전환: user_scn 한 번 비움
+            _twin_dirty = False
+    except Exception as ex:
+        if not _twin_failed:
+            _twin_failed = True
+            try:                         # 출력 실패(인코딩 등)가 본체 뷰어를 멈추지 않게
+                print(f"[Twin] 고스트 처리 실패 - 고스트를 끄고 계속합니다: {ex}", flush=True)
+            except Exception:
+                pass
+            try:
+                if viewer_handle.user_scn is not None:
+                    with viewer_handle.lock():
+                        viewer_handle.user_scn.ngeom = 0
+            except Exception:
+                pass
+
 # MuJoCo 뷰어 시작 (인터랙티브 모드)
 try:
     with mujoco.viewer.launch_passive(model, data) as viewer:
@@ -1743,6 +1965,9 @@ try:
 
             # 시뮬레이션 스텝 실행
             simulation_step()
+
+            # 처짐 쌍둥이(TWIN) 고스트 — TWIN 을 받은 적이 없으면 바로 반환 (기존 동작 그대로)
+            _twin_tick(viewer)
 
             # 뷰어 동기화
             viewer.sync()

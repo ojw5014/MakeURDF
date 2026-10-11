@@ -545,53 +545,66 @@ namespace MakeUrdf
                                         "[215,0,0,0],[-1,0,0]\r\n";
 
         private string m_strExample7 =  "// *Humanoid(Full) - 초기포지션 0으로 가는 현상 발견\r\n" +
-                                        // ── 물리 자동기입: 실기(PR2 MAX-E3) 기종/실측 질량 (2026-07-26 버스 스캔) ──
-                                        // ★2026-09-01 정정 — 실기는 2XL430/XL430 이다 (사용자 확인).
-                                        //   종전 2XC430-W250/XC430-W240 선언은 틀렸고, 그 탓에 effort 가
-                                        //   1.6/1.7 N·m 로 나가 있었다. 실제는 두 기종 다 1.4 N·m 다.
-                                        //   저울 실측(2026-09-01): XL430 56g / 2XL430 100g (XC430 63 / 2XC430 106 은 미사용)
-                                        "$servo, T1, 2XL430-W250\r\n" + "$servo, T2, 2XL430-W250\r\n" +
-                                        "$servo, T3, 2XL430-W250\r\n" + "$servo, T4, 2XL430-W250\r\n" +
-                                        "$servo, T5, 2XL430-W250\r\n" + "$servo, T6, 2XL430-W250\r\n" +
-                                        "$servo, T7, 2XL430-W250\r\n" + "$servo, T8, 2XL430-W250\r\n" +
-                                        "$servo, T9, 2XL430-W250\r\n" + "$servo, T10, 2XL430-W250\r\n" +
-                                        "$servo, T11, 2XL430-W250\r\n" + "$servo, T12, 2XL430-W250\r\n" +
-                                        "$servo, T13, XL430-W250\r\n" + "$servo, T14, XL430-W250\r\n" +
-                                        "$servo, T15, XL430-W250\r\n" + "$servo, T16, XL430-W250\r\n" +
-                                        "$servo, T17, XL430-W250\r\n" +
+                                        // ── 물리 자동기입: 실기(PR2 MAX-E3) 기종/실측 질량 ──
+                                        // ★2026-09-03 재정정 — 버스 재스캔(모델번호 전자판독)이 정본이다.
+                                        //   09-01 의 "전 축 2XL430/XL430" 은 외관 오인이었다 (2XL↔2XC 케이스가
+                                        //   같고 라벨만 다르다). 모델번호 자기보고가 8/3·9/1 두 번 일치했다.
+                                        //     ID1·2=1090(2XL430)  ID3~12=1160(2XC430)  ID13~16=1080(XC430-W240)
+                                        //     ID17=1060(XL430)   ⇒ 서보 합 100 + 106×5 + 63×4 + 56 = 938.0g
+                                        //   effort 도 기종 DB 로 복귀한다 — 2XL 1.4 / 2XC 1.6 / XC-W240 1.7 / XL 1.4.
+                                        //   ★우 어깨만 2XL430 이라 좌우가 6g·0.2N·m 다르다 (실물의 유일한 좌우 비차).
+                                        //
+                                        //   ★메시를 기종별로 분리했다: 2xc_dummy.stl / xc-430.stl 은
+                                        //     2xl_dummy.stl / xl-430.stl 과 형상이 같은 사본이다 (케이스가 실제로 같다).
+                                        //     FixedMassTable 이 메시명 키라, 같은 메시를 쓰면 한 모델에 한 질량밖에
+                                        //     못 건다 — 파일명을 나눠야 $servo 4번째 인자로 기종별 질량이 걸린다.
+                                        "$servo, T1, 2XL430-W250\r\n" +                     // ID1·2  우 어깨 — 유일한 2XL
+                                        "$servo, T2, 2XL430-W250\r\n" +
+                                        "$servo, T3, 2XC430-W250, 2xc_dummy.stl\r\n" +      // ID3·4  좌 어깨 ★메시 질량 등록 106g
+                                        "$servo, T4, 2XC430-W250\r\n" +
+                                        "$servo, T5, 2XC430-W250\r\n" + "$servo, T6, 2XC430-W250\r\n" +    // ID5·6   우 힙
+                                        "$servo, T7, 2XC430-W250\r\n" + "$servo, T8, 2XC430-W250\r\n" +    // ID7·8   좌 힙
+                                        "$servo, T9, 2XC430-W250\r\n" + "$servo, T10, 2XC430-W250\r\n" +   // ID9·10  우 발목
+                                        "$servo, T11, 2XC430-W250\r\n" + "$servo, T12, 2XC430-W250\r\n" +  // ID11·12 좌 발목
+                                        "$servo, T13, XC430-W240, xc-430.stl\r\n" +         // ID13~16 팔꿈치·무릎 ★메시 질량 등록 63g
+                                        "$servo, T14, XC430-W240\r\n" +
+                                        "$servo, T15, XC430-W240\r\n" + "$servo, T16, XC430-W240\r\n" +
+                                        "$servo, T17, XL430-W250\r\n" +                     // ID17   허리
                                         // ── 뭉치 질량 보정 ─────────────────────────────────────────────
-                                        //   ★2026-09-01 저울 실측으로 재조정 (회신17 / 답신16-2).
+                                        //   ★2026-09-03 재조정 (회신19 — 버스 재스캔으로 서보 +58g).
                                         //     실물: 배터리+케이스 123g / 로봇단독 1511g / 보행구성 1634g.
-                                        //     서보 실측: XL430 56g, 2XL430 100g (XC430 63 / 2XC430 106 은 이 로봇 미사용).
+                                        //     서보 실측: 2XL430 100 / 2XC430 106 / XC430-W240 63 / XL430 56 g.
                                         //     케이블 평균 3g/가닥.
                                         //   ※배터리는 종전에도 이미 들어 있었다(셀 102g). 부족분은 배터리가 아니라
                                         //     배선·나사·Pi + "정체 미확인" 이었다 — 회신17 §2 의 격차 분해를 정정한다.
                                         //
-                                        //   구성:  서보 880.0 (6×100 + 5×56, 실측)  + 배터리 모듈 123.0 (실측)
+                                        //   구성:  서보 938.0 (100 + 106×5 + 63×4 + 56, 실측)  + 배터리 모듈 123.0 (실측)
                                         //        + CM-550 58.8 (실측)  + 프레임 형상 256.4 (STL×1050)  + 빈 링크 3.0
                                         //        + 케이블 54.0 (18가닥×3, 실측)  + Pi·마운트·USB 25.0 (추정)
-                                        //        + ★정체 미확인 233.8  = 1634.0
-                                        //   ★미확인 233.8g 은 모델된 프레임 전체(256.4g)와 맞먹는다. 프레임이 금속이거나
-                                        //     STL 에 없는 부품이 있다는 뜻 — 프레임 형상질량에 비례 배분했다(계수 0.9120,
-                                        //     프레임 유효밀도 1050 → 2008 kg/m³). 프레임 부품 하나만 저울에 올리면 확정된다.
+                                        //        + ★정체 미확인 175.8  = 1634.0
+                                        //   ★미확인은 233.8 → 175.8g 으로 줄었다(서보 재스캔이 58g 을 설명했다). 아직
+                                        //     프레임 형상 전체(256.4g)의 2/3 다 — 프레임 형상질량에 비례 배분한다
+                                        //     (계수 0.6858, 프레임 유효밀도 1050 → 1770 kg/m³).
+                                        //     ★총량은 실측, 분포는 가정이다. 프레임 부품 하나만 저울에 올리면 확정된다.
                                         "$extramass, t3_pr25_A01_Cm-550.stl, 25.6\r\n" +      // CM-550 실측 58.8g
                                         "$extramass, t3_Pr25_A01_Battery_Bottom_Cover.stl, 95.62\r\n" +  // 커버 27.4 + 95.62 = 123.0
-                                        //   프레임: 형상질량 × 0.9120 (미확인분) + 그 링크의 케이블·전장
-                                        "$extramass, ef25-f19.stl, 5.52\r\n" +            // link_1 (+허리 케이블 1.5×2)
-                                        "$extramass, pr25_a01_f23.stl, 10.97\r\n" +       // link_1
-                                        "$extramass, head_1.stl, 45.24\r\n" +             // link_2 (+Pi·USB 25, 케이블 3)
-                                        "$extramass, frame_1_3_1.stl, 21.31\r\n" +        // link_2
-                                        "$extramass, fp04-f10.stl, 1.67\r\n" +            // link_2 / 정강이
-                                        "$extramass, pr25_a01_f19.stl, 5.59\r\n" +        // 팔꿈치·무릎 4축 (+케이블 3)
-                                        "$extramass, frame_4_1_2.stl, 4.54\r\n" +
-                                        "$extramass, pr25_a01_f18.stl, 7.22\r\n" +        // 손
-                                        "$extramass, pr25_a01_f21.stl, 7.22\r\n" +        // 손
-                                        "$extramass, hand_r_3_1.stl, 6.21\r\n" +
-                                        "$extramass, hand_l_3_1.stl, 6.21\r\n" +
-                                        "$extramass, pr25_a01_f22.stl, 10.7\r\n" +        // 허벅지
-                                        "$extramass, foot_2_2.stl, 18.49\r\n" +           // 발
-                                        //   듀얼 6축: 서보 100 은 고정질량표, 여기에 관절 케이블 2가닥 6g
-                                        "$extramass, 2xl_dummy.stl, 6\r\n" +
+                                        //   프레임: 형상질량 × 0.6858 (미확인분) + 그 링크의 케이블·전장
+                                        "$extramass, ef25-f19.stl, 4.53\r\n" +            // link_1 (+허리 케이블 1.5×2)
+                                        "$extramass, pr25_a01_f23.stl, 8.25\r\n" +        // link_1
+                                        "$extramass, head_1.stl, 40.97\r\n" +             // link_2 (+Pi·USB 25, 케이블 3)
+                                        "$extramass, frame_1_3_1.stl, 16.02\r\n" +        // link_2
+                                        "$extramass, fp04-f10.stl, 1.25\r\n" +            // link_2 / 정강이
+                                        "$extramass, pr25_a01_f19.stl, 4.95\r\n" +        // 팔꿈치·무릎 4축 (+케이블 3)
+                                        "$extramass, frame_4_1_2.stl, 3.41\r\n" +
+                                        "$extramass, pr25_a01_f18.stl, 5.43\r\n" +        // 손
+                                        "$extramass, pr25_a01_f21.stl, 5.43\r\n" +        // 손
+                                        "$extramass, hand_r_3_1.stl, 4.67\r\n" +
+                                        "$extramass, hand_l_3_1.stl, 4.67\r\n" +
+                                        "$extramass, pr25_a01_f22.stl, 8.05\r\n" +        // 허벅지
+                                        "$extramass, foot_2_2.stl, 13.91\r\n" +           // 발
+                                        //   듀얼 6축: 서보 본체(100/106)는 고정질량표, 여기에 관절 케이블 2가닥 6g
+                                        "$extramass, 2xl_dummy.stl, 6\r\n" +              // 우 어깨 1개
+                                        "$extramass, 2xc_dummy.stl, 6\r\n" +              // 나머지 5개
                                         // ── 관절 가동범위 (URDF 공간, deg) ─────────────────────────────
                                         //   없으면 ±180deg 플레이스홀더가 나가고, RL/솔버가 실물이 못 하는 자세로
                                         //   균형을 훔친다 (humanoid 프로젝트: 무릎 역굴곡·발날 딛기 재학습 2회).
@@ -698,7 +711,7 @@ namespace MakeUrdf
                                         "[0,0,0,0],[2,0,0] // - Axis2\r\n" +
                                         "@[frame_4_1_2.stl,-8355712,1.0],[1,2],[-12,0,-21.5],[0,0,-90]\r\n" +
                                         "@[pr25_a01_f19.stl,-8355712,1.0],[1,13],[30.5,0,0],[0,0,-90]\r\n" +
-                                        "@[xl-430.stl,-8355712,1.0],[1,13],[65,0,0],[90,0,-90]\r\n" +
+                                        "@[xc-430.stl,-8355712,1.0],[1,13],[65,0,0],[90,0,-90]\r\n" +
                                         "[65,0,0,90],[-1,0,0]\r\n" +
                                         "[0,0,0,0],[13,0,0] // - Axis13\r\n" +
                                         "[0,0,0,0],[254,0,0] // - Axis14\r\n" +
@@ -716,12 +729,12 @@ namespace MakeUrdf
                                         "[65.9,0,0,90],[-1,0,0]\r\n" +
                                         "[0,50.6,-90,-15],[-1,0,0]\r\n" +
                                         "[0,18,0,0],[3,1,0] // - Axis3\r\n" +
-                                        "@[2xl_dummy.stl,-8355712,1.0],[1,3],[0,-12,-21],[0,0,0]\r\n" +
+                                        "@[2xc_dummy.stl,-8355712,1.0],[1,3],[0,-12,-21],[0,0,0]\r\n" +
                                         "[24,0,-90,-90],[-1,0,0]\r\n" +
                                         "[0,0,0,0],[4,0,0] // - Axis4\r\n" +
                                         "@[frame_4_1_2.stl,-8355712,1.0],[1,4],[-12,0,-21.5],[0,0,-90]\r\n" +
                                         "@[pr25_a01_f19.stl,-8355712,1.0],[1,4],[30.5,0,0],[0,0,-90]\r\n" +
-                                        "@[xl-430.stl,-8355712,1.0],[1,14],[65,0,0],[90,0,-90]\r\n" +
+                                        "@[xc-430.stl,-8355712,1.0],[1,14],[65,0,0],[90,0,-90]\r\n" +
                                         "[65,0,0,90],[-1,0,0]\r\n" +
                                         "[0,0,0,0],[14,1,0] // - Axis14\r\n" +
                                         "[0,0,0,0],[254,1,0] // - Axis14\r\n" +
@@ -736,19 +749,19 @@ namespace MakeUrdf
                                         "[2.4,0,90,0],[-1,0,0]\r\n" +
                                         "[-25,0,0,0],[-1,0,0]\r\n" +
                                         "[0,0,0,0],[5,0,0] // - Axis5\r\n" +
-                                        "@[2xl_dummy.stl,-8355712,1.0],[1,5],[-9.7,-20.8,0],[90,0,90]\r\n" +
+                                        "@[2xc_dummy.stl,-8355712,1.0],[1,5],[-9.7,-20.8,0],[90,0,90]\r\n" +
                                         "[-21.6,0,0,-90],[-1,0,0]\r\n" +
                                         "[0,0,0,0],[6,0,0] // - Axis6\r\n" +
                                         "@[pr25_a01_f22.stl,-8355712,1.0],[1,6],[-34.5,-3.7,0],[90,0,-90]\r\n" +
                                         "[-67.75,0,0,0],[-1,0,0]\r\n" +
                                         "[0,0,0,0],[15,1,0] // - Axis15\r\n" +
-                                        "@[xl-430.stl,-8355712,1.0],[1,15],[-1.2,0,0],[0,0,-90]\r\n" +
+                                        "@[xc-430.stl,-8355712,1.0],[1,15],[-1.2,0,0],[0,0,-90]\r\n" +
                                         "@[pr25_a01_f19.stl,-8355712,1.0],[1,15],[-35.3,0,0],[90,0,-90]\r\n" +
                                         "@fp04-f10.stl,-8355712,1.0],[1,15],[-42.6,0,0],[90,0,-90]\r\n" +
                                         "@[frame_4_1_2.stl,-8355712,1.0],[1,15],[-81.8,0,-22],[0,0,-90]\r\n" +
                                         "[-69,0,0,0],[-1,0,0]\r\n" +
                                         "[0,0,0,90],[9,0,0] // - Axis9\r\n" +
-                                        "@[2xl_dummy.stl,-8355712,1.0],[1,9],[-12.8,21,0],[90,0,-90]\r\n" +
+                                        "@[2xc_dummy.stl,-8355712,1.0],[1,9],[-12.8,21,0],[90,0,-90]\r\n" +
                                         "[-24,0,0,0],[-1,0,0]\r\n" +
                                         "[0,0,0,0],[10,1,0] // - Axis10\r\n" +
                                         "@[frame_4_1_2.stl,-8355712,1.0],[1,10],[11.2,0,-22],[0,0,90]\r\n" +
@@ -766,19 +779,19 @@ namespace MakeUrdf
                                         "[2.4,0,90,0],[-1,0,0]\r\n" +
                                         "[-25,0,0,0],[-1,0,0]\r\n" +
                                         "[0,0,0,0],[7,1,0] // - Axis7\r\n" +
-                                        "@[2xl_dummy.stl,-8355712,1.0],[1,7],[-9.7,-20.8,0],[90,0,90]\r\n" +
+                                        "@[2xc_dummy.stl,-8355712,1.0],[1,7],[-9.7,-20.8,0],[90,0,90]\r\n" +
                                         "[-21.6,0,0,-90],[-1,0,0]\r\n" +
                                         "[0,0,0,0],[8,0,0] // - Axis8\r\n" +
                                         "@[pr25_a01_f22.stl,-8355712,1.0],[1,8],[-34.5,-3.7,0],[90,0,-90]\r\n" +
                                         "[-67.75,0,0,0],[-1,0,0]\r\n" +
                                         "[0,0,0,0],[16,1,0] // - Axis16\r\n" +
-                                        "@[xl-430.stl,-8355712,1.0],[1,16],[-1.2,0,0],[0,180,90]\r\n" +
+                                        "@[xc-430.stl,-8355712,1.0],[1,16],[-1.2,0,0],[0,180,90]\r\n" +
                                         "@[pr25_a01_f19.stl,-8355712,1.0],[1,16],[-35.3,0,0],[90,0,-90]\r\n" +
                                         "@fp04-f10.stl,-8355712,1.0],[1,16],[-42.6,0,0],[90,0,-90]\r\n" +
                                         "@[frame_4_1_2.stl,-8355712,1.0],[1,16],[-81.8,0,-22],[0,0,-90]\r\n" +
                                         "[-69,0,0,0],[-1,0,0]\r\n" +
                                         "[0,0,0,90],[11,0,0] // - Axis11\r\n" +
-                                        "@[2xl_dummy.stl,-8355712,1.0],[1,11],[-12.8,21,0],[90,0,-90]\r\n" +
+                                        "@[2xc_dummy.stl,-8355712,1.0],[1,11],[-12.8,21,0],[90,0,-90]\r\n" +
                                         "[-24,0,0,0],[-1,0,0]\r\n" +
                                         "[0,0,0,0],[12,0,0] // - Axis12\r\n" +
                                         "@[frame_4_1_2.stl,-8355712,1.0],[1,12],[11.2,0,-22],[0,0,90]\r\n" +
@@ -1099,6 +1112,8 @@ namespace MakeUrdf
             InitializeComponent();
             InitSceneTab();   // $scene placement UI 동적 생성 (tabRight 에 "Scene" 탭 추가)
             InitSnapTab();    // STL 스냅 UI 동적 생성 (tabRight 에 "Snap" 탭 추가, snap.html 포팅)
+            tabRight.TabPages.Remove(tabArmSetup);   // 로봇팔 세팅 탭은 탭 줄 맨 끝으로 (코드로 붙는 Scene·Snap 뒤)
+            tabRight.TabPages.Add(tabArmSetup);
             this.KeyPreview = true;
             this.KeyDown += new KeyEventHandler(this.Main_KeyDown_SceneEsc);
         }
@@ -1225,6 +1240,7 @@ namespace MakeUrdf
                 {
                     PopulateDhEditFields(newSel, cur[newSel].Trim());
                     pnDhEdit.Visible = true;
+                    PopulateStateFields(newSel);
                 }
             }
             finally { m_bSyncingSelection = false; }
@@ -2516,11 +2532,17 @@ namespace MakeUrdf
         // ========================================
         private void C3d_DragEnter(object sender, DragEventArgs e)
         {
+            if (m_bArmLocked) { e.Effect = DragDropEffects.None; return; }   // 로봇팔 작업·조그 중에는 DH 를 바꾸지 않는다
             if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy;
         }
 
         private void C3d_DragDrop(object sender, DragEventArgs e)
         {
+            if (m_bArmLocked)   // 로봇팔 작업·조그 중 — DH 줄 넣기·적용(btnApplyDh)을 하지 않는다 (DH 글상자가 읽기 전용이어도 이 길은 따로 적용한다)
+            {
+                Ojw.printf(txtLogHistory, "[Drop] 로봇팔 작업 중 — 끝난 뒤 다시 놓으십시오\r\n");
+                return;
+            }
             try
             {
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop, false);
@@ -2657,8 +2679,15 @@ namespace MakeUrdf
                 chkShowBall,
                 txtBallSize,
                 chkShowSphere,
-                txtSphereSize
+                txtSphereSize,
+                txtArmPort,     // 로봇팔 세팅 탭 연결 줄 — CParam 은 위치 기반이라 새 칸은 늘 맨 끝에
+                txtArmBaud
                 );
+            // 옛 param.dat 에 없는 칸은 CFile 이 "0" 으로 채운다 — 읽을 수 없는 값이면 기본값으로 (판정은 DLL 파서)
+            int nArmTmp;
+            string strArmTmp;
+            if (!Ojw.CArmConn_t.ParsePort(txtArmPort.Text, out nArmTmp)) txtArmPort.Text = "COM4";
+            if (!Ojw.CArmConn_t.ParseBaud(txtArmBaud.Text, out nArmTmp, out strArmTmp)) txtArmBaud.Text = "1000000";
             
             // 로그 시스템 초기화
             Ojw.printf_Init(txtLogHistory, false);
@@ -2668,6 +2697,9 @@ namespace MakeUrdf
             Init3d();
             InitControlPanel();
             InitDhEditPanel();
+            InitAxisStatePanel();   // 축 상태 칸 (Move/Rotate 버튼 아래)
+            SagComp_AutoLoad();     // 처짐 보상 모델이 있으면 조용히 적용 (없으면 예전과 동일)
+            ArmMotor_Init();        // 로봇팔 세팅 탭 — 연결 객체·모터 세팅 (Main.ArmMotor.cs)
             //cmbViewMode.SelectedIndex = 0; // 기본: 전체 보기
             viewmodeApply();
 
@@ -2678,6 +2710,7 @@ namespace MakeUrdf
                 cmbMotorId.Items.Add(i.ToString());
             cmbMotorId.SelectedIndex = 0;
             cmbExample.SelectedIndex = 0;
+            cmbSagTwin.SelectedIndex = 0;   // 처짐 쌍둥이 기본 끔 (DLL C3d.SagTwin_*)
 
             RefreshHistory();
             UpdatePreview(null);
@@ -2685,12 +2718,15 @@ namespace MakeUrdf
 
             // 재생 탭 초기화
             InitPlaybackTab();
+            ArmSetup_Init();        // 로봇팔 세팅 탭 — 측정·학습·시험 페이지 (Main.ArmSetup.cs)
 
             rbMode();
         }
 
         private void Main_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if (ArmSetup_BlockClose(e)) return;                         // 로봇팔 작업 중이면 닫지 않는다 — 원위치·토크 끄기 먼저
+            if (!ArmMotor_OnClosing()) { e.Cancel = true; return; }      // 저장 안 된 모터 세팅·연결 해제(토크 3지선다) — DInit 전에 싱크를 되돌린다
             if (m_C3d != null)
             {
                 m_C3d.Stop();
@@ -2787,6 +2823,8 @@ namespace MakeUrdf
         private void MakeAll(string dhString)
         {
             if (m_C3d == null) return;
+            // 로봇팔 작업·조그 중 — 다시 해석하는 동안 작업 스레드가 쓰는 기구학이 비었다 채워진다. 마지막 DH 만 기억했다가 잠금이 풀릴 때 한 번
+            if (m_bArmLocked) { m_strArmRebuildDh = dhString; return; }
             if (string.IsNullOrEmpty(dhString) || dhString.Trim().Length == 0)
                 dhString = " ";
 
@@ -2795,9 +2833,8 @@ namespace MakeUrdf
             m_lstFormulaGroups = groups;
             m_nFormulaCount = groups.Count;
 
-            // 기존 수식 슬롯 클리어
-            for (int i = 0; i <= groups.Count && i < 512; i++)
-                m_C3d.m_CHeader.pstrKinematics[i] = null;
+            // 기존 수식 슬롯 클리어 — 512 칸 모두 (앞 모델이 체인이 더 많았으면 남은 슬롯이 그려지지 않는 옛 체인으로 남아 IK·로봇 정의의 공구 끝 후보가 된다)
+            MakeAll_ClearFormulaSlots();
 
             // 각 체인을 별도 수식 슬롯에 저장
             //   '$' 특수 라인($camera, $mech)은 렌더 경로(MakeDHSkeleton)에서는 카메라/기구 선언으로
@@ -2877,6 +2914,24 @@ namespace MakeUrdf
 
             // 그리퍼 모터 콤보 갱신
             UpdateGripperMotorCombo(dhString);
+
+            // 로봇팔 세팅 — DH 를 다시 해석했으니 연결이 리밋을 다시 반영 (로봇이 바뀌었으면 그 로봇의 모터 세팅으로)
+            ArmMotor_AfterRebuild(dhString);
+            ArmDef_ModelChanged();   // 로봇 정의 — 계획 기구학·3D 표시를 새 수식으로 (Main.ArmDef.cs)
+        }
+
+        /// <summary>MakeAll 앞 — 수식 슬롯 512 칸을 모두 비운다: 글 = null, 해석 결과 = 3D 컨트롤 처음 상태 (0~255 빈 묶음, 256~511 null).
+        /// 슬롯 일부만 비우면 앞에 불러온 (체인이 더 많은) 모델의 슬롯이 그려지지 않는 옛 체인·합친 '전체 수식' 으로 남는다</summary>
+        private void MakeAll_ClearFormulaSlots()
+        {
+            string[] t = m_C3d.m_CHeader.pstrKinematics;
+            CDhParamAll[] d = m_C3d.m_CHeader.pDhParamAll;
+            for (int i = 0; i < t.Length; i++) t[i] = null;
+            for (int i = 0; i < d.Length; i++)
+            {
+                if (i < 256) { d[i] = new CDhParamAll(); d[i].DeleteAll(); }
+                else d[i] = null;
+            }
         }
 
         // ========================================
@@ -3175,6 +3230,7 @@ namespace MakeUrdf
             // 편집 UI 채우기
             PopulateDhEditFields(textLine, rawLine);
             pnDhEdit.Visible = true;
+            PopulateStateFields(textLine);   // ★상태 칸 = 명령+현재상태
         }
 
         /// <summary>지정된 줄에 배경색 + Bold 하이라이트</summary>
@@ -3269,6 +3325,7 @@ namespace MakeUrdf
                     m_C3d.User_ShowDhBall(-1);
                 }
                 if (pnDhEdit != null) pnDhEdit.Visible = false;
+                ClearStateFields();
                 lblStatus.Text = string.Format("빈 줄 {0} — ±버튼을 누르면 여기에 새 줄이 생깁니다", textLine + 1);
             }
             finally { m_bSyncingSelection = bPrev; }
@@ -3931,7 +3988,9 @@ namespace MakeUrdf
                 m_eCurrentAction = BuildAction.None;
                 if (m_C3d != null)
                     m_C3d.SetMouseMode(rdMouseJoint.Checked ? 1 : 0);
+                if (tabRight.SelectedTab == tabArmSetup) { ArmMotor_UpdateUi(); ArmSetup_OnShown(); }   // 로봇팔 세팅 — 상태·목록 새로 읽기
             }
+            ArmDef_TopTabChanged();   // 로봇 정의 3D 표시 — 로봇팔 세팅 탭 밖이면 끔, 돌아오면 정의 페이지·실습 카드 체크대로 (Main.ArmDef.cs)
         }
 
         private void UpdateModeUI()
@@ -4172,109 +4231,17 @@ namespace MakeUrdf
             }
 
             // 모든 STL 스텝에 대해 레이캐스트
-            int bestStepIdx = -1;
-            int bestTriIdx = -1;
-            float bestT = float.MaxValue;
-            StlBoundingBox bestBbox = null;
-            float bestOffX = 0, bestOffY = 0, bestOffZ = 0;
-            float bestPan = 0, bestTilt = 0, bestSwing = 0;
-
-            for (int i = 0; i < m_Builder.StepCount; i++)
-            {
-                DhStep step = m_Builder.GetStep(i);
-                if (step.Action != BuildAction.Stl) continue;
-
-                // 신형 DH 형식 (`[ ]` 포함) 도 파싱 가능하도록 괄호 제거 후 split.
-                string dhLine = step.DhLines.TrimStart('@').Replace("[", "").Replace("]", "");
-                string[] parts = dhLine.Split(',');
-                if (parts.Length < 1) continue;
-                string stlFilename = parts[0].Trim();
-
-                string stlPath = Path.Combine(Application.StartupPath, "stl", stlFilename);
-                StlBoundingBox bbox;
-                try { bbox = StlParser.Parse(stlPath); }
-                catch { continue; }
-                if (!bbox.IsValid) continue;
-
-                float offX = 0, offY = 0, offZ = 0;
-                float stlPan = 0, stlTilt = 0, stlSwing = 0;
-                if (parts.Length >= 8)
-                {
-                    float.TryParse(parts[5], System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out offX);
-                    float.TryParse(parts[6], System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out offY);
-                    float.TryParse(parts[7], System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out offZ);
-                }
-                if (parts.Length >= 11)
-                {
-                    float.TryParse(parts[8], System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out stlPan);
-                    float.TryParse(parts[9], System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out stlTilt);
-                    float.TryParse(parts[10], System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out stlSwing);
-                }
-
-                // 레이를 STL 로컬 좌표계로 변환
-                // 렌더링: DH_chain * Translate(off) * Rz(swing) * Rx(tilt) * Ry(pan) * vertex
-                // 역변환: Ry(-pan) * Rx(-tilt) * Rz(-swing) * (Re^T * (ray - endpoint) - offset)
-                double epx, epy, epz;
-                m_Builder.GetEndpointPosition(i, out epx, out epy, out epz);
-                double[,] Re = m_Builder.GetEndpointRotation(i);
-
-                double dxw = wox - epx, dyw = woy - epy, dzw = woz - epz;
-
-                // Re^T * (ray - endpoint) - offset → endpoint 로컬 좌표
-                float eox = (float)(Re[0, 0] * dxw + Re[1, 0] * dyw + Re[2, 0] * dzw) - offX;
-                float eoy = (float)(Re[0, 1] * dxw + Re[1, 1] * dyw + Re[2, 1] * dzw) - offY;
-                float eoz = (float)(Re[0, 2] * dxw + Re[1, 2] * dyw + Re[2, 2] * dzw) - offZ;
-
-                float edx = (float)(Re[0, 0] * wdx + Re[1, 0] * wdy + Re[2, 0] * wdz);
-                float edy = (float)(Re[0, 1] * wdx + Re[1, 1] * wdy + Re[2, 1] * wdz);
-                float edz = (float)(Re[0, 2] * wdx + Re[1, 2] * wdy + Re[2, 2] * wdz);
-
-                // STL 회전 역변환: Rm^T * (endpoint_local)
-                // Rm = Rz(swing) * Rx(tilt) * Ry(pan) (OjwRotation 적용 순서)
-                float lox = eox, loy = eoy, loz = eoz;
-                float ldx = edx, ldy = edy, ldz = edz;
-                if (stlSwing != 0 || stlTilt != 0 || stlPan != 0)
-                {
-                    double[,] Rm = DhBuilder.StlLocalRotation(stlPan, stlTilt, stlSwing);
-                    // Rm^T * vector
-                    lox = (float)(Rm[0, 0] * eox + Rm[1, 0] * eoy + Rm[2, 0] * eoz);
-                    loy = (float)(Rm[0, 1] * eox + Rm[1, 1] * eoy + Rm[2, 1] * eoz);
-                    loz = (float)(Rm[0, 2] * eox + Rm[1, 2] * eoy + Rm[2, 2] * eoz);
-                    ldx = (float)(Rm[0, 0] * edx + Rm[1, 0] * edy + Rm[2, 0] * edz);
-                    ldy = (float)(Rm[0, 1] * edx + Rm[1, 1] * edy + Rm[2, 1] * edz);
-                    ldz = (float)(Rm[0, 2] * edx + Rm[1, 2] * edy + Rm[2, 2] * edz);
-                }
-
-                int hitTri = StlParser.RaycastMesh(bbox, lox, loy, loz, ldx, ldy, ldz);
-                if (hitTri < 0) continue;
-
-                // 히트 거리 계산 (여러 STL 간 비교용)
-                int b = hitTri * 9;
-                float t = StlParser.RayTriangleIntersect(lox, loy, loz, ldx, ldy, ldz,
-                    bbox.Vertices[b], bbox.Vertices[b + 1], bbox.Vertices[b + 2],
-                    bbox.Vertices[b + 3], bbox.Vertices[b + 4], bbox.Vertices[b + 5],
-                    bbox.Vertices[b + 6], bbox.Vertices[b + 7], bbox.Vertices[b + 8]);
-
-                if (t < bestT)
-                {
-                    bestT = t;
-                    bestStepIdx = i;
-                    bestTriIdx = hitTri;
-                    bestBbox = bbox;
-                    bestOffX = offX;
-                    bestOffY = offY;
-                    bestOffZ = offZ;
-                    bestPan = stlPan;
-                    bestTilt = stlTilt;
-                    bestSwing = stlSwing;
-                }
-            }
+            // ★레이캐스트 골격은 DLL 로 이관 (2026-09-03, Ojw.PickStlFace).
+            //   종전에는 이 루프가 TrySelectStlFace 와 TryHoverStlFace 에 한 벌씩 있었다
+            //   — 선택과 호버가 서로 다른 판정을 갖는 구조였다.
+            Ojw.StlPickResult pick = Ojw.PickStlFace(m_Builder,
+                Path.Combine(Application.StartupPath, "stl"), wox, woy, woz, wdx, wdy, wdz);
+            int bestStepIdx = pick.StepIndex;
+            int bestTriIdx = pick.TriangleIndex;
+            float bestT = pick.Distance;
+            StlBoundingBox bestBbox = pick.Bbox;
+            float bestOffX = pick.OffX, bestOffY = pick.OffY, bestOffZ = pick.OffZ;
+            float bestPan = pick.Pan, bestTilt = pick.Tilt, bestSwing = pick.Swing;
 
             if (bestStepIdx < 0) return false;
 
@@ -4362,103 +4329,17 @@ namespace MakeUrdf
                 m_bDbgShowCrosshair = true;
             }
 
-            int bestStepIdx = -1;
-            int bestTriIdx = -1;
-            float bestT = float.MaxValue;
-            StlBoundingBox bestBbox = null;
-            float bestOffX = 0, bestOffY = 0, bestOffZ = 0;
-            float bestPan = 0, bestTilt = 0, bestSwing = 0;
-
-            for (int i = 0; i < m_Builder.StepCount; i++)
-            {
-                DhStep step = m_Builder.GetStep(i);
-                if (step.Action != BuildAction.Stl) continue;
-
-                // 신형 DH 형식 (`[ ]` 포함) 도 파싱 가능하도록 괄호 제거 후 split.
-                string dhLine = step.DhLines.TrimStart('@').Replace("[", "").Replace("]", "");
-                string[] parts = dhLine.Split(',');
-                if (parts.Length < 1) continue;
-                string stlFilename = parts[0].Trim();
-
-                string stlPath = Path.Combine(Application.StartupPath, "stl", stlFilename);
-                StlBoundingBox bbox;
-                try { bbox = StlParser.Parse(stlPath); }
-                catch { continue; }
-                if (!bbox.IsValid) continue;
-
-                float offX = 0, offY = 0, offZ = 0;
-                float stlPan = 0, stlTilt = 0, stlSwing = 0;
-                if (parts.Length >= 8)
-                {
-                    float.TryParse(parts[5], System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out offX);
-                    float.TryParse(parts[6], System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out offY);
-                    float.TryParse(parts[7], System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out offZ);
-                }
-                if (parts.Length >= 11)
-                {
-                    float.TryParse(parts[8], System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out stlPan);
-                    float.TryParse(parts[9], System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out stlTilt);
-                    float.TryParse(parts[10], System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out stlSwing);
-                }
-
-                double epx, epy, epz;
-                m_Builder.GetEndpointPosition(i, out epx, out epy, out epz);
-                double[,] Re = m_Builder.GetEndpointRotation(i);
-
-                double dxw2 = wox - epx, dyw2 = woy - epy, dzw2 = woz - epz;
-
-                // Re^T * (ray - endpoint) - offset → endpoint 로컬 좌표
-                float eox = (float)(Re[0, 0] * dxw2 + Re[1, 0] * dyw2 + Re[2, 0] * dzw2) - offX;
-                float eoy = (float)(Re[0, 1] * dxw2 + Re[1, 1] * dyw2 + Re[2, 1] * dzw2) - offY;
-                float eoz = (float)(Re[0, 2] * dxw2 + Re[1, 2] * dyw2 + Re[2, 2] * dzw2) - offZ;
-
-                float edx = (float)(Re[0, 0] * wdx + Re[1, 0] * wdy + Re[2, 0] * wdz);
-                float edy = (float)(Re[0, 1] * wdx + Re[1, 1] * wdy + Re[2, 1] * wdz);
-                float edz = (float)(Re[0, 2] * wdx + Re[1, 2] * wdy + Re[2, 2] * wdz);
-
-                // STL 회전 역변환: Rm^T * (endpoint_local)
-                float lox = eox, loy = eoy, loz = eoz;
-                float ldx = edx, ldy = edy, ldz = edz;
-                if (stlSwing != 0 || stlTilt != 0 || stlPan != 0)
-                {
-                    double[,] Rm = DhBuilder.StlLocalRotation(stlPan, stlTilt, stlSwing);
-                    lox = (float)(Rm[0, 0] * eox + Rm[1, 0] * eoy + Rm[2, 0] * eoz);
-                    loy = (float)(Rm[0, 1] * eox + Rm[1, 1] * eoy + Rm[2, 1] * eoz);
-                    loz = (float)(Rm[0, 2] * eox + Rm[1, 2] * eoy + Rm[2, 2] * eoz);
-                    ldx = (float)(Rm[0, 0] * edx + Rm[1, 0] * edy + Rm[2, 0] * edz);
-                    ldy = (float)(Rm[0, 1] * edx + Rm[1, 1] * edy + Rm[2, 1] * edz);
-                    ldz = (float)(Rm[0, 2] * edx + Rm[1, 2] * edy + Rm[2, 2] * edz);
-                }
-
-                int hitTri = StlParser.RaycastMesh(bbox, lox, loy, loz, ldx, ldy, ldz);
-                if (hitTri < 0) continue;
-
-                int b = hitTri * 9;
-                float t = StlParser.RayTriangleIntersect(lox, loy, loz, ldx, ldy, ldz,
-                    bbox.Vertices[b], bbox.Vertices[b + 1], bbox.Vertices[b + 2],
-                    bbox.Vertices[b + 3], bbox.Vertices[b + 4], bbox.Vertices[b + 5],
-                    bbox.Vertices[b + 6], bbox.Vertices[b + 7], bbox.Vertices[b + 8]);
-
-                if (t < bestT)
-                {
-                    bestT = t;
-                    bestStepIdx = i;
-                    bestTriIdx = hitTri;
-                    bestBbox = bbox;
-                    bestOffX = offX;
-                    bestOffY = offY;
-                    bestOffZ = offZ;
-                    bestPan = stlPan;
-                    bestTilt = stlTilt;
-                    bestSwing = stlSwing;
-                }
-            }
+            // ★레이캐스트 골격은 DLL 로 이관 (2026-09-03, Ojw.PickStlFace).
+            //   종전에는 이 루프가 TrySelectStlFace 와 TryHoverStlFace 에 한 벌씩 있었다
+            //   — 선택과 호버가 서로 다른 판정을 갖는 구조였다.
+            Ojw.StlPickResult pick = Ojw.PickStlFace(m_Builder,
+                Path.Combine(Application.StartupPath, "stl"), wox, woy, woz, wdx, wdy, wdz);
+            int bestStepIdx = pick.StepIndex;
+            int bestTriIdx = pick.TriangleIndex;
+            float bestT = pick.Distance;
+            StlBoundingBox bestBbox = pick.Bbox;
+            float bestOffX = pick.OffX, bestOffY = pick.OffY, bestOffZ = pick.OffZ;
+            float bestPan = pick.Pan, bestTilt = pick.Tilt, bestSwing = pick.Swing;
 
             if (bestStepIdx < 0)
             {
@@ -4739,6 +4620,7 @@ namespace MakeUrdf
         // ========================================
         private void OnC3dMouseDown(object sender, MouseEventArgs e)
         {
+            if (m_bArmLocked) return;   // 로봇팔 작업·조그 중 — 3D 클릭으로 부품·관절을 고르거나 DH 를 바꾸지 않는다 (카메라 조작만)
             // === $scene placement mode 우선 처리 ===
             //   Scene 탭에서 객체 버튼 클릭 시 m_eSceneMode == PlacingObject 상태가 됨.
             //   3D 뷰 좌클릭 → 클릭 위치 (Z=0 floor) 에 객체 spawn.
@@ -4789,6 +4671,7 @@ namespace MakeUrdf
 
         private void OnC3dMouseMove(object sender, MouseEventArgs e)
         {
+            if (m_bArmLocked) return;   // 로봇팔 작업·조그 중 — 면 호버·부품 끌기(둘 다 3D 를 다시 만든다) 안 함
             // STL 면 호버 프리뷰 (결합 모드 또는 FaceSnap 모드: 버튼 안 눌렀을 때)
             if ((m_bMergeMode || m_bFaceSnapMode) && e.Button == MouseButtons.None)
             {
@@ -4858,6 +4741,7 @@ namespace MakeUrdf
 
         private void OnC3dMouseUp(object sender, MouseEventArgs e)
         {
+            if (m_bArmLocked) return;   // 로봇팔 작업·조그 중 — STL 면 선택(모든 모드에서 3D 를 다시 만든다)·면 맞춤 안 함
             // STL 면 선택 (모든 모드): 클릭(드래그 아닌) 시 레이캐스트로 면 감지
             bool stlSelected = false;
             if (e.Button == MouseButtons.Left)
@@ -5598,6 +5482,7 @@ namespace MakeUrdf
 
         private void UpdatePreview(DhStep tempStep, bool keepOverlay = false)
         {
+            if (m_bArmLocked) { m_bArmPreviewPending = true; return; }   // 로봇팔 작업·조그 중 — 3D 다시 만들기는 잠금이 풀릴 때 한 번 (MakeAll 과 같은 이유)
             if (!keepOverlay)
                 m_Builder.ClearOverlay();
 
@@ -5954,234 +5839,22 @@ namespace MakeUrdf
             try { Process.Start(htmlPath); } catch { }
         }
 
-        /// <summary>USDA 한 줄을 HTML 구문 하이라이팅 (심플 토큰 스캐너).</summary>
+        /// <summary>USDA 한 줄 HTML 하이라이팅 (DLL 위임).</summary>
         private static string ColorizeUsdaLine(string line)
         {
-            // 대문자로 시작하는 USDA 키워드 및 타입 집합
-            var kwSet = new HashSet<string> {
-                "def","over","class","prepend","append","uniform","varying","rel","add","delete","reorder",
-                "custom","references","payload","subLayers","defaultPrim","metersPerUnit","upAxis",
-                "apiSchemas","physics","drive"
-            };
-            var tySet = new HashSet<string> {
-                "Xform","Sphere","Cylinder","Cube","Cone","Mesh","Camera","Scope","Material","Shader",
-                "PhysicsScene","PhysicsFixedJoint","PhysicsRevoluteJoint","PhysicsPrismaticJoint","PhysicsMeshCollisionAPI",
-                "PhysicsRigidBodyAPI","PhysicsMassAPI","PhysicsArticulationRootAPI",
-                "float","double","int","token","string","bool","asset","point3f","vector3f","color3f","quatf","matrix4d",
-                "double3","float3","float4","true","false"
-            };
-            StringBuilder sb = new StringBuilder();
-            int pos = 0;
-            int len = line.Length;
-            while (pos < len)
-            {
-                char ch = line[pos];
-                // 주석 # ... 끝까지
-                if (ch == '#')
-                {
-                    sb.AppendFormat("<span class=\"cmt\">{0}</span>", Esc(line.Substring(pos)));
-                    break;
-                }
-                // 문자열 리터럴 "..." (에스케이프 미지원 — USDA 실무 충분)
-                if (ch == '"')
-                {
-                    int end = line.IndexOf('"', pos + 1);
-                    if (end < 0) end = len - 1;
-                    sb.AppendFormat("<span class=\"st\">{0}</span>", Esc(line.Substring(pos, end + 1 - pos)));
-                    pos = end + 1;
-                    continue;
-                }
-                // asset 리터럴 @...@
-                if (ch == '@')
-                {
-                    int end = line.IndexOf('@', pos + 1);
-                    if (end < 0) end = len - 1;
-                    sb.AppendFormat("<span class=\"st\">{0}</span>", Esc(line.Substring(pos, end + 1 - pos)));
-                    pos = end + 1;
-                    continue;
-                }
-                // 숫자 (±소수 포함)
-                if (char.IsDigit(ch) || (ch == '-' && pos + 1 < len && (char.IsDigit(line[pos + 1]) || line[pos + 1] == '.')))
-                {
-                    int start = pos;
-                    if (ch == '-') pos++;
-                    while (pos < len && (char.IsDigit(line[pos]) || line[pos] == '.' || line[pos] == 'e' || line[pos] == 'E' || line[pos] == '+' || line[pos] == '-'))
-                    {
-                        // -는 지수부에서만
-                        if (line[pos] == '-' && (pos == start || (line[pos-1] != 'e' && line[pos-1] != 'E'))) break;
-                        pos++;
-                    }
-                    sb.AppendFormat("<span class=\"num\">{0}</span>", Esc(line.Substring(start, pos - start)));
-                    continue;
-                }
-                // 식별자
-                if (char.IsLetter(ch) || ch == '_')
-                {
-                    int start = pos;
-                    while (pos < len && (char.IsLetterOrDigit(line[pos]) || line[pos] == '_' || line[pos] == ':')) pos++;
-                    string tok = line.Substring(start, pos - start);
-                    string cls;
-                    if (kwSet.Contains(tok)) cls = "kw";
-                    else if (tySet.Contains(tok)) cls = "ty";
-                    else if (tok.Contains(":")) cls = "at";   // xformOp:translate 같은 attribute 경로
-                    else cls = "at";
-                    sb.AppendFormat("<span class=\"{0}\">{1}</span>", cls, Esc(tok));
-                    continue;
-                }
-                // 구두점 / 공백
-                if ("(){}[],=/<>".IndexOf(ch) >= 0)
-                {
-                    sb.AppendFormat("<span class=\"pnc\">{0}</span>", Esc(ch.ToString()));
-                }
-                else
-                {
-                    sb.Append(Esc(ch.ToString()));
-                }
-                pos++;
-            }
-            return sb.ToString();
+            return Ojw.C3d.Html_ColorizeUsdaLine(line);
         }
 
-        /// <summary>XML 한 줄을 HTML 구문 하이라이팅</summary>
+        /// <summary>XML 한 줄 HTML 하이라이팅 (DLL 위임).</summary>
         private static string ColorizeXmlLine(string line)
         {
-            StringBuilder sb = new StringBuilder();
-            int pos = 0;
-            int len = line.Length;
-
-            while (pos < len)
-            {
-                // 주석: <!-- ... -->
-                if (pos + 3 < len && line[pos] == '<' && line[pos + 1] == '!'
-                    && line[pos + 2] == '-' && line[pos + 3] == '-')
-                {
-                    int end = line.IndexOf("-->", pos + 4);
-                    if (end < 0) end = len - 3;
-                    string comment = line.Substring(pos, end + 3 - pos);
-                    sb.AppendFormat("<span class=\"cmt\">{0}</span>", Esc(comment));
-                    pos = end + 3;
-                    continue;
-                }
-
-                // XML 선언: <?xml ... ?>
-                if (pos + 1 < len && line[pos] == '<' && line[pos + 1] == '?')
-                {
-                    int end = line.IndexOf("?>", pos + 2);
-                    if (end < 0) end = len - 2;
-                    string decl = line.Substring(pos, end + 2 - pos);
-                    sb.AppendFormat("<span class=\"kw\">{0}</span>", Esc(decl));
-                    pos = end + 2;
-                    continue;
-                }
-
-                // 닫는 태그: </tagname>
-                if (pos + 1 < len && line[pos] == '<' && line[pos + 1] == '/')
-                {
-                    int end = line.IndexOf('>', pos + 2);
-                    if (end < 0) end = len - 1;
-                    string tagName = line.Substring(pos + 2, end - pos - 2).Trim();
-                    sb.AppendFormat("<span class=\"pnc\">&lt;/</span><span class=\"tag\">{0}</span><span class=\"pnc\">&gt;</span>",
-                        Esc(tagName));
-                    pos = end + 1;
-                    continue;
-                }
-
-                // 여는 태그: <tagname attr="val" ...> 또는 <tagname ... />
-                if (line[pos] == '<' && pos + 1 < len && char.IsLetter(line[pos + 1]))
-                {
-                    // 태그 이름 추출
-                    int nameStart = pos + 1;
-                    int nameEnd = nameStart;
-                    while (nameEnd < len && !char.IsWhiteSpace(line[nameEnd])
-                           && line[nameEnd] != '>' && line[nameEnd] != '/')
-                        nameEnd++;
-
-                    string tagName = line.Substring(nameStart, nameEnd - nameStart);
-                    sb.AppendFormat("<span class=\"pnc\">&lt;</span><span class=\"tag\">{0}</span>", Esc(tagName));
-
-                    pos = nameEnd;
-
-                    // 속성 파싱
-                    while (pos < len && line[pos] != '>' && !(line[pos] == '/' && pos + 1 < len && line[pos + 1] == '>'))
-                    {
-                        // 공백 건너뛰기
-                        if (char.IsWhiteSpace(line[pos]))
-                        {
-                            sb.Append(line[pos]);
-                            pos++;
-                            continue;
-                        }
-
-                        // 속성이름=값
-                        if (char.IsLetter(line[pos]) || line[pos] == '_')
-                        {
-                            int aStart = pos;
-                            while (pos < len && line[pos] != '=' && line[pos] != '>'
-                                   && !char.IsWhiteSpace(line[pos]) && line[pos] != '/')
-                                pos++;
-                            string attrName = line.Substring(aStart, pos - aStart);
-                            sb.AppendFormat("<span class=\"atn\">{0}</span>", Esc(attrName));
-
-                            // = 부호
-                            if (pos < len && line[pos] == '=')
-                            {
-                                sb.Append("<span class=\"pnc\">=</span>");
-                                pos++;
-
-                                // 값 (따옴표)
-                                if (pos < len && (line[pos] == '"' || line[pos] == '\''))
-                                {
-                                    char q = line[pos];
-                                    int vEnd = line.IndexOf(q, pos + 1);
-                                    if (vEnd < 0) vEnd = len - 1;
-                                    string val = line.Substring(pos, vEnd + 1 - pos);
-                                    sb.AppendFormat("<span class=\"atv\">{0}</span>", Esc(val));
-                                    pos = vEnd + 1;
-                                }
-                            }
-                            continue;
-                        }
-
-                        // 기타 문자
-                        sb.Append(Esc(line[pos].ToString()));
-                        pos++;
-                    }
-
-                    // 자기닫기 /> 또는 >
-                    if (pos < len && line[pos] == '/' && pos + 1 < len && line[pos + 1] == '>')
-                    {
-                        sb.Append("<span class=\"pnc\">/&gt;</span>");
-                        pos += 2;
-                    }
-                    else if (pos < len && line[pos] == '>')
-                    {
-                        sb.Append("<span class=\"pnc\">&gt;</span>");
-                        pos++;
-                    }
-                    continue;
-                }
-
-                // 텍스트 내용 (태그 밖)
-                int nextTag = line.IndexOf('<', pos);
-                if (nextTag < 0) nextTag = len;
-                if (nextTag > pos)
-                {
-                    sb.Append(Esc(line.Substring(pos, nextTag - pos)));
-                    pos = nextTag;
-                }
-                else
-                {
-                    sb.Append(Esc(line[pos].ToString()));
-                    pos++;
-                }
-            }
-
-            return sb.ToString();
+            return Ojw.C3d.Html_ColorizeXmlLine(line);
         }
 
+        /// <summary>HTML 이스케이프 (DLL 위임).</summary>
         private static string Esc(string s)
         {
-            return s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
+            return Ojw.C3d.Html_Escape(s);
         }
 
         // URDF/MJCF 내보내기 (Kinematics:908 패턴)
@@ -6230,6 +5903,11 @@ namespace MakeUrdf
         /// </summary>
         private bool ExportUrdfFiles()
         {
+            if (m_bArmLocked)   // 로봇팔 작업·조그 중 — 내보내기도 DH 를 다시 해석한다 (3D 장면·IK 잠금·리밋 헤더를 다시 만든다)
+            {
+                Ojw.printf(txtLogHistory, "[Export] 로봇팔 작업 중 — 끝난 뒤 내보내십시오\r\n");
+                return false;
+            }
             try
             {
                 string dhString = m_Builder.GenerateFullDh();
@@ -6272,12 +5950,16 @@ namespace MakeUrdf
                 float fAxisSize = Ojw.CConvert.StrToFloat(txtAxisSize.Text);
                 if (fAxisSize <= 0) fAxisSize = 20.0f;
 
-                m_C3d.MakeDHSkeleton_Urdf(
-                    false, true, bShowSkeleton, bShowMesh, fSkeletonSize, fAxisSize, Color.Violet,
-                    dhString, 0, 0, 0, 0, 0, 0, 0,
-                    ref txtMessage,
-                    ref strUrdfCommand,
-                    ref strUrdfXml);
+                try
+                {
+                    m_C3d.MakeDHSkeleton_Urdf(
+                        false, true, bShowSkeleton, bShowMesh, fSkeletonSize, fAxisSize, Color.Violet,
+                        dhString, 0, 0, 0, 0, 0, 0, 0,
+                        ref txtMessage,
+                        ref strUrdfCommand,
+                        ref strUrdfXml);
+                }
+                finally { ArmMotor_AfterRebuild(dhString); }   // 내보내기도 DH 를 다시 해석한다 (3D 리밋 헤더) — 로봇팔 연결이 리밋을 다시 반영
 
                 // ── STL 파일 복사 ──────────────────────────────────
                 // STL 원본 위치: SetAseFile_Path("stl")로 설정된 경로 (예: Release\stl\)
@@ -7034,6 +6716,7 @@ namespace MakeUrdf
         {
             int idx = cmbExample.SelectedIndex;
             if (idx <= 0) return; // "예제 선택..." 항목
+            if (!ArmMotor_CanChangeRobot()) { cmbExample.SelectedIndex = 0; return; }   // 로봇팔 토크 ON 이면 거부, OFF 면 연결 자동 해제
 
             // 예제 번호 = 항목 텍스트의 "N:" 접두 (리스트 표시 순서와 번호 분리 —
             //   14번(기본형)을 5번(+카메라) 앞에 두는 등 재정렬 가능). 접두 없으면 인덱스.
@@ -7055,6 +6738,7 @@ namespace MakeUrdf
             UpdatePreview(null);
             ClearDhEditSelection();
             if (tabRight.SelectedTab == tabTest) UpdateMotorList();
+            SagComp_AutoLoad();               // 예제(=출력 폴더)에 맞는 처짐 보상 모델 자동 로드
             lblStatus.Text = name + " loaded";
             m_nLastExampleIdx = nExampleNum;   // Capture All / ExportSource 가 사용 (예제 번호)
             m_strLastExampleName = name;
@@ -7825,16 +7509,9 @@ namespace MakeUrdf
                     return;
                 }
 
-                int nDelayMs = 0;
-                var sb = new StringBuilder();
-                sb.Append(timeMs).Append(',').Append(nDelayMs);
-                foreach (int id in motorIds)
-                {
-                    float angle = m_C3d.GetData(id);
-                    sb.Append(',').Append(id).Append(',').Append(angle.ToString("F2", System.Globalization.CultureInfo.InvariantCulture));
-                }
-                sb.Append(';');
-                string payload = sb.ToString();
+                // 처짐 쌍둥이(10-02): 켜져 있으면 실물이 있을 자세를 함께(겹쳐 보기) 또는 대신(실물 자세) 보낸다 — 계산·문자열은 DLL
+                bool bTwin;
+                string payload = Ojw.CSimBridge.BuildC3dPayload(m_C3d, timeMs, motorIds.ToArray(), SagTwin_SimMode(), out bTwin);
 
                 var client = new Ojw.CSocket();
                 if (!client.Connect("127.0.0.1", 4000))
@@ -7856,6 +7533,7 @@ namespace MakeUrdf
                 byte[] data = System.Text.Encoding.UTF8.GetBytes(payload);
                 bool ok = client.Send(data);
                 client.DisConnect();
+                if (ok) Ojw.CSimBridge.NoteTwinSent(bTwin);
 
                 if (ok)
                 {
@@ -7963,474 +7641,19 @@ namespace MakeUrdf
 
         // DetectGroupName 은 DLL(Edh_DetectGroupName)로 이관됨 — Edh_SplitByInit 이 내부에서 사용.
 
+        /// <summary>FK 수식 분석 HTML 생성 (DLL 위임) — 문서 본체는 Ojw.C3d.Edh_BuildFormulaHtml.
+        /// 여기서는 파일 쓰기만 한다 (브라우저 열기는 호출자).</summary>
         private void GenerateFormulaHtml(string dhText, List<DhGroup> groups, string htmlPath)
         {
-            // 그룹 색상 배열
-            string[] grpColors = { "#569cd6", "#4ec9b0", "#dcdcaa", "#c586c0", "#ce9178", "#6a9955" };
-
-            StringBuilder h = new StringBuilder();
-            h.AppendLine("<!DOCTYPE html><html lang=\"ko\"><head><meta charset=\"UTF-8\">");
-            h.AppendLine("<title>FK \uc218\uc2dd \ubd84\uc11d</title>");
-            h.AppendLine("<style>");
-            h.AppendLine("*{margin:0;padding:0;box-sizing:border-box}");
-            h.AppendLine("body{background:#1e1e1e;color:#d4d4d4;font-family:'Segoe UI','맑은 고딕',sans-serif;padding:24px 32px;line-height:1.6}");
-            h.AppendLine("h1{color:#569cd6;font-size:24px;margin-bottom:4px}");
-            h.AppendLine(".subtitle{color:#888;font-size:13px;margin-bottom:24px}");
-            h.AppendLine("h2{color:#c586c0;font-size:18px;margin-top:32px;padding-bottom:6px;border-bottom:1px solid #333}");
-            h.AppendLine("h3{color:#4ec9b0;font-size:15px;margin:16px 0 8px}");
-            h.AppendLine(".legend{background:#252526;padding:16px 20px;border-radius:8px;margin:12px 0;display:inline-block}");
-            h.AppendLine(".legend table{border-collapse:collapse}");
-            h.AppendLine(".legend td{padding:3px 16px 3px 0;vertical-align:top}");
-            h.AppendLine(".legend .sym{font-family:Consolas,monospace;font-weight:bold;min-width:100px}");
-            h.AppendLine("table.dh{border-collapse:collapse;margin:12px 0}");
-            h.AppendLine("table.dh th{background:#333;color:#9cdcfe;padding:6px 14px;text-align:center;font-size:13px}");
-            h.AppendLine("table.dh th.dh-core{background:#2a3a4a;color:#4fc1ff;font-weight:bold}");
-            h.AppendLine("table.dh th.dh-ext{background:#3a2a2a;color:#e0a070}");
-            h.AppendLine("table.dh td{padding:5px 14px;text-align:right;border:1px solid #444;font-family:Consolas,monospace;font-size:13px}");
-            h.AppendLine("table.dh td.dh-core{background:rgba(42,58,74,0.25)}");
-            h.AppendLine("table.dh td.dh-ext{background:rgba(58,42,42,0.25)}");
-            h.AppendLine("table.dh td.dh-sep{border-left:2px solid #666}");
-            h.AppendLine("table.dh th.dh-sep{border-left:2px solid #666}");
-            h.AppendLine("table.dh tr:nth-child(even) td.dh-core{background:rgba(42,58,74,0.4)}");
-            h.AppendLine("table.dh tr:nth-child(even) td.dh-ext{background:rgba(58,42,42,0.4)}");
-            h.AppendLine("table.dh tr:nth-child(even) td{background:#252526}");
-            h.AppendLine("table.dh td.idx-col{background:#333;color:#9cdcfe;font-weight:bold;text-align:center}");
-            h.AppendLine("table.dh tr.grp-sep td{border-top:3px solid #666}");
-            h.AppendLine("table.dh tr.grp-header td{background:#2a2a3a;text-align:left;padding:8px 14px;font-weight:bold;font-size:14px;border:none}");
-            h.AppendLine("table.mtx{border-collapse:collapse;margin:8px 0;display:inline-block}");
-            h.AppendLine("table.mtx td{padding:4px 10px;text-align:center;font-family:Consolas,monospace;font-size:13px;min-width:60px;border:1px solid #444;background:#252526}");
-            h.AppendLine(".bracket{color:#ffd700;font-size:280%;vertical-align:middle;line-height:1;padding:0 4px}");
-            h.AppendLine(".mtx-wrap{display:inline-flex;align-items:center;margin:8px 0;flex-wrap:wrap}");
-            h.AppendLine(".mtx-label{color:#808080;font-style:italic;margin-right:8px;font-size:14px}");
-            h.AppendLine(".op{color:#d4d4d4;font-size:20px;padding:0 12px;vertical-align:middle}");
-            h.AppendLine(".eq{color:#d4d4d4;font-size:20px;padding:0 12px;vertical-align:middle}");
-            h.AppendLine(".fn{color:#569cd6;font-weight:bold}");
-            h.AppendLine(".var{color:#dcdcaa}");
-            h.AppendLine(".num{color:#b5cea8}");
-            h.AppendLine(".result-box{background:#2d2d2d;border-left:3px solid #569cd6;padding:16px 20px;margin:12px 0;font-family:Consolas,monospace;font-size:15px;line-height:2.0;overflow-x:auto}");
-            h.AppendLine(".formula-label{color:#c586c0;font-weight:bold;font-size:16px;min-width:30px;display:inline-block}");
-            h.AppendLine(".xyz-box{background:#2d2d2d;padding:14px 20px;margin:10px 0;font-family:Consolas,monospace;font-size:15px;line-height:1.8;overflow-x:auto;border-radius:6px}");
-            h.AppendLine(".xyz-box.x-box{border-left:4px solid #ff6b6b}");
-            h.AppendLine(".xyz-box.y-box{border-left:4px solid #6bff6b}");
-            h.AppendLine(".xyz-box.z-box{border-left:4px solid #6b9fff}");
-            h.AppendLine(".xyz-label{font-weight:bold;font-size:18px;margin-right:8px}");
-            h.AppendLine(".xyz-label.x-label{color:#ff6b6b}");
-            h.AppendLine(".xyz-label.y-label{color:#6bff6b}");
-            h.AppendLine(".xyz-label.z-label{color:#6b9fff}");
-            h.AppendLine(".dir-box{background:#2d2d2d;border-left:3px solid #4ec9b0;padding:16px 20px;margin:12px 0;font-family:Consolas,monospace;font-size:14px;line-height:1.8}");
-            h.AppendLine(".dir-label{color:#4ec9b0;font-weight:bold;min-width:160px;display:inline-block}");
-            h.AppendLine(".step-desc{color:#6a9955;font-style:italic;margin:4px 0 8px 0;font-size:13px}");
-            h.AppendLine(".grp-section{border:1px solid #444;border-radius:10px;padding:20px 24px;margin:20px 0;background:#1a1a1a}");
-            h.AppendLine(".grp-title{font-size:17px;font-weight:bold;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid}");
-            h.AppendLine("</style></head><body>");
-
-            // ── 제목 ──
-            h.AppendLine("<h1>Forward Kinematics \uc218\uc2dd \ubd84\uc11d</h1>");
-            int totalGroups = groups.Count;
-            if (totalGroups > 1)
-                h.AppendFormat("<div class=\"subtitle\">DH \ud30c\ub77c\ubbf8\ud130\ub85c\ubd80\ud130 \uc704\uce58/\ubc29\ud5a5 \uc218\uc2dd\uc744 \uc720\ub3c4\ud569\ub2c8\ub2e4 \u2014 {0}\uac1c \uadf8\ub8f9 (Init=1 \uae30\uc900 \ubd84\ub9ac)</div>\n", totalGroups);
-            else
-                h.AppendLine("<div class=\"subtitle\">DH \ud30c\ub77c\ubbf8\ud130\ub85c\ubd80\ud130 \uc704\uce58/\ubc29\ud5a5 \uc218\uc2dd\uc744 \uc720\ub3c4\ud569\ub2c8\ub2e4</div>");
-
-            // ── 1. 범례 ──
-            h.AppendLine("<h2>1. \ubc94\ub840 (Legend)</h2>");
-
-            // 수학 기호 범례
-            h.AppendLine("<h3>\uc218\ud559 \uae30\ud638</h3>");
-            h.AppendLine("<div class=\"legend\"><table>");
-            h.AppendLine("<tr><td class=\"sym\"><span class=\"fn\">C</span>(\u03b8)</td><td>= cos(\u03b8) \u2014 \ucf54\uc0ac\uc778 \ud568\uc218</td></tr>");
-            h.AppendLine("<tr><td class=\"sym\"><span class=\"fn\">S</span>(\u03b8)</td><td>= sin(\u03b8) \u2014 \uc0ac\uc778 \ud568\uc218</td></tr>");
-            h.AppendLine("<tr><td class=\"sym\"><span class=\"var\">t0</span>, <span class=\"var\">t1</span>, ...</td><td>= \ubaa8\ud130 0, \ubaa8\ud130 1, ... \uc758 \uad00\uc808 \uac01\ub3c4 (Degree, 0~360\u00b0)</td></tr>");
-            h.AppendLine("<tr><td class=\"sym\"><span class=\"var\">-t0</span></td><td>= \uc5ed\ubc29\ud5a5 \ubaa8\ud130 (Dir=1\uc77c \ub54c, \uac01\ub3c4\uc5d0 -1\uc744 \uacf1\ud568)</td></tr>");
-            h.AppendLine("</table></div>");
-
-            // DH 핵심 파라미터 범례
-            h.AppendLine("<h3>DH \ud575\uc2ec \ud30c\ub77c\ubbf8\ud130 (A, D, \u03b8, \u03b1)</h3>");
-            h.AppendLine("<div class=\"legend\" style=\"border-left:3px solid #4fc1ff\"><table>");
-            h.AppendLine("<tr><td class=\"sym\">A</td><td>\ub9c1\ud06c \uae38\uc774 (X\ucd95 \uc774\ub3d9, mm) \u2014 <span style=\"color:#ff6b6b\">\ube68\uac04\ucd95</span></td></tr>");
-            h.AppendLine("<tr><td class=\"sym\">D</td><td>\ub9c1\ud06c \uc624\ud504\uc14b (Z\ucd95 \uc774\ub3d9, mm) \u2014 <span style=\"color:#6b9fff\">\ud30c\ub780\ucd95</span></td></tr>");
-            h.AppendLine("<tr><td class=\"sym\">\u03b8 (Theta)</td><td>\uad00\uc808 \uac01\ub3c4 (Z\ucd95 \ud68c\uc804, \u00b0) \u2014 \ubaa8\ud130\uac00 \uc5f0\uacb0\ub418\uba74 \ubaa8\ud130 \uac01\ub3c4\ub85c \ub300\uce58</td></tr>");
-            h.AppendLine("<tr><td class=\"sym\">\u03b1 (Alpha)</td><td>\ub9c1\ud06c \ube44\ud2c0\ub9bc (X\ucd95 \ud68c\uc804, \u00b0)</td></tr>");
-            h.AppendLine("</table></div>");
-
-            // 확장 파라미터 범례
-            h.AppendLine("<h3>\ud655\uc7a5 \ud30c\ub77c\ubbf8\ud130 (Axis, Dir, Init, Type, Num)</h3>");
-            h.AppendLine("<div class=\"legend\" style=\"border-left:3px solid #e0a070\"><table>");
-            h.AppendLine("<tr><td class=\"sym\">Axis</td><td>\uc5f0\uacb0\ub41c \ubaa8\ud130 \ubc88\ud638 (-1: \uc5c6\uc74c, 0~: \ubaa8\ud130 \ubc88\ud638)</td></tr>");
-            h.AppendLine("<tr><td class=\"sym\">Dir</td><td>\ubaa8\ud130 \ubc29\ud5a5: 0=\uc815\ubc29\ud5a5 Z\ud68c\uc804, 1=\uc5ed\ubc29\ud5a5 Z\ud68c\uc804, 2=\uc815\ubc29\ud5a5 Z\uc774\ub3d9, 3=\uc5ed\ubc29\ud5a5 Z\uc774\ub3d9, 4=\uc815\ubc29\ud5a5 \ubc14\ud034\ud68c\uc804, 5=\uc5ed\ubc29\ud5a5 \ubc14\ud034\ud68c\uc804</td></tr>");
-            h.AppendLine("<tr><td class=\"sym\">Init</td><td>\uc88c\ud45c \ucd08\uae30\ud654 \ud50c\ub798\uadf8: <b>1</b>=\uc6d0\uc810\uc73c\ub85c \ub9ac\uc14b(\uc0c8 \uccb4\uc778 \uc2dc\uc791), 0=\uc774\uc804 \uccb4\uc778 \uc774\uc5b4\uc11c \uacc4\uc18d</td></tr>");
-            h.AppendLine("<tr><td class=\"sym\">Type</td><td>\ud53c\ud0b9 \ud0c0\uc785: 0=\uc5c6\uc74c, <b>1</b>=\ubaa8\ud130\uadf8\ub8f9(\uac19\uc740 \uadf8\ub8f9\ub07c\ub9ac \ud568\uaed8 \uc120\ud0dd), <b>2</b>=IK\ubc88\ud638(\uc5ed\uae30\uad6c\ud559 \ub300\uc0c1 \uc9c0\uc815)</td></tr>");
-            h.AppendLine("<tr><td class=\"sym\">Num</td><td>\uadf8\ub8f9/IK \ubc88\ud638: Type\uc5d0 \ub530\ub77c \ubaa8\ud130\uadf8\ub8f9 \ubc88\ud638 \ub610\ub294 IK \uc778\ub371\uc2a4 (0\ubd80\ud130 \uc2dc\uc791)</td></tr>");
-            h.AppendLine("</table></div>");
-
-            // ── 2. DH 파라미터 테이블 ──
-            h.AppendLine("<h2>2. DH \ud30c\ub77c\ubbf8\ud130</h2>");
-            GenerateDhParamTable(h, dhText, groups);
-
-            // ── 3~7. 그룹별 수식 섹션 ──
-            int sectionNum = 3;
-            for (int gi = 0; gi < groups.Count; gi++)
-            {
-                DhGroup grp = groups[gi];
-                string grpColor = grpColors[gi % grpColors.Length];
-
-                if (totalGroups > 1)
-                {
-                    // 그룹 컨테이너
-                    h.AppendFormat("<div class=\"grp-section\" style=\"border-color:{0}\">\n", grpColor);
-                    h.AppendFormat("<div class=\"grp-title\" style=\"color:{0};border-bottom-color:{0}\">\u25b6 {1}</div>\n", grpColor, Esc(grp.Name));
-                }
-
-                // 개별 T행렬 + 곱셈 과정
-                if (!string.IsNullOrEmpty(grp.MatrixChain))
-                {
-                    h.AppendFormat("<h2>{0}. \uac1c\ubcc4 T\ud589\ub82c + \uacf1\uc148 \uacfc\uc815 ({1})</h2>\n", sectionNum, Esc(grp.Name));
-                    GenerateMatrixSections(h, grp.MatrixChain);
-                    sectionNum++;
-                }
-
-                // X,Y,Z 수식
-                h.AppendFormat("<h2>{0}. \ucd5c\uc885 \uc704\uce58 \uc218\uc2dd ({1})</h2>\n", sectionNum, Esc(grp.Name));
-                h.AppendLine("<p style=\"color:#888;font-size:13px;margin-bottom:8px\">\ucd5c\uc885 \ubcc0\ud658 \ud589\ub82c\uc758 4\ubc88\uc9f8 \uc5f4\uc5d0\uc11c X, Y, Z \uc704\uce58\ub97c \ucd94\ucd9c\ud569\ub2c8\ub2e4.</p>");
-                if (grp.XyzFormulas != null && grp.XyzFormulas.Length >= 3)
-                {
-                    h.AppendLine("<div class=\"xyz-box x-box\">");
-                    h.AppendFormat("<span class=\"xyz-label x-label\">X</span> <span style=\"color:#d4d4d4;font-size:16px\">=</span> {0}", ColorizeFormulaExpr(grp.XyzFormulas[0]));
-                    h.AppendLine("</div>");
-                    h.AppendLine("<div class=\"xyz-box y-box\">");
-                    h.AppendFormat("<span class=\"xyz-label y-label\">Y</span> <span style=\"color:#d4d4d4;font-size:16px\">=</span> {0}", ColorizeFormulaExpr(grp.XyzFormulas[1]));
-                    h.AppendLine("</div>");
-                    h.AppendLine("<div class=\"xyz-box z-box\">");
-                    h.AppendFormat("<span class=\"xyz-label z-label\">Z</span> <span style=\"color:#d4d4d4;font-size:16px\">=</span> {0}", ColorizeFormulaExpr(grp.XyzFormulas[2]));
-                    h.AppendLine("</div>");
-                }
-                else
-                {
-                    h.AppendLine("<p style=\"color:#f44\">\uc218\uc2dd\uc744 \ucd94\ucd9c\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.</p>");
-                }
-                sectionNum++;
-
-                // 방향 벡터
-                if (grp.XyzFormulas != null && grp.XyzFormulas.Length >= 6)
-                {
-                    h.AppendFormat("<h2>{0}. \ub05d\uc810 \ubc29\ud5a5 \ubca1\ud130 ({1})</h2>\n", sectionNum, Esc(grp.Name));
-                    h.AppendLine("<div class=\"dir-box\">");
-                    h.AppendFormat("<span class=\"dir-label\">X\ucd95 \ubc29\ud5a5\ubca1\ud130 = </span>{0}<br>", Esc(grp.XyzFormulas[3]));
-                    h.AppendFormat("<span class=\"dir-label\">Y\ucd95 \ubc29\ud5a5\ubca1\ud130 = </span>{0}<br>", Esc(grp.XyzFormulas[4]));
-                    h.AppendFormat("<span class=\"dir-label\">Z\ucd95 \ubc29\ud5a5\ubca1\ud130 = </span>{0}", Esc(grp.XyzFormulas[5]));
-                    h.AppendLine("</div>");
-                    sectionNum++;
-                }
-
-                if (totalGroups > 1)
-                    h.AppendLine("</div>"); // grp-section 닫기
-            }
-
-            // ── DH 공식 참고 ──
-            h.AppendFormat("<h2>{0}. DH \ubcc0\ud658 \ud589\ub82c \uacf5\uc2dd (Reference)</h2>\n", sectionNum);
-            h.AppendLine("<p style=\"color:#888;font-size:13px;margin-bottom:12px\">\uac01 DH \ud30c\ub77c\ubbf8\ud130(A, D, \u03b8, \u03b1)\ub85c\ubd80\ud130 4\u00d74 \ub3d9\ucc28 \ubcc0\ud658 \ud589\ub82c T\ub97c \ub9cc\ub4dc\ub294 \uacf5\uc2dd:</p>");
-            h.AppendLine("<div class=\"result-box\" style=\"border-left-color:#4ec9b0;font-size:14px;line-height:1.8\">");
-            h.AppendLine("T = Rot<sub>z</sub>(\u03b8) \u00b7 Trans<sub>z</sub>(D) \u00b7 Trans<sub>x</sub>(A) \u00b7 Rot<sub>x</sub>(\u03b1)<br><br>");
-            h.AppendLine("<table class=\"mtx\" style=\"font-size:13px\">");
-            h.AppendLine("<tr><td><span class=\"fn\">C</span>\u03b8</td><td>-<span class=\"fn\">S</span>\u03b8\u00b7<span class=\"fn\">C</span>\u03b1</td><td><span class=\"fn\">S</span>\u03b8\u00b7<span class=\"fn\">S</span>\u03b1</td><td>A\u00b7<span class=\"fn\">C</span>\u03b8</td></tr>");
-            h.AppendLine("<tr><td><span class=\"fn\">S</span>\u03b8</td><td><span class=\"fn\">C</span>\u03b8\u00b7<span class=\"fn\">C</span>\u03b1</td><td>-<span class=\"fn\">C</span>\u03b8\u00b7<span class=\"fn\">S</span>\u03b1</td><td>A\u00b7<span class=\"fn\">S</span>\u03b8</td></tr>");
-            h.AppendLine("<tr><td>0</td><td><span class=\"fn\">S</span>\u03b1</td><td><span class=\"fn\">C</span>\u03b1</td><td>D</td></tr>");
-            h.AppendLine("<tr><td>0</td><td>0</td><td>0</td><td>1</td></tr>");
-            h.AppendLine("</table>");
-            h.AppendLine("</div>");
-
-            h.AppendLine("<div style=\"margin-top:32px;color:#555;font-size:12px;border-top:1px solid #333;padding-top:8px\">");
-            h.AppendLine("Generated by MakeUrdf \u2014 OpenJigWare FK Formula Analyzer</div>");
-            h.AppendLine("</body></html>");
-
-            File.WriteAllText(htmlPath, h.ToString(), Encoding.UTF8);
+            File.WriteAllText(htmlPath, Ojw.C3d.Edh_BuildFormulaHtml(dhText, groups), Encoding.UTF8);
         }
 
-        /// <summary>DH 파라미터 텍스트 → HTML 테이블 (그룹 구분 포함)</summary>
-        private void GenerateDhParamTable(StringBuilder h, string dhText, List<DhGroup> groups)
-        {
-            string[] grpColors = { "#569cd6", "#4ec9b0", "#dcdcaa", "#c586c0", "#ce9178", "#6a9955" };
-            string[] lines = dhText.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
-            h.AppendLine("<table class=\"dh\">");
-            // 헤더: Index | 핵심 DH 파라미터(파란) | 확장 파라미터(주황) | 설명
-            h.Append("<tr>");
-            h.Append("<th class=\"idx-col\">#</th>");
-            h.Append("<th class=\"dh-core\">A</th>");
-            h.Append("<th class=\"dh-core\">D</th>");
-            h.Append("<th class=\"dh-core\">\u03b8</th>");
-            h.Append("<th class=\"dh-core\">\u03b1</th>");
-            h.Append("<th class=\"dh-ext dh-sep\">Axis</th>");
-            h.Append("<th class=\"dh-ext\">Dir</th>");
-            h.Append("<th class=\"dh-ext\">Init</th>");
-            h.Append("<th class=\"dh-ext\">Type</th>");
-            h.Append("<th class=\"dh-ext\">Num</th>");
-            h.Append("<th>\uc124\uba85</th>");
-            h.AppendLine("</tr>");
 
-            int idx = 0;
-            int grpIdx = 0;
-            bool firstDataLine = true;
-            foreach (string rawLine in lines)
-            {
-                string line = rawLine.Trim();
-                if (line.Length == 0 || line.StartsWith("//")) continue;
-                if (line.StartsWith("@"))
-                {
-                    h.AppendFormat("<tr><td class=\"idx-col\">{0}</td><td class=\"dh-core\" colspan=\"4\" style=\"text-align:left;color:#ce9178\">STL: {1}</td><td class=\"dh-ext dh-sep\" colspan=\"5\"></td><td style=\"color:#6a9955\">\ubaa8\ub378 \ud30c\uc77c</td></tr>\n", idx, Esc(line));
-                    idx++;
-                    continue;
-                }
 
-                // 주석 제거 후 파싱
-                string s = line;
-                int commentPos = s.IndexOf("//");
-                string comment = "";
-                if (commentPos >= 0) { comment = s.Substring(commentPos + 2).Trim(); s = s.Substring(0, commentPos); }
-                s = s.Replace("[", "").Replace("]", "").Trim();
-                string[] parts = s.Split(',');
 
-                string sA = "0", sD = "0", sTheta = "0", sAlpha = "0";
-                string sAxis = "-1", sDir = "0", sInit = "0";
-                string sType = "", sNum = "";
-                if (parts.Length >= 4)
-                {
-                    sA = parts[0].Trim(); sD = parts[1].Trim();
-                    sTheta = parts[2].Trim(); sAlpha = parts[3].Trim();
-                }
-                if (parts.Length >= 7)
-                {
-                    sAxis = parts[4].Trim(); sDir = parts[5].Trim(); sInit = parts[6].Trim();
-                }
-                if (parts.Length >= 8) sType = parts[7].Trim();
-                if (parts.Length >= 9) sNum = parts[8].Trim();
-
-                float fA, fD, fTh, fAl; int nAx, nDir, nInit;
-                float.TryParse(sA, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out fA);
-                float.TryParse(sD, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out fD);
-                float.TryParse(sTheta, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out fTh);
-                float.TryParse(sAlpha, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out fAl);
-                int.TryParse(sAxis, out nAx); int.TryParse(sDir, out nDir); int.TryParse(sInit, out nInit);
-
-                // Init=1일 때 그룹 구분 행 삽입
-                if (nInit == 1 && !firstDataLine && groups.Count > 1)
-                {
-                    grpIdx++;
-                    string gc = grpColors[(grpIdx) % grpColors.Length];
-                    string gName = (grpIdx < groups.Count) ? groups[grpIdx].Name : string.Format("\uadf8\ub8f9 {0}", grpIdx + 1);
-                    h.AppendFormat("<tr class=\"grp-header\"><td colspan=\"11\" style=\"color:{0}\">\u25b6 {1}</td></tr>\n", gc, Esc(gName));
-                }
-                if (firstDataLine && groups.Count > 1)
-                {
-                    string gc = grpColors[0];
-                    h.AppendFormat("<tr class=\"grp-header\"><td colspan=\"11\" style=\"color:{0}\">\u25b6 {1}</td></tr>\n", gc, Esc(groups[0].Name));
-                }
-                firstDataLine = false;
-
-                // 설명 생성
-                string desc = "";
-                if (nInit == 1) desc = "\uc88c\ud45c \ucd08\uae30\ud654 (Init)";
-                else if (nAx >= 0 && fA == 0 && fD == 0 && fTh == 0 && fAl == 0)
-                    desc = string.Format("\ubaa8\ud130 {0}\ubc88", nAx);
-                else
-                {
-                    List<string> parts2 = new List<string>();
-                    if (nAx >= 0) parts2.Add(string.Format("\ubaa8\ud130{0}", nAx));
-                    if (fA != 0) parts2.Add(string.Format("X\uc774\ub3d9 {0}mm", fA));
-                    if (fD != 0) parts2.Add(string.Format("Z\uc774\ub3d9 {0}mm", fD));
-                    if (fTh != 0) parts2.Add(string.Format("Z\ud68c\uc804 {0}\u00b0", fTh));
-                    if (fAl != 0) parts2.Add(string.Format("X\ud68c\uc804 {0}\u00b0", fAl));
-                    desc = string.Join(", ", parts2.ToArray());
-                }
-                if (comment.Length > 0) desc = comment;
-
-                // Init=1 행은 강조
-                string initStyle = (nInit == 1) ? " style=\"color:#ff9900;font-weight:bold\"" : "";
-                string axisColor = (nAx >= 0) ? " style=\"color:#dcdcaa\"" : "";
-                string trClass = (nInit == 1 && idx > 0) ? " class=\"grp-sep\"" : "";
-                h.AppendFormat("<tr{0}><td class=\"idx-col\">{1}</td><td class=\"dh-core\">{2}</td><td class=\"dh-core\">{3}</td><td class=\"dh-core\">{4}</td><td class=\"dh-core\">{5}</td>" +
-                    "<td class=\"dh-ext dh-sep\"{6}>{7}</td><td class=\"dh-ext\">{8}</td><td class=\"dh-ext\"{9}>{10}</td><td class=\"dh-ext\">{11}</td><td class=\"dh-ext\">{12}</td>" +
-                    "<td style=\"color:#6a9955;text-align:left\">{13}</td></tr>\n",
-                    trClass, idx, sA, sD, sTheta, sAlpha, axisColor, sAxis, sDir, initStyle, sInit, sType, sNum, Esc(desc));
-                idx++;
-            }
-            h.AppendLine("</table>");
-        }
-
-        /// <summary>행렬 체인 파싱 + 개별 T행렬/곱셈 과정 HTML 생성</summary>
-        private void GenerateMatrixSections(StringBuilder h, string matrixChain)
-        {
-            if (string.IsNullOrEmpty(matrixChain)) return;
-
-            string[] chunks = matrixChain.Split(new[] { "==============" }, StringSplitOptions.RemoveEmptyEntries);
-
-            bool wroteTMatrixHeader = false;
-            bool wroteMultHeader = false;
-            int tMatrixIdx = 0;
-            int multIdx = 0;
-
-            foreach (string chunk in chunks)
-            {
-                string[] cLines = chunk.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
-                string label = "";
-                List<string[]> rows = new List<string[]>();
-
-                foreach (string rawLine in cLines)
-                {
-                    string line = rawLine.Trim();
-                    if (line.Length == 0) continue;
-                    if (line.StartsWith("//"))
-                    {
-                        label = line.TrimStart('/').TrimEnd('/').Trim();
-                        continue;
-                    }
-
-                    // 행 파싱: 콤마 또는 3+공백 구분
-                    List<string> cells = new List<string>();
-                    if (line.Contains(","))
-                    {
-                        foreach (string c in line.Split(','))
-                        {
-                            string t = c.Trim();
-                            if (t.Length > 0) cells.Add(t);
-                        }
-                    }
-                    else
-                    {
-                        foreach (string c in line.Split(new[] { "   " }, StringSplitOptions.RemoveEmptyEntries))
-                        {
-                            string t = c.Trim();
-                            if (t.Length > 0) cells.Add(t);
-                        }
-                    }
-                    if (cells.Count > 0)
-                        rows.Add(cells.ToArray());
-                }
-
-                if (rows.Count == 0) continue;
-
-                // 섹션 분류
-                if (label.Contains("Start"))
-                {
-                    // 항등 행렬 - 건너뜀
-                    continue;
-                }
-                else if (label.StartsWith("--") && !label.Contains("First"))
-                {
-                    // 개별 T 행렬
-                    if (!wroteTMatrixHeader)
-                    {
-                        h.AppendLine("<h2>3. \uac1c\ubcc4 DH \ubcc0\ud658 \ud589\ub82c (T Matrices)</h2>");
-                        h.AppendLine("<p style=\"color:#888;font-size:13px;margin-bottom:8px\">\uac01 DH \ud30c\ub77c\ubbf8\ud130 \ud55c \uc904\uc774 \ud558\ub098\uc758 4\u00d74 \ubcc0\ud658 \ud589\ub82c\uc744 \ub9cc\ub4ed\ub2c8\ub2e4.</p>");
-                        wroteTMatrixHeader = true;
-                    }
-                    h.AppendFormat("<h3>T<sub>{0}</sub></h3>\n", tMatrixIdx);
-                    WriteMatrixHtml(h, rows);
-                    tMatrixIdx++;
-                }
-                else
-                {
-                    // 곱셈 과정
-                    if (!wroteMultHeader)
-                    {
-                        h.AppendLine("<h2>4. \ud589\ub82c \uacf1\uc148 \uacfc\uc815 (Matrix Multiplication)</h2>");
-                        h.AppendLine("<p style=\"color:#888;font-size:13px;margin-bottom:8px\">\ubcc0\ud658 \ud589\ub82c\uc744 \uc21c\uc11c\ub300\ub85c \uacf1\ud558\uc5ec \ucd5c\uc885 \uacb0\uacfc\ub97c \ub9cc\ub4ed\ub2c8\ub2e4: T<sub>final</sub> = T<sub>0</sub> \u00d7 T<sub>1</sub> \u00d7 ... \u00d7 T<sub>n</sub></p>");
-                        wroteMultHeader = true;
-                    }
-
-                    string stepLabel;
-                    if (label.Contains("First"))
-                        stepLabel = "T<sub>0</sub> \u00d7 T<sub>1</sub>";
-                    else
-                    {
-                        int stepNum;
-                        if (int.TryParse(label.Trim(), out stepNum))
-                            stepLabel = string.Format("(\u2026) \u00d7 T<sub>{0}</sub>", stepNum + 1);
-                        else
-                            stepLabel = "Step " + multIdx;
-                    }
-                    h.AppendFormat("<h3>{0} =</h3>\n", stepLabel);
-                    WriteMatrixHtml(h, rows);
-                    multIdx++;
-                }
-            }
-        }
-
-        /// <summary>4x4 행렬을 HTML 테이블로 렌더링</summary>
-        private void WriteMatrixHtml(StringBuilder h, List<string[]> rows)
-        {
-            h.AppendLine("<div class=\"mtx-wrap\">");
-            h.Append("<span class=\"bracket\">[</span>");
-            h.AppendLine("<table class=\"mtx\">");
-            foreach (string[] row in rows)
-            {
-                h.Append("<tr>");
-                foreach (string cell in row)
-                    h.AppendFormat("<td>{0}</td>", ColorizeFormulaExpr(cell));
-                h.AppendLine("</tr>");
-            }
-            h.AppendLine("</table>");
-            h.AppendLine("<span class=\"bracket\">]</span>");
-            h.AppendLine("</div>");
-        }
-
-        /// <summary>수학 수식에 구문 하이라이팅 적용</summary>
-        private static string ColorizeFormulaExpr(string expr)
-        {
-            if (string.IsNullOrEmpty(expr)) return "";
-
-            StringBuilder sb = new StringBuilder();
-            int pos = 0;
-            int len = expr.Length;
-
-            while (pos < len)
-            {
-                char ch = expr[pos];
-
-                // C( 또는 S( → 함수 하이라이팅
-                if ((ch == 'C' || ch == 'S') && pos + 1 < len && expr[pos + 1] == '(')
-                {
-                    sb.AppendFormat("<span class=\"fn\">{0}</span>", ch);
-                    pos++;
-                    continue;
-                }
-
-                // t 뒤에 숫자 → 모터 변수
-                if (ch == 't' && pos + 1 < len && char.IsDigit(expr[pos + 1]))
-                {
-                    sb.Append("<span class=\"var\">t");
-                    pos++;
-                    while (pos < len && char.IsDigit(expr[pos]))
-                    {
-                        sb.Append(expr[pos]);
-                        pos++;
-                    }
-                    sb.Append("</span>");
-                    continue;
-                }
-
-                // 숫자 (정수/소수)
-                if (char.IsDigit(ch))
-                {
-                    sb.Append("<span class=\"num\">");
-                    while (pos < len && (char.IsDigit(expr[pos]) || expr[pos] == '.'))
-                    {
-                        sb.Append(expr[pos]);
-                        pos++;
-                    }
-                    sb.Append("</span>");
-                    continue;
-                }
-
-                // 그 외: HTML 이스케이프 후 출력
-                if (ch == '<') sb.Append("&lt;");
-                else if (ch == '>') sb.Append("&gt;");
-                else if (ch == '&') sb.Append("&amp;");
-                else sb.Append(ch);
-                pos++;
-            }
-
-            return sb.ToString();
-        }
+        // ── HTML 생성·구문 하이라이팅은 DLL 로 이관됨 (2026-09-03, COjw_12_3D_Html.cs) ──
+        //   GenerateDhParamTable / GenerateMatrixSections / WriteMatrixHtml / ColorizeFormulaExpr 는
+        //   Edh_BuildFormulaHtml 안에서만 쓰이던 내부 헬퍼라 위임 래퍼를 두지 않고 통째로 옮겼다.
 
         private bool m_bShowArrow = true;
         private float m_fArrowSize = 25.0f;

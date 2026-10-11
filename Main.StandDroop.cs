@@ -113,6 +113,9 @@ namespace MakeUrdf
                     "먼저 ② 관절리미트를 하십시오.", "기립 처짐");
                 return;
             }
+            int nToolPort, nToolBaud;                                   // 포트·속도 = 로봇팔 세팅 탭 칸 (standdroop 설정 파일의 port/baud 대신 — 탭이 연결 중이면 해제할지 묻는다)
+            if (!ArmMotor_ToolPort("④ 기립 처짐", true, out nToolPort, out nToolBaud)) return;
+            cfg.nPort = nToolPort; cfg.nBaud = nToolBaud;
 
             int nSteps = (int)(cfg.fMaxLean / cfg.fStep) * 2;
             if (MessageBox.Show(string.Format(
